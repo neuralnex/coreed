@@ -1,0 +1,16 @@
+# Coreed Agent Space - Python Dependencies
+# Core dependencies
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+
+# AI/ML dependencies (optional - uncomment as needed)
+# torch>=2.1.0
+# transformers>=4.38.0
+# sentencepiece>=0.1.99
+# accelerate>=0.27.0
+# huggingface-hub>=0.20.0
+
+# Utility dependencies
+python-dotenv>=1.0.0
+httpx>=0.26.0

@@ -1,0 +1,28 @@
+{
+  "name": "contracts",
+  "version": "2.0.0",
+  "description": "Coreed Smart Contracts - Agent Registry + Model Registry",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "test:agents": "hardhat test test/AgentRegistry.test.js",
+    "test:models": "hardhat test test/ModelRegistry.test.js",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js --network galileo",
+    "deploy:all": "hardhat run scripts/deploy-all.js --network galileo"
+  },
+  "keywords": ["web3", "ai", "0g", "storage", "registry", "agents", "models"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "chai": "^4.5.0",
+    "dotenv": "^17.4.2",
+    "ganache": "^7.9.2",
+    "hardhat": "^2.28.6",
+    "solc": "^0.8.26"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

@@ -1,0 +1,14 @@
+# Coreed CLI Dependencies
+
+# Core dependencies
+web3>=6.0.0
+python-dotenv>=1.0.0
+
+# Optional: For better async support
+# aiohttp>=3.8.0
+
+# Optional: For direct 0G Storage SDK (Python)
+# Install with: pip install 0g-storage-client  (if available)
+
+# Development dependencies (not required for runtime)
+# pip install -e .[dev]

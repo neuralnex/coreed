@@ -1,0 +1,47 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Build artifacts
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+.next/
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Python
+venv/
+.venv/
+.env/
+.pytest_cache/
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Hardhat cache
+cache/
+
+# Temporary files
+*.tmp
+*.temp
