@@ -1,10 +1,10 @@
 import { ethers } from 'ethers';
-import { AgentSpaceRegistryABI, ModelRegistryABI, DEFAULT_CONTRACT_ADDRESSES, DEFAULT_NETWORK } from './contracts';
+import { AgentSpaceRegistryABI, ModelRegistryABI, AgentRegistryABI, DEFAULT_CONTRACT_ADDRESSES, DEFAULT_NETWORK } from './contracts';
 import type { CoreedConfig, ModelMetadata, SpaceConfig, SleepStatus, SpaceHealth, ModelInfo, SpaceInfo } from './types';
 
 export class CoreedClient {
   private provider: ethers.JsonRpcProvider;
-  private signer: ethers.Wallet | ethers.JsonRpcSigner;
+  private signer: ethers.Wallet | ethers.JsonRpcSigner | ethers.JsonRpcProvider;
   private modelRegistry: ethers.Contract;
   private agentRegistry: ethers.Contract;
   private agentSpaceRegistry: ethers.Contract;
@@ -213,7 +213,7 @@ export class CoreedClient {
     return this.provider;
   }
 
-  getSigner(): ethers.Wallet | ethers.JsonRpcSigner {
+  getSigner(): ethers.Wallet | ethers.JsonRpcSigner | ethers.JsonRpcProvider {
     return this.signer;
   }
 

@@ -1,6 +1,15 @@
 {
   "version": 2,
-  "builds": [],
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/nextjs",
+      "config": {
+        "installCommand": "npm install",
+        "buildCommand": "npm run build"
+      }
+    }
+  ],
   "routes": [
     {
       "src": "/health",
@@ -12,6 +21,13 @@
       "src": "/api/(.*)",
       "headers": {
         "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/",
+      "headers": {
+        "Cache-Control": "public, max-age=3600"
       }
     }
   ],

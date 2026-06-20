@@ -2,7 +2,15 @@ import AgentSpaceRegistryABI from './abis/AgentSpaceRegistry.json';
 import ModelRegistryABI from './abis/ModelRegistry.json';
 import AgentRegistryABI from './abis/AgentRegistry.json';
 
+// Re-export the ABIs
 export { AgentSpaceRegistryABI, ModelRegistryABI, AgentRegistryABI };
+
+// Also export as default for flexibility
+export default {
+  AgentSpaceRegistryABI,
+  ModelRegistryABI,
+  AgentRegistryABI,
+};
 
 // Default contract addresses for Galileo Testnet
 export const DEFAULT_CONTRACT_ADDRESSES = {

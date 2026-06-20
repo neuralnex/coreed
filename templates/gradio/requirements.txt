@@ -15,4 +15,4 @@ python-dotenv>=1.0.0
 # transformers>=4.38.0
 # sentencepiece>=0.1.99
 # accelerate>=0.27.0
-# huggingface-hub>=0.20.0
+# coreed-cli>=3.0.0

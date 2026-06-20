@@ -142,7 +142,7 @@ push-to-coreed --save-config
 
 ### Authentication
 
-Coreed uses your **wallet private key** for authentication (unlike HF's separate API tokens):
+Coreed uses your **wallet private key** for authentication (unlike traditional API token systems):
 
 ```bash
 # Set private key (NEVER commit this!)
