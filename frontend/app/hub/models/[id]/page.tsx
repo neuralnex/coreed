@@ -179,7 +179,7 @@ export default function ModelDetailPage() {
             <button
               onClick={handleLike}
               disabled={!isConnected}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-3 rounded-md text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] ${
                 liked
                   ? "bg-coreed-moss text-coreed-void"
                   : "bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone hover:border-coreed-moss"
@@ -190,7 +190,7 @@ export default function ModelDetailPage() {
             <button
               onClick={handleDownload}
               disabled={!isConnected}
-              className="px-4 py-2 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors"
+              className="px-4 py-3 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
             >
               📥 Download
             </button>
@@ -198,7 +198,7 @@ export default function ModelDetailPage() {
               <button
                 onClick={handleDeploy}
                 disabled={deploying}
-                className="px-4 py-2 bg-coreed-moss hover:bg-coreed-moss-bright disabled:bg-coreed-line disabled:cursor-not-allowed text-coreed-void rounded-md text-sm font-medium transition-colors"
+                className="px-4 py-3 bg-coreed-moss hover:bg-coreed-moss-bright disabled:bg-coreed-line disabled:cursor-not-allowed text-coreed-void rounded-md text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
               >
                 {deploying ? "Deploying..." : "🚀 Deploy Space"}
               </button>
@@ -326,19 +326,19 @@ export default function ModelDetailPage() {
               <button
                 onClick={handleDeploy}
                 disabled={deploying}
-                className="px-4 py-2 bg-coreed-moss hover:bg-coreed-moss-bright disabled:bg-coreed-line disabled:cursor-not-allowed text-coreed-void rounded-md text-sm font-medium transition-colors"
+                className="px-4 py-3 bg-coreed-moss hover:bg-coreed-moss-bright disabled:bg-coreed-line disabled:cursor-not-allowed text-coreed-void rounded-md text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
               >
                 {deploying ? "Deploying..." : "🚀 Deploy Space"}
               </button>
               <button
                 onClick={handleLike}
-                className="px-4 py-2 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors"
+                className="px-4 py-3 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
               >
                 {liked ? "❤️ Unlike" : "❤️ Like"}
               </button>
               <button
                 onClick={handleDownload}
-                className="px-4 py-2 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors"
+                className="px-4 py-3 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
               >
                 📥 Download
               </button>

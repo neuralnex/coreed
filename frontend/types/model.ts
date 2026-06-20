@@ -28,6 +28,33 @@ export interface ModelMeta {
   downloadCount: number;
   likeCount: number;
   tags?: string[];
+  version?: string;
+  isLatest?: boolean;
+  parentModelId?: string;
+}
+
+export interface ModelVersion {
+  versionId: string;
+  modelId: string;
+  version: string;
+  name: string;
+  description: string;
+  storageRootHash: string;
+  createdAt: number;
+  createdBy: string;
+  isLatest: boolean;
+  changes?: string;
+}
+
+export interface VersionHistory {
+  modelId: string;
+  versions: ModelVersion[];
+  currentVersion: string;
+}
+
+export interface ModelWithVersions extends ModelMeta {
+  versions?: ModelVersion[];
+  versionCount?: number;
 }
 
 export interface UploadModelResult {

@@ -70,3 +70,248 @@ body {
 .coreed-pulse {
   animation: coreed-pulse 1.6s ease-in-out infinite;
 }
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  /* Base touch targets - minimum 44x44px for accessibility */
+  button,
+  [role="button"],
+  a,
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent double-tap zoom on buttons */
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+  
+  /* Better touch feedback */
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+  
+  /* Ensure inputs are touch-friendly */
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  
+  /* Prevent horizontal overflow */
+  html {
+    overflow-x: hidden;
+  }
+  
+  /* Better scrolling on mobile */
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
+  }
+  
+  /* Fix position: sticky for mobile */
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+}
+
+/* Tablet optimizations */
+@media (max-width: 1024px) and (min-width: 769px) {
+  /* Slightly larger touch targets for tablets */
+  button,
+  [role="button"] {
+    min-height: 40px;
+  }
+}
+
+/* Prevent text selection on buttons */
+button,
+[role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Theme support */
+:root {
+  /* Light theme variables (default) */
+  --bg-primary: #f8f8f8;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e8e8e8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --border-primary: #e0e0e0;
+  --border-secondary: #d0d0d0;
+  --accent-primary: #5b7a62;
+  --accent-secondary: #8fb89a;
+  --accent-tertiary: #c97b4a;
+}
+
+.dark {
+  /* Dark theme variables (already set in our color scheme) */
+  --bg-primary: #0b0e0c;
+  --bg-secondary: #151916;
+  --bg-tertiary: #1d2220;
+  --text-primary: #e8e4d8;
+  --text-secondary: #7a8b7e;
+  --text-tertiary: #5b7a62;
+  --border-primary: #2a2e2b;
+  --border-secondary: #3a3e3b;
+  --accent-primary: #8fb89a;
+  --accent-secondary: #5b7a62;
+  --accent-tertiary: #c97b4a;
+}
+
+.light {
+  /* Light theme - override dark theme */
+  --color-coreed-void: #f8f8f8;
+  --color-coreed-panel: #ffffff;
+  --color-coreed-panel-raised: #f0f0f0;
+  --color-coreed-line: #e0e0e0;
+  --color-coreed-bone: #1a1a1a;
+  --color-coreed-sage: #666666;
+  --color-coreed-moss: #5b7a62;
+  --color-coreed-moss-bright: #8fb89a;
+  --color-coreed-clay: #c97b4a;
+  --color-coreed-clay-dim: #8a5836;
+}
+
+/* Mobile Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari */
+  button,
+  input,
+  select,
+  textarea {
+    cursor: pointer;
+  }
+  
+  /* Fix input zoom on focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Prevent default yellow input background on autofill */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--color-coreed-bone);
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}
+
+/* Enhanced Mobile Button Responsiveness */
+@media (max-width: 768px) {
+  /* Ensure all interactive elements have minimum touch size */
+  button:not(.text-xs):not(.text-sm),
+  [role="button"]:not(.text-xs):not(.text-sm),
+  a:not(.text-xs):not(.text-sm) {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 24px;
+  }
+  
+  /* Better button feedback on mobile */
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled),
+  a:active:not(:disabled) {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+  
+  /* Prevent text overflow on small screens */
+  .truncate-mobile {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Mobile-specific button sizing for action buttons */
+  .mobile-action-btn {
+    min-height: 48px;
+    padding: 14px 28px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  /* Fix button alignment in flex containers */
+  .flex.gap-4 button,
+  .flex.gap-4 a {
+    flex-shrink: 0;
+  }
+  
+  /* Ensure form inputs are touch-friendly */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  select,
+  textarea {
+    min-height: 48px;
+    padding: 14px 18px;
+    font-size: 16px;
+  }
+  
+  /* Better spacing for mobile forms */
+  .space-y-6 > div > input,
+  .space-y-6 > div > select,
+  .space-y-6 > div > textarea {
+    width: 100%;
+  }
+  
+  /* Mobile card touch targets */
+  .rounded-lg {
+    touch-action: manipulation;
+  }
+  
+  /* Fix mobile nav menu */
+  .md\:hidden .flex.col gap-3 > * {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+}
+
+/* Tablet optimizations */
+@media (max-width: 1024px) and (min-width: 769px) {
+  button,
+  [role="button"],
+  a {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+/* Very small screens (e.g., iPhone SE) */
+@media (max-width: 320px) {
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
+    min-width: 100%;
+    padding: 12px 16px;
+  }
+  
+  .flex.gap-4 {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

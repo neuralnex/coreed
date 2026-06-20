@@ -1,0 +1,1 @@
+export { VersionHistoryComponent } from "./VersionHistory";

@@ -57,6 +57,33 @@ export interface SpaceDeployment {
   healthStatus: HealthCheck;
 }
 
+export interface Collaborator {
+  address: string;
+  role: "operator" | "viewer" | "admin";
+  addedAt: number;
+  addedBy: string;
+}
+
+export interface SpaceWithCollaborators extends AgentSpace {
+  collaborators?: Collaborator[];
+  canManage: boolean;
+}
+
+export interface Invitation {
+  invitationId: string;
+  spaceId: string;
+  recipient: string;
+  role: "operator" | "viewer" | "admin";
+  createdAt: number;
+  createdBy: string;
+  status: "pending" | "accepted" | "rejected";
+  expiresAt?: number;
+}
+
+export type SpaceRole = "owner" | "operator" | "viewer" | "admin";
+
+export const SPACE_ROLES: SpaceRole[] = ["owner", "admin", "operator", "viewer"];
+
 export type DeploymentStatus = "pending" | "deploying" | "active" | "inactive" | "error";
 
 export interface DeploymentConfig {
