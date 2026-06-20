@@ -90,6 +90,9 @@ export function Navbar() {
           <Link href="/hub" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2">
             Hub
           </Link>
+          <Link href="/docs" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2">
+            Docs
+          </Link>
         </div>
 
         <div className="flex items-center gap-3">
@@ -139,6 +142,9 @@ export function Navbar() {
             </Link>
             <Link href="/hub" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2" onClick={() => setShowMobileMenu(false)}>
               Hub
+            </Link>
+            <Link href="/docs" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2" onClick={() => setShowMobileMenu(false)}>
+              Docs
             </Link>
             <div className="flex items-center gap-2 pt-2 border-t border-coreed-line/30">
               <span className="px-2 py-1 bg-coreed-moss/10 text-coreed-moss-bright text-xs rounded-full border border-coreed-moss/20">
