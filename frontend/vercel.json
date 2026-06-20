@@ -1,12 +1,6 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/nextjs",
-      "config": { "installCommand": "npm install" }
-    }
-  ],
+  "builds": [],
   "routes": [
     {
       "src": "/health",
@@ -40,6 +34,5 @@
       ]
     }
   ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  "cleanUrls": true
 }
