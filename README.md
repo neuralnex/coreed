@@ -2,7 +2,9 @@
 
 **AI Deployment Platform for 0G Chain** 
 
-Coreed is a complete Web3 AI agent launchpad built on the 0G Modular Infrastructure Stack. It provides an AI deployment experience for deploying, managing, and discovering AI models and live agent spaces, all on decentralized infrastructure.
+Coreed is a complete Web3 AI agent launchpad built on the **0G Modular Infrastructure Stack**. It provides a seamless experience for deploying, managing, and discovering AI models and live agent spaces, all powered by decentralized infrastructure.
+
+**✅ Properly Integrated with 0G SDK** - Coreed leverages the official 0G TypeScript SDKs for storage and compute, ensuring full compatibility with the 0G ecosystem on Galileo Testnet.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -49,8 +51,8 @@ Coreed is a complete Web3 AI agent launchpad built on the 0G Modular Infrastruct
 | **Web UI Templates** | Gradio, FastAPI, Express, Docker |
 | **API Endpoints** | REST API support via FastAPI |
 | **Health Monitoring** | Automatic health checks and status updates |
-| **Decentralized Storage** | 0G Storage integration |
-| **Decentralized Compute** | 0G Compute deployment |
+| **Decentralized Storage** | ✅ 0G Storage TS SDK (`@0gfoundation/0g-storage-ts-sdk`) |
+| **Decentralized Compute** | ✅ 0G Compute TS SDK (`@0gfoundation/0g-compute-ts-sdk`) |
 | **On-Chain Registry** | All registries on 0G Chain |
 | **Pause/Sleep Spaces** | Manual and auto-sleep for inactive spaces |
 
@@ -102,8 +104,10 @@ This single command will:
 
 ## Prerequisites
 
-- **0G Wallet**: Get testnet 0G from [faucet.0g.ai](https://faucet.0g.ai)
+- **0G Galileo Testnet**: Get testnet 0G from [faucet.0g.ai](https://faucet.0g.ai)
 - **Private Key**: Set via `PRIVATE_KEY` environment variable
+- **Supported Wallets**: MetaMask, OKX Wallet, Trust Wallet, WalletConnect, Coinbase Wallet, and all EIP-1193 compatible wallets
+- **Mobile Support**: Full mobile wallet detection and in-app browser support
 - **Git**: For version control integration
 - **Docker**: For containerization
 - **Python 3.8+**: For Gradio/FastAPI templates
@@ -277,11 +281,13 @@ coreed/
 
 ## Network Configuration
 
+Coreed is currently running on **0G Galileo Testnet** with full 0G SDK integration:
+
 ### Galileo Testnet (Default)
 
 ```
 RPC URL:           https://evmrpc-testnet.0g.ai
-Chain ID:          16602
+Chain ID:          16602 (0x40DA)
 Storage Indexer:   https://indexer-storage-testnet-turbo.0g.ai
 Compute Router:    https://router-api.0g.ai/v1
 Explorer:          https://chainscan-galileo.0g.ai
@@ -291,6 +297,11 @@ ModelRegistry:     0xFA81366Ba81C19d848191B8e49eC0948230d4216
 AgentRegistry:    0xff34F1281A8D4F14d503c28E8A45cAF98Acc235C
 AgentSpaceRegistry: 0xedF4958de1e22979EaE3dec3ECb84C4D63cA510A
 ```
+
+**✅ 0G SDK Integration:**
+- Storage operations use `@0gfoundation/0g-storage-ts-sdk`
+- Compute operations use `@0gfoundation/0g-compute-ts-sdk`
+- All smart contracts deployed on 0G Galileo Testnet
 
 ---
 
@@ -342,6 +353,8 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 **Coreed v3.0: AI Deployment Platform for 0G Chain** 
 
-*Built on 0G Chain*
+*✅ Properly Built on 0G Chain using Official SDKs*
+
+*🏗️ Currently on 0G Galileo Testnet*
 
 *Last updated: June 2026*
