@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { StatusStrip } from "@/components/StatusStrip";
 import { ModelCard } from "@/components/hub/ModelCard";
 import { useModelRegistry } from "@/lib/useModelRegistry";
+import { useWalletContext } from "@/lib/contexts/WalletContext";
 import type { ModelMeta } from "@/types/model";
-import type { JsonRpcSigner } from "ethers";
 
 export default function HubPage() {
-  const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [address, setAddress] = useState<string | null>(null);
+  const { address, isConnected } = useWalletContext();
   const [trendingModels, setTrendingModels] = useState<ModelMeta[]>([]);
   const [recentModels, setRecentModels] = useState<ModelMeta[]>([]);
   const [totalModels, setTotalModels] = useState<number>(0);
@@ -40,61 +38,52 @@ export default function HubPage() {
   }, [getTrendingModels, getTotalModels, searchModels]);
 
   return (
-    <>
-      <StatusStrip
-        address={address}
-        onConnect={(s, addr) => {
-          setSigner(s);
-          setAddress(addr);
-        }}
-      />
-
-      <main className="mx-auto flex max-w-6xl flex-1 flex-col px-6 py-12">
+    <main className="mx-auto flex max-w-6xl flex-1 flex-col px-6 py-12">
         <div className="mb-8">
           <div className="flex items-baseline justify-between">
             <div>
-              <h1 className="font-mono text-2xl font-medium tracking-tight text-coreed-bone">
-                coreed hub
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-coreed-moss-bright to-coreed-clay bg-clip-text text-transparent mb-2">
+                COREED HUB
               </h1>
-              <p className="mt-2 max-w-md text-sm leading-relaxed text-coreed-sage">
+              <p className="text-coreed-sage">
                 Discover and deploy AI models on 0G. {totalModels} models registered.
               </p>
             </div>
             <Link
               href="/"
-              className="font-mono text-xs text-coreed-sage hover:text-coreed-bone"
+              className="px-4 py-2 bg-coreed-panel-raised border border-coreed-line/30 rounded-md text-sm text-coreed-bone hover:border-coreed-moss-bright transition-colors"
             >
-              ← launch
+              ← Launch Agent
             </Link>
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-8 flex-wrap">
           <Link
             href="/hub"
-            className="rounded border border-coreed-moss bg-coreed-panel-raised px-3 py-1.5 font-mono text-xs text-coreed-bone"
+            className="px-4 py-2 bg-coreed-moss/20 text-coreed-bone rounded-md text-sm font-medium"
           >
             Overview
           </Link>
           <Link
             href="/hub/search"
-            className="rounded border border-coreed-line px-3 py-1.5 font-mono text-xs text-coreed-sage hover:border-coreed-moss hover:text-coreed-bone"
+            className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
           >
             Browse All
           </Link>
-          {address && (
+          {isConnected && address && (
             <Link
               href="/hub/my-models"
-              className="rounded border border-coreed-line px-3 py-1.5 font-mono text-xs text-coreed-sage hover:border-coreed-moss hover:text-coreed-bone"
+              className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
             >
               My Models
             </Link>
           )}
           <Link
-            href="/playground"
-            className="rounded border border-coreed-line px-3 py-1.5 font-mono text-xs text-coreed-sage hover:border-coreed-moss hover:text-coreed-bone"
+            href="/spaces"
+            className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
           >
-            Agents
+            Spaces
           </Link>
         </div>
 
@@ -113,13 +102,13 @@ export default function HubPage() {
         ) : (
           <>
             <section className="mb-12">
-              <div className="mb-4 flex items-baseline justify-between">
-                <h2 className="font-mono text-lg font-medium text-coreed-bone">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-coreed-bone">
                   🔥 Trending Models
                 </h2>
                 <Link
                   href="/hub/search?sort=popular"
-                  className="font-mono text-xs text-coreed-moss-bright hover:text-coreed-bone"
+                  className="text-sm text-coreed-moss-bright hover:text-coreed-bone transition-colors"
                 >
                   View All →
                 </Link>
@@ -138,13 +127,13 @@ export default function HubPage() {
             </section>
 
             <section>
-              <div className="mb-4 flex items-baseline justify-between">
-                <h2 className="font-mono text-lg font-medium text-coreed-bone">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-coreed-bone">
                   🆕 Recently Added
                 </h2>
                 <Link
                   href="/hub/search?sort=recent"
-                  className="font-mono text-xs text-coreed-moss-bright hover:text-coreed-bone"
+                  className="text-sm text-coreed-moss-bright hover:text-coreed-bone transition-colors"
                 >
                   View All →
                 </Link>
@@ -164,6 +153,5 @@ export default function HubPage() {
           </>
         )}
       </main>
-    </>
   );
 }

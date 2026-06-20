@@ -297,6 +297,56 @@ export function useAgentSpaceRegistry() {
     }
   }, []);
 
+  const getAllSpaces = useCallback(async (): Promise<AgentSpace[]> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const contract = getContract(getReadProvider());
+      const totalSpacesBig: bigint = await contract.totalSpaces();
+      const totalSpaces = Number(totalSpacesBig);
+      
+      if (totalSpaces === 0) return [];
+      
+      // Fetch all space IDs from 1 to totalSpaces
+      const spaceIds: bigint[] = Array.from({ length: totalSpaces }, (_, i) => BigInt(i + 1));
+      
+      const spaces = await Promise.all(
+        spaceIds.map(async (id) => {
+          try {
+            const result = await contract.getSpace(id);
+            return {
+              spaceId: id.toString(),
+              name: result.name,
+              description: result.description,
+              version: result.version,
+              modelId: result.modelId.toString(),
+              endpointUrl: result.endpointUrl,
+              deployedAt: Number(result.deployedAt),
+              lastHealthCheck: Number(result.lastHealthCheck),
+              lastActivity: Number(result.lastActivity),
+              isActive: result.isActive,
+              isAsleep: result.isAsleep,
+              sleepTimeout: Number(result.sleepTimeout),
+              owner: result.owner,
+              requestCount: Number(result.requestCount)
+            };
+          } catch {
+            // Space might not exist (if deleted)
+            return null;
+          }
+        })
+      );
+      
+      return spaces.filter(Boolean) as AgentSpace[];
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch all spaces");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const getActiveSpaces = useCallback(async (): Promise<AgentSpace[]> => {
     setIsLoading(true);
     setError(null);
@@ -496,6 +546,7 @@ export function useAgentSpaceRegistry() {
     deactivateSpace,
     recordRequest,
     getSpace,
+    getAllSpaces,
     getSpacesByOwner,
     getSpacesByModel,
     getActiveSpaces,

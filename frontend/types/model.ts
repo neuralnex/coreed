@@ -75,3 +75,16 @@ export const ARCHITECTURES = [
   "DeepSeek",
   "Other"
 ];
+
+export const TAGS = [
+  "llm",
+  "text-generation",
+  "chat",
+  "inference",
+  "vision",
+  "multimodal",
+  "embedding",
+  "classification",
+  "summarization",
+  "translation"
+];
