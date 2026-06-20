@@ -1,8 +1,8 @@
-# Coreed User Guide - Hugging Face Flow Aligned
+# Coreed User Guide - AI Platform Flow Aligned
 
-**Coreed: Hugging Face for 0G Chain**
+**Coreed: AI Platform for 0G Chain**
 
-This guide maps the complete Hugging Face workflow to Coreed's implementation, ensuring users familiar with Hugging Face can seamlessly transition to Coreed.
+This guide maps the complete AI Platform workflow to Coreed's implementation, ensuring users familiar with AI Platform can seamlessly transition to Coreed.
 
 ---
 
@@ -22,7 +22,7 @@ This guide maps the complete Hugging Face workflow to Coreed's implementation, e
 
 # Phase 1: Creating Your Account
 
-**Hugging Face**: Sign up at huggingface.co with email/password, verify email, set profile details.
+**AI Platform**: Sign up at coreed.ai with email/password, verify email, set profile details.
 
 **Coreed**: Get a 0G wallet (your identity on Coreed).
 
@@ -112,9 +112,9 @@ echo ".env" >> .gitignore
 
 # Phase 2: Navigating Coreed Platform Sections
 
-**Hugging Face Sections → Coreed Equivalents**
+**AI Platform Sections → Coreed Equivalents**
 
-| Hugging Face | Coreed | Description | Contract/API |
+| AI Platform | Coreed | Description | Contract/API |
 |-------------|--------|-------------|-------------|
 | **Models** | **Models** | Browse registered AI models | ModelRegistry.sol |
 | **Datasets** | (Future) | Datasets for training | (Planned) |
@@ -123,7 +123,7 @@ echo ".env" >> .gitignore
 | **Docs** | **Docs** | Documentation | Local files |
 | **Organizations** | **Agents** | Multi-developer collaboration | AgentRegistry.sol |
 
-### Web Interface (Equivalent to huggingface.co)
+### Web Interface (Equivalent to coreed.ai)
 
 While the web UI is being developed, the CLI provides **full functionality** equivalent to HF's web interface:
 
@@ -140,11 +140,11 @@ push-to-coreed --save-config
 
 ### Core Sections Comparison
 
-| Section | Hugging Face | Coreed | URL Pattern |
+| Section | AI Platform | Coreed | URL Pattern |
 |---------|-------------|--------|-------------|
-| Model Repository | huggingface.co/username/model-name | coreed.ai/username/model-id | /models/:id |
-| Space | huggingface.co/username/space-name | coreed.ai/username/space-id | /spaces/:id |
-| User Profile | huggingface.co/username | coreed.ai/username | /:username |
+| Model Repository | coreed.ai/username/model-name | coreed.ai/username/model-id | /models/:id |
+| Space | coreed.ai/username/space-name | coreed.ai/username/space-id | /spaces/:id |
+| User Profile | coreed.ai/username | coreed.ai/username | /:username |
 | Create Model | New Model button | push-to-coreed --register-only | N/A |
 | Create Space | New Space button | push-to-coreed | N/A |
 
@@ -152,7 +152,7 @@ push-to-coreed --save-config
 
 # Phase 3: Setting Up Your Profile & Settings
 
-**Hugging Face**: Profile icon → Settings → Access Tokens, SSH Keys, Billing.
+**AI Platform**: Profile icon → Settings → Access Tokens, SSH Keys, Billing.
 
 **Coreed**: Profile is your wallet. Settings are environment variables and config files.
 
@@ -244,7 +244,7 @@ Coreed uses **AgentRegistry** for multi-developer collaboration:
 
 # Phase 4: Creating a Repository (Step-by-Step Fields)
 
-**Hugging Face**: New Model → Fill form (Owner, Name, Visibility, License) → Create → Upload files.
+**AI Platform**: New Model → Fill form (Owner, Name, Visibility, License) → Create → Upload files.
 
 **Coreed**: Use CLI or frontend to create model/space repositories.
 
@@ -339,13 +339,13 @@ push-to-coreed \
 
 # Phase 5: Inside the Repository (The Final Fields)
 
-**Hugging Face**: README.md with YAML metadata, Files & versions tab, Community tab, Settings tab.
+**AI Platform**: README.md with YAML metadata, Files & versions tab, Community tab, Settings tab.
 
 **Coreed**: Model card (README.md), repository structure, on-chain metadata, health monitoring.
 
 ### 1. The Model Card (README.md - Equivalent to HF Model Card)
 
-Coreed uses **README.md** with YAML metadata at the top, just like Hugging Face:
+Coreed uses **README.md** with YAML metadata at the top, just like AI Platform:
 
 ```markdown
 ---
@@ -406,7 +406,7 @@ Available tags:
 
 ### 2. Files and Versions (Equivalent to HF Files Tab)
 
-**Hugging Face**: Uses Git LFS for large files (.bin, .safetensors, .onnx).
+**AI Platform**: Uses Git LFS for large files (.bin, .safetensors, .onnx).
 
 **Coreed**: Uses **0G Storage** for model files, with on-chain Merkle root hash.
 
@@ -431,7 +431,7 @@ Available tags:
 
 **Comparison:**
 
-| Operation | Hugging Face | Coreed |
+| Operation | AI Platform | Coreed |
 |-----------|-------------|--------|
 | Upload large file | `git lfs track + git add` | `0g-storage-client upload` |
 | Download large file | `git lfs pull` | `0g-storage-client download` |
@@ -514,7 +514,7 @@ git push
 
 **Comparison:**
 
-| Setting | Hugging Face | Coreed |
+| Setting | AI Platform | Coreed |
 |---------|-------------|--------|
 | Rename | ✅ | ✅ (Deploy new + update metadata) |
 | Transfer Ownership | ✅ | ✅ (On-chain transfer) |
@@ -526,7 +526,7 @@ git push
 
 # Interface Level Guide
 
-**For users who prefer the web interface (like huggingface.co)**
+**For users who prefer the web interface (like coreed.ai)**
 
 ### Web Interface Navigation (Coming Soon)
 
@@ -1141,9 +1141,9 @@ railway up
 
 ---
 
-# Comparison Table: Hugging Face vs Coreed
+# Comparison Table: AI Platform vs Coreed
 
-| Feature | Hugging Face | Coreed | Coreed Advantage |
+| Feature | AI Platform | Coreed | Coreed Advantage |
 |---------|-------------|--------|------------------|
 | **Account Setup** | Email + Password | 0G Wallet | Decentralized identity |
 | **Authentication** | API Tokens | Private Key | Unified authentication |
@@ -1194,7 +1194,7 @@ railway up
 
 ## Model Operations
 
-| Action | Hugging Face | Coreed |
+| Action | AI Platform | Coreed |
 |--------|-------------|--------|
 | Create model | `hf create-repo` | `push-to-coreed --register-only` |
 | Upload files | `hf upload` | `push-to-coreed --model-path` |
@@ -1204,7 +1204,7 @@ railway up
 
 ## Space Operations
 
-| Action | Hugging Face | Coreed |
+| Action | AI Platform | Coreed |
 |--------|-------------|--------|
 | Create space | New Space button | `push-to-coreed` |
 | Deploy space | HF Hosting | 0G Compute deployment |
@@ -1213,7 +1213,7 @@ railway up
 
 ## Repository Operations
 
-| Action | Hugging Face | Coreed |
+| Action | AI Platform | Coreed |
 |--------|-------------|--------|
 | Clone repo | `git clone` | `git clone` |
 | Pull changes | `git pull` | `git pull` |
@@ -1248,9 +1248,9 @@ AgentSpaceRegistry: 0xff34F1281A8D4F14d503c28E8A45cAF98Acc235C
 
 # Summary
 
-**Coreed provides a Hugging Face-like experience on 0G Chain.**
+**Coreed provides a AI Platform-like experience on 0G Chain.**
 
-### For Users Familiar with Hugging Face:
+### For Users Familiar with AI Platform:
 - **Same concepts**: Models, Spaces, Repositories
 - **Same workflow**: Create → Upload → Deploy → Share
 - **Same tools**: CLI, SDK, Git integration
@@ -1271,10 +1271,10 @@ AgentSpaceRegistry: 0xff34F1281A8D4F14d503c28E8A45cAF98Acc235C
 ✅ **SDK Level**: Python and JavaScript SDKs equivalent to HF SDKs
 ✅ **Hosting**: Multiple hosting options including 0G Compute (recommended)
 
-**The Hugging Face workflow you know, now on 0G Chain with decentralized superpowers!** 🚀
+**The AI Platform workflow you know, now on 0G Chain with decentralized superpowers!** 🚀
 
 ---
 
-**Coreed: Hugging Face for the Decentralized Age**
+**Coreed: AI Platform for the Decentralized Age**
 
 *Last updated: June 19, 2026*

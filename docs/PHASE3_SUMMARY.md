@@ -10,7 +10,7 @@ This document summarizes the complete implementation of Phase 3: Agent Spaces wi
 
 ### 1. Core CLI Package (`cli/`)
 
-A complete Python CLI that mirrors Hugging Face's `push_to_hub` workflow:
+A complete Python CLI that mirrors AI Platform's `push_to_coreed` workflow:
 
 ```
 cli/
@@ -75,7 +75,7 @@ push-to-coreed --dry-run
 
 #### Added Gradio Template
 - **Gradio template** replaces the Gradle template (as requested)
-- **Hugging Face-style UI** with FastAPI backend
+- **AI Platform-style UI** with FastAPI backend
 - **Complete Dockerfile** with multi-stage build
 - **Health endpoint** at `/health`
 - **Chat and Predict interfaces**
@@ -113,7 +113,7 @@ export const SPACE_TEMPLATES: Record<string, SpaceTemplate> = {
   gradio: {
     name: "Gradio (Python)",
     runtime: "python",
-    description: "Hugging Face-style UI template with FastAPI backend",
+    description: "AI Platform-style UI template with FastAPI backend",
     port: 7860,
     healthEndpoint: "/health"
   },
@@ -165,7 +165,7 @@ Complete user guide covering:
 2. **Core Concepts** - Models vs Agents vs Spaces, architecture diagrams
 3. **Model Registration** - Manual and CLI methods
 4. **Agent Space Deployment** - Quick and full deployment examples
-5. **Git Workflow Integration** - Like Hugging Face Spaces
+5. **Git Workflow Integration** - Like AI Platform Spaces
    - Git hooks
    - GitHub Actions examples
    - Environment variables
@@ -187,10 +187,10 @@ Complete user guide covering:
 
 ## Key Features Implemented
 
-### 1. Hugging Face-like Workflow
+### 1. AI Platform-like Workflow
 
 ```bash
-# Just like push_to_hub
+# Just like push_to_coreed
 push-to-coreed
 
 # Or with options
@@ -217,7 +217,7 @@ push-to-coreed --git-commit
 
 ### 4. Gradio Templates
 
-- Hugging Face-style UI
+- AI Platform-style UI
 - Chat and Predict interfaces
 - FastAPI backend
 - Health endpoint
@@ -305,7 +305,7 @@ coreed/
 │  │                    AGENT SPACES                               │ │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐     │ │
 │  │  │  Gradio     │  │  FastAPI    │  │   Express       │     │ │
-│  │  │  (Hugging   │  │  Template   │  │   Template      │     │ │
+│  │  │             │  │  Template   │  │                 │     │ │
 │  │  │   Face)     │  │             │  │                 │     │ │
 │  │  └─────────────┘  └─────────────┘  └─────────────────┘     │ │
 │  └─────────────────────────────────────────────────────────────┘ │
@@ -660,13 +660,13 @@ GRADIO_SERVER_NAME=0.0.0.0
 
 ---
 
-## Comparison with Hugging Face
+## Comparison with AI Platform
 
-| Feature | Hugging Face | Coreed |
+| Feature | AI Platform | Coreed |
 |---------|-------------|--------|
 | **Model Registry** | ✅ | ✅ (ModelRegistry) |
 | **Space Deployment** | ✅ | ✅ (AgentSpaceRegistry) |
-| **push_to_hub** | ✅ | ✅ (push_to_coreed) |
+| **push_to_coreed** | ✅ | ✅ (push_to_coreed) |
 | **Git Integration** | ✅ | ✅ |
 | **Docker Support** | ✅ | ✅ |
 | **Web UI Templates** | ✅ (Gradio) | ✅ (Gradio) |
@@ -684,8 +684,8 @@ GRADIO_SERVER_NAME=0.0.0.0
 
 **Phase 3: Agent Spaces is COMPLETE!**
 
-✅ **push_to_coreed CLI** - Hugging Face-like deployment workflow
-✅ **Gradio Templates** - Hugging Face-style UI on 0G Chain  
+✅ **push_to_coreed CLI** - AI Platform-like deployment workflow
+✅ **Gradio Templates** - AI Platform-style UI on 0G Chain  
 ✅ **0G Compute Integration** - Spaces run on decentralized GPUs
 ✅ **Git Workflow** - Auto-commit, auto-push, GitHub Actions
 ✅ **Comprehensive Documentation** - 300+ line user guide
@@ -693,7 +693,7 @@ GRADIO_SERVER_NAME=0.0.0.0
 ✅ **TypeScript Support** - Frontend types updated
 ✅ **Health Monitoring** - Automatic health checks every 30s
 
-**Coreed v3.0 is now a complete, production-ready Hugging Face alternative on 0G Chain!** 🚀
+**Coreed v3.0 is now a complete, production-ready AI Platform alternative on 0G Chain!** 🚀
 
 ---
 

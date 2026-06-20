@@ -1,8 +1,8 @@
 # Coreed v3.0
 
-**Hugging Face for 0G Chain** 
+**AI Deployment Platform for 0G Chain** 
 
-Coreed is a complete Web3 AI agent launchpad built on the 0G Modular Infrastructure Stack. It provides a Hugging Face-like experience for deploying, managing, and discovering AI models and live agent spaces, all on decentralized infrastructure.
+Coreed is a complete Web3 AI agent launchpad built on the 0G Modular Infrastructure Stack. It provides an AI deployment experience for deploying, managing, and discovering AI models and live agent spaces, all on decentralized infrastructure.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -27,8 +27,8 @@ Coreed is a complete Web3 AI agent launchpad built on the 0G Modular Infrastruct
 │  │                    AGENT SPACES                               │ │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐     │ │
 │  │  │  Gradio     │  │  FastAPI    │  │   Express       │     │ │
-│  │  │  (Hugging   │  │  Template   │  │   Template      │     │ │
-│  │  │   Face)     │  │             │  │                 │     │ │
+│  │  │             │  │  Template   │  │                 │     │ │
+│  │  │             │  │             │  │                 │     │ │
 │  │  └─────────────┘  └─────────────┘  └─────────────────┘     │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 │                                                                  │
@@ -235,7 +235,7 @@ coreed/
 │   └── public/
 │
 ├── templates/               # Agent Space Templates
-│   ├── gradio/              # Hugging Face-style (RECOMMENDED)
+│   ├── gradio/              # Interactive (RECOMMENDED)
 │   │   ├── app.py
 │   │   ├── Dockerfile
 │   │   └── requirements.txt
@@ -340,7 +340,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
-**Coreed v3.0: Hugging Face for 0G Chain** 
+**Coreed v3.0: AI Deployment Platform for 0G Chain** 
 
 *Built on 0G Chain*
 

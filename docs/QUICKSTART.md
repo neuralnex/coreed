@@ -306,7 +306,7 @@ npx hardhat run scripts/check-health.js --network galileo --space-id 1
 
 ---
 
-## 🔄 Git Workflow (Like Hugging Face)
+## 🔄 Git Workflow (Like AI Platform)
 
 ### Auto-Commit & Push
 
@@ -460,6 +460,6 @@ python -c "import os; print(os.getenv('MODEL_PATH'))"
 
 ---
 
-**Coreed: Hugging Face for the 0G Chain** 🚀
+**Coreed: AI Platform for the 0G Chain** 🚀
 
 *Built with ❤️ on 0G*

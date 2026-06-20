@@ -1,8 +1,8 @@
 # Gradio Template
 
-**Hugging Face-style UI for Coreed Agent Spaces**
+**Interactive UI for Coreed Agent Spaces**
 
-This template provides a Gradio-based interface for your AI model, similar to Hugging Face Spaces.
+This template provides a Gradio-based interface for your AI model, similar to AI deployment platforms.
 
 ---
 

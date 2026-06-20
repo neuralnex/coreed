@@ -92,7 +92,7 @@ export const SPACE_TEMPLATES: Record<string, SpaceTemplate> = {
   gradio: {
     name: "Gradio (Python)",
     runtime: "python",
-    description: "Hugging Face-style UI template with FastAPI backend",
+    description: "AI deployment UI template with FastAPI backend",
     port: 7860,
     healthEndpoint: "/health"
   },

@@ -1,6 +1,6 @@
 # Coreed User Guide - Phase 3 (Agent Spaces)
 
-**Coreed v3.0: Hugging Face for the 0G Chain**
+**Coreed v3.0: AI Platform for the 0G Chain**
 
 This comprehensive guide covers everything you need to know to use Coreed like a pro - from model registration to live deployment on 0G Compute.
 
@@ -75,9 +75,9 @@ This will:
 
 | Concept | Description | Analogy |
 |---------|-------------|---------|
-| **Model** | AI model files (gguf, safetensors, etc.) stored on 0G Storage | Hugging Face Model |
+| **Model** | AI model files (gguf, safetensors, etc.) stored on 0G Storage | AI Platform Model |
 | **Agent** | Registered entity on AgentRegistry (v1) | - |
-| **Space** | Live deployment with an endpoint | Hugging Face Space |
+| **Space** | Live deployment with an endpoint | AI Platform Space |
 
 ### Architecture
 
@@ -200,9 +200,9 @@ push-to-coreed --model-path models/my-model.gguf \
 - `text-to-speech` - Generate speech
 - `automatic-speech-recognition` - Transcribe speech
 
-### Loading Models from Coreed (Like Hugging Face)
+### Loading Models from Coreed (Like AI Platform)
 
-Just like Hugging Face's `from transformers import AutoModelForCausalLM`, you can load Coreed models using standard AI libraries. Coreed provides the **modelId** and **storageRootHash** for identification.
+Just like AI Platform's `from transformers import AutoModelForCausalLM`, you can load Coreed models using standard AI libraries. Coreed provides the **modelId** and **storageRootHash** for identification.
 
 #### Python - Transformers (Recommended)
 
@@ -414,7 +414,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from coreed_cli import get_model_from_registry, download_model_from_storage
 
 class CoreedModelLoader:
-    """Load models from Coreed by ID, like Hugging Face Hub"""
+    """Load models from Coreed by ID, like AI Platform Hub"""
     
     def __init__(self, cache_dir="models"):
         self.cache_dir = cache_dir
@@ -454,7 +454,7 @@ print(result)
 
 **Model Provider Integration:**
 ```python
-# Like Hugging Face's model hub, Coreed tracks providers
+# Like AI Platform's model hub, Coreed tracks providers
 # You can filter models by provider
 
 from coreed_cli import get_models_by_provider
@@ -706,9 +706,9 @@ const { isAsleep, sleepTimeout, timeUntilSleep } = await getSleepStatus(spaceId)
 
 ## 5. Git Workflow Integration
 
-### Like Hugging Face Spaces
+### Like AI Platform Spaces
 
-Coreed's `push_to_coreed` mirrors Hugging Face's `push_to_hub` workflow:
+Coreed's `push_to_coreed` mirrors AI Platform's `push_to_coreed` workflow:
 
 ```bash
 # Make changes to your model or code
@@ -2609,13 +2609,13 @@ def switch(endpoint: str):
     return {"error": "Invalid environment"}, 400
 ```
 
-### Migration from Hugging Face
+### Migration from AI Platform
 
-**If you're migrating from Hugging Face Spaces:**
+**If you're migrating from AI Platform Spaces:**
 
-| Hugging Face | Coreed Equivalent |
+| AI Platform | Coreed Equivalent |
 |--------------|-------------------|
-| `push_to_hub` | `push-to-coreed` |
+| `push_to_coreed` | `push-to-coreed` |
 | Model Hub | ModelRegistry + 0G Storage |
 | Spaces | AgentSpaceRegistry + 0G Compute |
 | `.gitignore` | Same |
@@ -2625,12 +2625,12 @@ def switch(endpoint: str):
 
 **Migration Steps:**
 
-1. **Export your model from Hugging Face:**
+1. **Export your model from AI Platform:**
 ```bash
-# Download from Hugging Face
+# Download from AI Platform
 git lfs install
-git clone https://huggingface.co/username/model-name
-huggingface-cli download username/model-name --local-dir models/
+git clone https://coreed.ai/username/model-name
+coreed-cli download username/model-name --local-dir models/
 ```
 
 2. **Upload to 0G Storage:**
@@ -2640,7 +2640,7 @@ push-to-coreed --model-path models/ --register-only
 
 3. **Deploy to Coreed:**
 ```bash
-# Use the same template as Hugging Face
+# Use the same template as AI Platform
 push-to-coreed \
   --model-id 1 \
   --space-name "My Migrated Space" \
@@ -2655,7 +2655,7 @@ push-to-coreed \
 
 **Example: Migrating a Gradio Space**
 
-Hugging Face `app.py`:
+AI Platform `app.py`:
 ```python
 import gradio as gr
 

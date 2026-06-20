@@ -1,5 +1,5 @@
 # Coreed User Guide - Complete Reference
-# "Hugging Face for 0G Chain"
+# "AI Platform for 0G Chain"
 
 **The definitive guide to building, deploying, and sharing AI on Coreed**
 
@@ -25,7 +25,7 @@
 11. [Health Monitoring](#11-health-monitoring)
 
 ### 🏗️ Templates & Customization
-12. [Gradio Template (Hugging Face-style)](#12-gradio-template-hugging-face-style)
+12. [Gradio Template (Interactive)](#12-gradio-template-interactive)
 13. [FastAPI Template](#13-fastapi-template)
 14. [Express Template](#14-express-template)
 15. [Docker Template](#15-docker-template)
@@ -39,7 +39,7 @@
 
 # 🎯 Platform Guide (Interface Level)
 
-This section covers using Coreed at the interface level, similar to Hugging Face's web UI.
+This section covers using Coreed at the interface level, similar to AI Platform's web UI.
 
 ---
 
@@ -113,7 +113,7 @@ python -m cli.coreed_cli --help
 
 ### Core Sections
 
-| Section | Description | Hugging Face Equivalent |
+| Section | Description | AI Platform Equivalent |
 |---------|-------------|-------------------------|
 | **Models** | Browse registered AI models | Models Hub |
 | **Spaces** | Browse live deployments | Spaces |
@@ -338,7 +338,7 @@ model = AutoModelForCausalLM.from_pretrained("./models/my-model.gguf")
 
 ## 6. CLI Level: push_to_coreed Command
 
-The `push-to-coreed` CLI mirrors Hugging Face's `push_to_hub` but with blockchain superpowers.
+The `push-to-coreed` CLI mirrors AI Platform's `push_to_coreed` but with blockchain superpowers.
 
 ### Installation
 
@@ -552,7 +552,7 @@ const model = await getModel(1);
 
 ## 8. Git Workflow Integration
 
-Like Hugging Face, Coreed supports git-based workflows.
+Like AI Platform, Coreed supports git-based workflows.
 
 ### Auto-Commit & Push
 
@@ -799,7 +799,7 @@ app.get('/health', (req, res) => {
 
 ---
 
-## 12. Gradio Template (Hugging Face-style)
+## 12. Gradio Template (AI Platform-style)
 
 **Best for:** Interactive web UIs, chatbots, demos
 
@@ -991,7 +991,7 @@ npx hardhat compile  # Compile contracts first
 
 ---
 
-**Coreed: Hugging Face for 0G Chain** 🚀
+**Coreed: AI Platform for 0G Chain** 🚀
 
 *Built with ❤️ on 0G*
 *Last updated: June 2026*

@@ -2,7 +2,7 @@
 Coreed CLI - Main implementation
 
 This module implements the push_to_coreed functionality that mirrors
-Hugging Face's push_to_hub workflow.
+Coreed push_to_coreed workflow.
 """
 
 import os

@@ -1,6 +1,6 @@
 # Coreed v2.0 - Model Hub
 
-**Coreed v2.0 transforms the platform from a simple agent registry into a full Model Hub on 0G Chain** — think "Hugging Face meets decentralized storage".
+**Coreed v2.0 transforms the platform from a simple agent registry into a full Model Hub on 0G Chain** — think "AI Platform meets decentralized storage".
 
 ## What's New in v2.0
 
@@ -410,4 +410,4 @@ MIT License - See LICENSE file for details.
 
 ---
 
-**Coreed v2.0: Hugging Face for the 0G Chain** 🚀
+**Coreed v2.0: AI Platform for the 0G Chain** 🚀

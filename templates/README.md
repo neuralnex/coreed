@@ -19,7 +19,7 @@ Starter templates for deploying AI agents as live services (Agent Spaces) on Cor
 
 ### Choose a Template
 
-- **Python with UI**: Use Gradio (Hugging Face-style interface)
+- **Python with UI**: Use Gradio (Interactive interface)
 - **Python API**: Use FastAPI
 - **Node.js**: Use Express
 - **Custom**: Use Docker

@@ -309,7 +309,7 @@ AgentSpaceRegistry: 0xedF4958de1e22979EaE3dec3ECb84C4D63cA510A
 
 ---
 
-**Coreed v3.0: Hugging Face for 0G Chain** 
+**Coreed v3.0: AI Deployment Platform for 0G Chain** 
 
 *All requested tasks completed!* 
 *Last updated: June 19, 2026*

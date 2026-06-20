@@ -1,7 +1,7 @@
 """
 Coreed Agent Space - Gradio Template
 
-This template creates a Gradio interface for your AI model, similar to Hugging Face Spaces.
+This template creates a Gradio interface for your AI model, similar to AI deployment platforms.
 It includes:
 - Health check endpoint (/health) for Coreed Space Registry
 - Gradio web UI at the root path
