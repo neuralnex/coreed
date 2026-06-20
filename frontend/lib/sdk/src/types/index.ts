@@ -20,7 +20,9 @@ export interface ModelMetadata {
 export interface SpaceConfig {
   name: string;
   description?: string;
+  version?: string;
   modelId?: number | string;
+  endpointUrl?: string;
   template?: string;
   autoSleep?: boolean;
   sleepTimeout?: number; // seconds
