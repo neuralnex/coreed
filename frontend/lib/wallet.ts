@@ -2,16 +2,23 @@
 
 import { BrowserProvider, JsonRpcSigner } from "ethers";
 
+import type { Eip1193Provider } from "ethers";
+
+interface ExtendedEip1193Provider extends Eip1193Provider {
+  isMetaMask?: boolean;
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on: (event: string, handler: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
+}
+
 declare global {
   interface Window {
-    ethereum?: import("ethers").Eip1193Provider & {
-      isMetaMask?: boolean;
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-    };
+    ethereum?: ExtendedEip1193Provider;
   }
 }
 
 export const GALILEO_CHAIN_ID = 16602;
+export type { ExtendedEip1193Provider };
 export const GALILEO_CHAIN_ID_HEX = "0x" + GALILEO_CHAIN_ID.toString(16);
 export const GALILEO_RPC_URL = "https://evmrpc-testnet.0g.ai";
 export const GALILEO_EXPLORER_URL = "https://chainscan-galileo.0g.ai";

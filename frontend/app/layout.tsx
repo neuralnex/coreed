@@ -6,6 +6,8 @@ import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "./globals.css";
+import { WalletProvider } from "@/lib/contexts/WalletContext";
+import { Navbar } from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "Coreed — Agent Launchpad on 0G",
@@ -21,7 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className="min-h-full flex flex-col bg-coreed-void text-coreed-bone antialiased">
-        {children}
+        <WalletProvider>
+          <Navbar />
+          <main className="flex-grow">{children}</main>
+        </WalletProvider>
       </body>
     </html>
   );
