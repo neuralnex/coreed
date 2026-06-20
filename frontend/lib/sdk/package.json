@@ -1,0 +1,43 @@
+{
+  "name": "@coreed/sdk",
+  "version": "3.0.0",
+  "description": "Coreed JavaScript SDK - AI Deployment Platform for 0G Chain",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ai",
+    "0g",
+    "blockchain",
+    "coreed",
+    "deployment",
+    "model-registry",
+    "space-registry"
+  ],
+  "author": "Coreed Team",
+  "license": "MIT",
+  "homepage": "https://coreed.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/coreed/coreed"
+  },
+  "dependencies": {
+    "ethers": "^6.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
