@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Contract, JsonRpcProvider, type JsonRpcSigner } from "ethers";
 import agentSpaceRegistryAbi from "./agentSpaceRegistryAbi.json";
 import { GALILEO_RPC_URL } from "./wallet";
-import type { AgentSpace, SpaceMeta, DeploySpaceResult, HealthCheck, SpaceHealthStatus } from "@/types/space";
+import type { AgentSpace, SpaceMeta, DeploySpaceResult, HealthCheck, SpaceHealthStatus, SleepConfig } from "@/types/space";
 
 const AGENT_SPACE_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_SPACE_REGISTRY_ADDRESS ?? "";
 
