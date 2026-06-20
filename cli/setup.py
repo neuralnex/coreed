@@ -11,8 +11,8 @@ with open("requirements.txt", "r") as f:
     requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
 setup(
-    name="coreed-cli",
-    version="1.0.0",
+    name="coreed-cli-v3",
+    version="3.0.0",
     description="Push to Coreed - Deploy AI models and agents to Coreed on 0G Chain",
     author="Coreed Team",
     author_email="team@coreed.ai",
