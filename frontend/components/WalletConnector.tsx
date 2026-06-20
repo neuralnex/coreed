@@ -53,15 +53,22 @@ const WALLET_OPTIONS: WalletOption[] = [
     available: () => {
       if (typeof window === "undefined") return false;
       const ethereum = window.ethereum;
-      if (!ethereum) return false;
+      // Check both the injected provider and the mobile global
       return Boolean(
-        (ethereum as { isOkxWallet?: boolean }).isOkxWallet ||
-        (ethereum as { isOKX?: boolean }).isOKX
+        ethereum?.isOkxWallet ||
+        ethereum?.isOKX ||
+        window.okxwallet
       );
     },
     connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+      if (typeof window !== "undefined") {
+        // Try the injected provider first
+        if (window.ethereum) {
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+        } else if (window.okxwallet) {
+          // Use the mobile global if available
+          await (window.okxwallet as any).request({ method: "eth_requestAccounts" });
+        }
       }
     }
   },
@@ -70,10 +77,20 @@ const WALLET_OPTIONS: WalletOption[] = [
     name: "WalletConnect",
     icon: "🔗",
     description: "Connect mobile wallets via QR code",
-    available: () => true,
+    available: () => {
+      if (typeof window === "undefined") return false;
+      // WalletConnect is available if we have the injected provider or the global
+      return Boolean(window.ethereum || window.WalletConnect);
+    },
     connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+      if (typeof window !== "undefined") {
+        // WalletConnect typically injects into window.ethereum when active
+        if (window.ethereum) {
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+        } else if (window.WalletConnect) {
+          // Initialize WalletConnect if available
+          await (window.WalletConnect as any).connect();
+        }
       }
     }
   },
@@ -119,12 +136,26 @@ const WALLET_OPTIONS: WalletOption[] = [
     available: () => {
       if (typeof window === "undefined") return false;
       const ethereum = window.ethereum;
-      if (!ethereum) return false;
-      return Boolean((ethereum as { isTrust?: boolean }).isTrust);
+      // Check both the injected provider and mobile globals
+      return Boolean(
+        ethereum?.isTrust ||
+        ethereum?.isTrustWallet ||
+        window.Trust ||
+        window.trustwallet
+      );
     },
     connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+      if (typeof window !== "undefined") {
+        // Try the injected provider first
+        if (window.ethereum) {
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+        } else if (window.Trust) {
+          // Use Trust Wallet mobile global
+          await (window.Trust as any).request({ method: "eth_requestAccounts" });
+        } else if (window.trustwallet) {
+          // Use trustwallet global
+          await (window.trustwallet as any).request({ method: "eth_requestAccounts" });
+        }
       }
     }
   },
@@ -189,6 +220,13 @@ interface WalletConnectorProps {
   onConnect: (walletId: string) => void;
 }
 
+function isMobileDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent || ""
+  );
+}
+
 export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
   const { hasWallet } = useWalletContext();
   const [isConnecting, setIsConnecting] = useState<string | null>(null);
@@ -229,8 +267,16 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
         </div>
 
         <p className="text-coreed-sage/70 text-sm mb-6">
-          Choose a wallet to connect to Coreed. We support all EIP-1193 compatible EVM wallets including OKX.
+          Choose a wallet to connect to Coreed. We support all EIP-1193 compatible EVM wallets including OKX, Trust Wallet, and MetaMask Mobile.
         </p>
+        {isMobileDevice() && (
+          <div className="mb-4 p-3 bg-coreed-moss/10 border border-coreed-moss/30 rounded-md">
+            <p className="text-coreed-moss-bright text-sm">
+              📱 On mobile? We support OKX Wallet, Trust Wallet, and MetaMask Mobile. 
+              Make sure your wallet's browser is connected.
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded-md">
@@ -273,16 +319,43 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
         {!hasWallet && availableWallets.length === 0 && (
           <div className="mt-6 p-4 bg-coreed-panel-raised border border-coreed-line/30 rounded-lg">
             <p className="text-coreed-sage text-sm mb-3">
-              No Web3 wallet detected. Please install a wallet extension.
+              No Web3 wallet detected. Please install a wallet.
             </p>
-            <a
-              href="https://metamask.io/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-coreed-moss-bright hover:text-coreed-moss text-sm font-medium"
-            >
-              Install MetaMask →
-            </a>
+            {isMobileDevice() ? (
+              <p className="text-coreed-sage/70 text-xs mb-3">
+                On mobile, we recommend OKX Wallet, Trust Wallet, or MetaMask Mobile
+              </p>
+            ) : (
+              <p className="text-coreed-sage/70 text-xs mb-3">
+                On desktop, we recommend MetaMask, OKX Wallet, or Coinbase Wallet
+              </p>
+            )}
+            <div className="flex gap-3">
+              <a
+                href="https://www.okx.com/web3" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-coreed-moss-bright hover:text-coreed-moss text-sm font-medium"
+              >
+                OKX Wallet →
+              </a>
+              <a
+                href="https://metamask.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-coreed-moss-bright hover:text-coreed-moss text-sm font-medium"
+              >
+                MetaMask →
+              </a>
+              <a
+                href="https://trustwallet.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-coreed-moss-bright hover:text-coreed-moss text-sm font-medium"
+              >
+                Trust Wallet →
+              </a>
+            </div>
           </div>
         )}
 

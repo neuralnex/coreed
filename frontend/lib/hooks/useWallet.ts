@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { BrowserProvider, JsonRpcSigner } from "ethers";
-import { GALILEO_CHAIN_ID_HEX, GALILEO_RPC_URL } from "../wallet";
+import { 
+  DEFAULT_CHAIN_ID_HEX, 
+  DEFAULT_RPC_URL,
+  DEFAULT_EXPLORER_URL,
+  GALILEO_CHAIN_ID_HEX 
+} from "../wallet";
 import type { ExtendedEip1193Provider } from "../wallet";
 
 interface WalletState {
@@ -15,6 +20,43 @@ interface WalletState {
 }
 
 const WALLET_STORAGE_KEY = "coreed_wallet_connected";
+
+/**
+ * Gets the appropriate wallet provider, handling both desktop and mobile wallets
+ * Mobile wallets may inject their provider in different ways
+ */
+async function getWalletProvider(): Promise<ExtendedEip1193Provider | null> {
+  if (typeof window === "undefined") return null;
+  
+  // Standard EIP-1193 provider
+  if (window.ethereum) {
+    return window.ethereum as ExtendedEip1193Provider;
+  }
+  
+  // OKX Wallet Mobile - may inject as window.okxwallet
+  if (window.okxwallet) {
+    // OKX wallet typically provides an EIP-1193 compatible interface
+    return window.okxwallet as unknown as ExtendedEip1193Provider;
+  }
+  
+  // Trust Wallet Mobile - may inject as window.Trust or window.trustwallet
+  if (window.Trust) {
+    return window.Trust as unknown as ExtendedEip1193Provider;
+  }
+  
+  if (window.trustwallet) {
+    return window.trustwallet as unknown as ExtendedEip1193Provider;
+  }
+  
+  // WalletConnect - may be available but typically uses window.ethereum
+  if (window.WalletConnect) {
+    // WalletConnect usually injects into window.ethereum
+    // If not, we need to initialize it properly
+    return null; // WalletConnect should use standard ethereum provider
+  }
+  
+  return null;
+}
 
 export function useWallet() {
   const [state, setState] = useState<WalletState>({
@@ -29,20 +71,41 @@ export function useWallet() {
   // Check localStorage for previous connection on mount
   useEffect(() => {
     const wasConnected = localStorage.getItem(WALLET_STORAGE_KEY) === "true";
-    if (wasConnected && typeof window !== "undefined" && window.ethereum) {
+    if (wasConnected && typeof window !== "undefined" && checkWalletAvailable()) {
       handleReconnect();
     }
   }, []);
 
+  // Enhanced wallet detection for mobile and desktop
+  const checkWalletAvailable = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    
+    // Standard EIP-1193 check
+    if (window.ethereum) return true;
+    
+    // Mobile-specific checks
+    // OKX Wallet Mobile - checks both the global and the injected provider
+    if (window.okxwallet || (window.ethereum as ExtendedEip1193Provider)?.isOkxWallet || (window.ethereum as ExtendedEip1193Provider)?.isOKX) return true;
+    
+    // WalletConnect mobile (injected by WalletConnect SDK)
+    if (window.WalletConnect) return true;
+    
+    // Trust Wallet Mobile - checks both global and injected provider
+    if (window.Trust || window.trustwallet || (window.ethereum as ExtendedEip1193Provider)?.isTrust || (window.ethereum as ExtendedEip1193Provider)?.isTrustWallet) return true;
+    
+    return false;
+  }, []);
+
   const handleReconnect = useCallback(async () => {
-    if (!window.ethereum) {
+    const providerInstance = await getWalletProvider();
+    if (!providerInstance) {
       localStorage.removeItem(WALLET_STORAGE_KEY);
       setState(prev => ({ ...prev, isConnecting: false, error: null }));
       return;
     }
 
     try {
-      const provider = new BrowserProvider(window.ethereum);
+      const provider = new BrowserProvider(providerInstance);
       
       // Try to get accounts without prompting
       const accounts = await provider.send("eth_accounts", []);
@@ -52,7 +115,7 @@ export function useWallet() {
         const address = await signer.getAddress();
         
         // Verify we're on the correct network
-        await ensureGalileoNetwork(provider);
+        await ensure0GNetwork(provider);
         
         setState({
           address,
@@ -71,7 +134,7 @@ export function useWallet() {
   }, []);
 
   const connect = useCallback(async () => {
-    if (typeof window === "undefined" || !window.ethereum) {
+    if (typeof window === "undefined") {
       setState(prev => ({
         ...prev,
         error: new Error("No Ethereum wallet detected. Install MetaMask or another EIP-1193 wallet."),
@@ -83,21 +146,23 @@ export function useWallet() {
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      if (!window.ethereum) {
+      // Get the provider, handling mobile wallets
+      const provider = await getWalletProvider();
+      if (!provider) {
         throw new Error("No Ethereum wallet detected");
       }
       
-      const provider = new BrowserProvider(window.ethereum);
+      const browserProvider = new BrowserProvider(provider);
       
       // Request accounts (this will prompt the user)
-      const accounts = await provider.send("eth_requestAccounts", []);
+      const accounts = await browserProvider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
-        const signer = await provider.getSigner();
+        const signer = await browserProvider.getSigner();
         const address = await signer.getAddress();
         
-        // Ensure we're on Galileo network
-        await ensureGalileoNetwork(provider);
+        // Ensure we're on 0G network
+        await ensure0GNetwork(browserProvider);
         
         // Save connection state to localStorage
         localStorage.setItem(WALLET_STORAGE_KEY, "true");
@@ -105,7 +170,7 @@ export function useWallet() {
         setState({
           address,
           signer,
-          provider,
+          provider: browserProvider,
           isConnected: true,
           isConnecting: false,
           error: null,
@@ -141,7 +206,11 @@ export function useWallet() {
 
   // Listen for account changes
   useEffect(() => {
-    if (typeof window === "undefined" || !window.ethereum) return;
+    if (typeof window === "undefined") return;
+
+    // Get the current provider instance to listen to
+    const providerInstance = window.ethereum as ExtendedEip1193Provider | undefined;
+    if (!providerInstance) return;
 
     const handleAccountsChanged = (...args: unknown[]) => {
       const accounts = args[0] as unknown[];
@@ -157,13 +226,13 @@ export function useWallet() {
       disconnect();
     };
 
-    window.ethereum.on("accountsChanged", handleAccountsChanged);
-    window.ethereum.on("chainChanged", handleChainChanged);
+    providerInstance.on("accountsChanged", handleAccountsChanged);
+    providerInstance.on("chainChanged", handleChainChanged);
 
     return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
-        window.ethereum.removeListener("chainChanged", handleChainChanged);
+      if (providerInstance) {
+        providerInstance.removeListener("accountsChanged", handleAccountsChanged);
+        providerInstance.removeListener("chainChanged", handleChainChanged);
       }
     };
   }, [disconnect, handleReconnect]);
@@ -172,30 +241,31 @@ export function useWallet() {
     ...state,
     connect,
     disconnect,
-    hasWallet: typeof window !== "undefined" && Boolean(window.ethereum),
+    hasWallet: typeof window !== "undefined" && checkWalletAvailable(),
   };
 }
 
-async function ensureGalileoNetwork(provider: BrowserProvider): Promise<void> {
+async function ensure0GNetwork(provider: BrowserProvider): Promise<void> {
   if (!window.ethereum) return;
 
   try {
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: GALILEO_CHAIN_ID_HEX }],
+      params: [{ chainId: DEFAULT_CHAIN_ID_HEX }],
     });
   } catch (switchError: unknown) {
     const err = switchError as { code?: number };
     if (err?.code === 4902) {
+      // Chain not added, add it
       await window.ethereum.request({
         method: "wallet_addEthereumChain",
         params: [
           {
-            chainId: GALILEO_CHAIN_ID_HEX,
-            chainName: "0G Galileo Testnet",
+            chainId: DEFAULT_CHAIN_ID_HEX,
+            chainName: DEFAULT_CHAIN_ID_HEX === GALILEO_CHAIN_ID_HEX ? "0G Galileo Testnet" : "0G Mainnet",
             nativeCurrency: { name: "OG", symbol: "OG", decimals: 18 },
-            rpcUrls: [GALILEO_RPC_URL],
-            blockExplorerUrls: ["https://chainscan-galileo.0g.ai"],
+            rpcUrls: [DEFAULT_RPC_URL],
+            blockExplorerUrls: [DEFAULT_EXPLORER_URL],
           },
         ],
       });

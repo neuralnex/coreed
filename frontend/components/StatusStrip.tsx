@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { connectWallet, hasInjectedWallet, GALILEO_CHAIN_ID } from "@/lib/wallet";
+import { connectWallet, hasInjectedWallet, DEFAULT_CHAIN_ID } from "@/lib/wallet";
 import type { JsonRpcSigner } from "ethers";
 
 interface StatusStripProps {
@@ -41,7 +41,7 @@ export function StatusStrip({ onConnect, address }: StatusStripProps) {
           <span className="h-3 w-px bg-coreed-line" aria-hidden />
           <span className="flex items-center gap-1.5 font-mono text-xs text-coreed-sage">
             <span className="h-1.5 w-1.5 rounded-full bg-coreed-moss-bright" aria-hidden />
-            0G Galileo · {GALILEO_CHAIN_ID}
+            0G Galileo · {DEFAULT_CHAIN_ID}
           </span>
         </div>
 

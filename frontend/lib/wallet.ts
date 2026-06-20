@@ -6,6 +6,15 @@ import type { Eip1193Provider } from "ethers";
 
 interface ExtendedEip1193Provider extends Eip1193Provider {
   isMetaMask?: boolean;
+  isOkxWallet?: boolean;
+  isOKX?: boolean;
+  isTrust?: boolean;
+  isTrustWallet?: boolean;
+  isCoinbaseWallet?: boolean;
+  isRabby?: boolean;
+  isBraveWallet?: boolean;
+  isLedgerLive?: boolean;
+  isImToken?: boolean;
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
   on: (event: string, handler: (...args: unknown[]) => void) => void;
   removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
@@ -14,14 +23,35 @@ interface ExtendedEip1193Provider extends Eip1193Provider {
 declare global {
   interface Window {
     ethereum?: ExtendedEip1193Provider;
+    okxwallet?: any;
+    WalletConnect?: any;
+    Trust?: any;
+    trustwallet?: any;
   }
 }
 
+// 0G Network Configurations
 export const GALILEO_CHAIN_ID = 16602;
+export const ARISTOTLE_CHAIN_ID = 16661;
+
 export type { ExtendedEip1193Provider };
+
 export const GALILEO_CHAIN_ID_HEX = "0x" + GALILEO_CHAIN_ID.toString(16);
+export const ARISTOTLE_CHAIN_ID_HEX = "0x" + ARISTOTLE_CHAIN_ID.toString(16);
+
+// Testnet (Galileo)
 export const GALILEO_RPC_URL = "https://evmrpc-testnet.0g.ai";
 export const GALILEO_EXPLORER_URL = "https://chainscan-galileo.0g.ai";
+
+// Mainnet (Aristotle)
+export const ARISTOTLE_RPC_URL = "https://evmrpc.0g.ai";
+export const ARISTOTLE_EXPLORER_URL = "https://chainscan.0g.ai";
+
+// Default to testnet for development
+export const DEFAULT_CHAIN_ID = GALILEO_CHAIN_ID;
+export const DEFAULT_RPC_URL = GALILEO_RPC_URL;
+export const DEFAULT_EXPLORER_URL = GALILEO_EXPLORER_URL;
+export const DEFAULT_CHAIN_ID_HEX = GALILEO_CHAIN_ID_HEX;
 
 export const AGENT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS ?? "";
 
