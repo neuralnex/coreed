@@ -1,315 +1,351 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { StatusStrip } from "@/components/StatusStrip";
-import { ResolvingHash } from "@/components/ResolvingHash";
+import { useWalletContext } from "@/lib/contexts/WalletContext";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentRegistry } from "@/lib/useAgentRegistry";
 import { GALILEO_EXPLORER_URL } from "@/lib/wallet";
 import type { ModelMeta } from "@/types/model";
-import type { JsonRpcSigner } from "ethers";
 
 export default function ModelDetailPage() {
   const params = useParams();
   const router = useRouter();
   const modelId = params.id as string;
-  const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [address, setAddress] = useState<string | null>(null);
+  const { address, isConnected, signer } = useWalletContext();
+  
   const [model, setModel] = useState<ModelMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [isCreator, setIsCreator] = useState(false);
+  const [deploying, setDeploying] = useState(false);
 
   const { getModel, likeModel, unlikeModel, checkLike, recordDownload, error } = useModelRegistry();
   const { launchAgent } = useAgentRegistry();
 
-  useEffect(() => {
-    const fetchModel = async () => {
-      try {
-        setLoading(true);
-        const modelData = await getModel(modelId);
-        setModel(modelData);
-        setLikeCount(Number(modelData.likeCount));
-        
-        if (address) {
-          const hasLiked = await checkLike(modelId, address);
-          setLiked(hasLiked);
-        }
-        
-        if (modelData.creator.toLowerCase() === address?.toLowerCase()) {
-          setIsCreator(true);
-        }
-      } catch (err) {
-        console.error("Failed to fetch model:", err);
-        router.push("/hub/search");
-      } finally {
-        setLoading(false);
+  const fetchModel = useCallback(async () => {
+    try {
+      setLoading(true);
+      const modelData = await getModel(modelId);
+      setModel(modelData);
+      setLikeCount(Number(modelData.likeCount));
+      
+      if (address) {
+        const hasLiked = await checkLike(modelId, address);
+        setLiked(hasLiked);
       }
-    };
+      
+      if (modelData.creator.toLowerCase() === address?.toLowerCase()) {
+        setIsCreator(true);
+      }
+    } catch (err) {
+      console.error("Failed to fetch model:", err);
+      router.push("/hub/search");
+    } finally {
+      setLoading(false);
+    }
+  }, [modelId, address, getModel, checkLike, router]);
+
+  useEffect(() => {
     fetchModel();
-  }, [modelId, getModel, checkLike, address]);
+  }, [fetchModel]);
+
+  useEffect(() => {
+    if (address) {
+      checkLike(modelId, address).then(setLiked);
+      fetchModel();
+    }
+  }, [address, modelId, checkLike, fetchModel]);
 
   const handleLike = async () => {
     if (!signer || !model) return;
     
     try {
       if (liked) {
-        await unlikeModel(model.modelId, signer);
+        await unlikeModel(modelId, signer);
         setLiked(false);
-        setLikeCount(likeCount - 1);
+        setLikeCount(prev => prev - 1);
       } else {
-        await likeModel(model.modelId, signer);
+        await likeModel(modelId, signer);
         setLiked(true);
-        setLikeCount(likeCount + 1);
+        setLikeCount(prev => prev + 1);
       }
     } catch (err) {
-      console.error("Like failed:", err);
+      console.error("Failed to toggle like:", err);
     }
   };
 
   const handleDownload = async () => {
-    if (!model) return;
-    
-    try {
-      await recordDownload(model.modelId);
-      setModel({ ...model, downloadCount: model.downloadCount + 1 });
-    } catch (err) {
-      console.error("Download record failed:", err);
-    }
-  };
-
-  const handleLaunchAgent = async () => {
     if (!signer || !model) return;
     
     try {
-      const { agentId } = await launchAgent(signer, model.name, model.storageRootHash);
-      router.push(`/?newAgent=${agentId}`);
+      await recordDownload(modelId);
+      // Increment download count locally for immediate feedback
+      // Note: In production, you'd want to refetch or listen for events
     } catch (err) {
-      console.error("Agent launch failed:", err);
+      console.error("Failed to record download:", err);
     }
   };
 
-  const formatNumber = (num: number): string => {
-    if (num >= 1_000_000_000) {
-      return (num / 1_000_000_000).toFixed(1) + "B";
+  const handleDeploy = async () => {
+    if (!signer || !model) return;
+    
+    setDeploying(true);
+    try {
+      await launchAgent(signer, model.name, model.storageRootHash);
+      // Redirect to spaces or show success message
+      router.push("/spaces/new");
+    } catch (err) {
+      console.error("Failed to deploy:", err);
+    } finally {
+      setDeploying(false);
     }
-    if (num >= 1_000_000) {
-      return (num / 1_000_000).toFixed(1) + "M";
-    }
-    if (num >= 1_000) {
-      return (num / 1_000).toFixed(1) + "K";
-    }
-    return num.toString();
-  };
-
-  const formatDate = (timestamp: number): string => {
-    return new Date(timestamp * 1000).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
-    });
   };
 
   if (loading) {
     return (
-      <>
-        <StatusStrip
-          address={address}
-          onConnect={(s, addr) => {
-            setSigner(s);
-            setAddress(addr);
-          }}
-        />
-        <main className="mx-auto flex max-w-4xl flex-1 flex-col px-6 py-12">
-          <p className="font-mono text-coreed-sage coreed-pulse">Loading model...</p>
-        </main>
-      </>
+      <main className="mx-auto flex max-w-6xl flex-1 flex-col px-6 py-12">
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-coreed-sage coreed-pulse">Loading model details...</p>
+        </div>
+      </main>
     );
   }
 
   if (!model) {
     return (
-      <>
-        <StatusStrip
-          address={address}
-          onConnect={(s, addr) => {
-            setSigner(s);
-            setAddress(addr);
-          }}
-        />
-        <main className="mx-auto flex max-w-4xl flex-1 flex-col px-6 py-12">
-          <p className="font-mono text-coreed-clay">Model not found.</p>
-        </main>
-      </>
+      <main className="mx-auto flex max-w-6xl flex-1 flex-col px-6 py-12">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-xl text-coreed-sage/70 mb-2">
+              Model not found
+            </p>
+            <Link
+              href="/hub"
+              className="px-4 py-2 bg-coreed-moss hover:bg-coreed-moss-bright text-coreed-void rounded-md text-sm transition-colors"
+            >
+              Back to Hub
+            </Link>
+          </div>
+        </div>
+      </main>
     );
   }
 
   return (
-    <>
-      <StatusStrip
-        address={address}
-        onConnect={(s, addr) => {
-          setSigner(s);
-          setAddress(addr);
-        }}
-      />
-
-      <main className="mx-auto flex max-w-4xl flex-1 flex-col px-6 py-12">
-        <div className="mb-6">
-          <div className="flex items-baseline gap-4">
+    <main className="mx-auto flex max-w-6xl flex-1 flex-col px-6 py-12">
+      <div className="mb-8">
+        <div className="flex gap-2 mb-4">
+          <Link
+            href="/hub"
+            className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
+          >
+            ← Back to Hub
+          </Link>
+          {isCreator && (
             <Link
-              href="/hub/search"
-              className="font-mono text-xs text-coreed-sage hover:text-coreed-bone"
+              href={`/hub/models/${model.modelId}/edit`}
+              className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
             >
-              ← All Models
+              Edit
             </Link>
-          </div>
+          )}
         </div>
 
+        {/* Model Header */}
         <div className="mb-8">
-          <div className="flex items-baseline gap-3">
-            <h1 className="font-mono text-2xl font-medium tracking-tight text-coreed-bone">
-              {model.name}
-            </h1>
-            <span className="font-mono text-xs text-coreed-sage">
-              v1.0
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-coreed-moss-bright to-coreed-clay bg-clip-text text-transparent mb-4">
+            {model.name}
+          </h1>
+          <div className="flex flex-wrap gap-4 items-center mb-4">
+            {model.architecture && (
+              <span className="px-3 py-1 bg-coreed-moss/10 text-coreed-moss-bright text-xs rounded-full border border-coreed-moss/20">
+                {model.architecture}
+              </span>
+            )}
+            {model.parameters && (
+              <span className="px-3 py-1 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone/70 text-xs rounded-full">
+                {model.parameters.toLocaleString()} Parameters
+              </span>
+            )}
+            <span className="px-3 py-1 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone/70 text-xs rounded-full">
+              {model.license}
             </span>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-coreed-sage">
-            {model.description || "No description provided."}
-          </p>
+          
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={handleLike}
+              disabled={!isConnected}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                liked
+                  ? "bg-coreed-moss text-coreed-void"
+                  : "bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone hover:border-coreed-moss"
+              }`}
+            >
+              ❤️ {likeCount} {likeCount === 1 ? "like" : "likes"}
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={!isConnected}
+              className="px-4 py-2 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors"
+            >
+              📥 Download
+            </button>
+            {isConnected && (
+              <button
+                onClick={handleDeploy}
+                disabled={deploying}
+                className="px-4 py-2 bg-coreed-moss hover:bg-coreed-moss-bright disabled:bg-coreed-line disabled:cursor-not-allowed text-coreed-void rounded-md text-sm font-medium transition-colors"
+              >
+                {deploying ? "Deploying..." : "🚀 Deploy Space"}
+              </button>
+            )}
+          </div>
         </div>
 
         {error && (
           <div className="mb-6 rounded border border-coreed-clay bg-coreed-panel-raised p-4">
-            <p className="font-mono text-xs text-coreed-clay" role="alert">
+            <p className="text-sm text-coreed-clay" role="alert">
               {error}
             </p>
           </div>
         )}
 
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="coreed-panel rounded-lg p-6">
-            <h2 className="mb-4 font-mono text-xs uppercase tracking-wide text-coreed-sage">
-              Model Details
+        {/* Model Details */}
+        <div className="grid md:grid-cols-3 gap-8 mb-8">
+          {/* Description */}
+          <div className="md:col-span-2">
+            <h2 className="text-lg font-semibold text-coreed-bone mb-4">
+              Description
             </h2>
-            <dl className="space-y-3">
-              <div>
-                <dt className="font-mono text-xs text-coreed-sage">Architecture</dt>
-                <dd className="font-mono text-sm text-coreed-bone">{model.architecture}</dd>
-              </div>
-              <div>
-                <dt className="font-mono text-xs text-coreed-sage">Parameters</dt>
-                <dd className="font-mono text-sm text-coreed-bone">
-                  {formatNumber(model.parameters)}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono text-xs text-coreed-sage">License</dt>
-                <dd className="font-mono text-sm text-coreed-bone">{model.license}</dd>
-              </div>
-              <div>
-                <dt className="font-mono text-xs text-coreed-sage">Storage Hash</dt>
-                <dd className="font-mono text-sm">
-                  <ResolvingHash value={model.storageRootHash} pending={false} />
-                </dd>
-              </div>
-            </dl>
+            <p className="text-coreed-sage leading-relaxed">
+              {model.description || "No description provided."}
+            </p>
           </div>
 
-          <div className="coreed-panel rounded-lg p-6">
-            <h2 className="mb-4 font-mono text-xs uppercase tracking-wide text-coreed-sage">
-              Statistics
+          {/* Metadata */}
+          <div>
+            <h2 className="text-lg font-semibold text-coreed-bone mb-4">
+              Metadata
             </h2>
-            <dl className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <dt className="font-mono text-xs text-coreed-sage">Downloads</dt>
-                <dd className="font-mono text-sm text-coreed-bone">
-                  {formatNumber(model.downloadCount)}
-                </dd>
+                <p className="text-sm text-coreed-sage/70 mb-1">Model ID</p>
+                <p className="text-sm text-coreed-bone font-mono">{model.modelId}</p>
               </div>
               <div>
-                <dt className="font-mono text-xs text-coreed-sage">Likes</dt>
-                <dd className="font-mono text-sm text-coreed-bone">{formatNumber(likeCount)}</dd>
+                <p className="text-sm text-coreed-sage/70 mb-1">Creator</p>
+                <p className="text-sm text-coreed-bone font-mono truncate">{model.creator}</p>
               </div>
               <div>
-                <dt className="font-mono text-xs text-coreed-sage">Created</dt>
-                <dd className="font-mono text-sm text-coreed-bone">
-                  {formatDate(model.createdAt)}
-                </dd>
+                <p className="text-sm text-coreed-sage/70 mb-1">Created</p>
+                <p className="text-sm text-coreed-bone">
+                  {new Date(Number(model.createdAt) * 1000).toLocaleDateString()}
+                </p>
               </div>
               <div>
-                <dt className="font-mono text-xs text-coreed-sage">Creator</dt>
-                <dd className="font-mono text-sm text-coreed-bone truncate">
-                  {model.creator.slice(0, 10)}...{model.creator.slice(-8)}
-                </dd>
+                <p className="text-sm text-coreed-sage/70 mb-1">Storage Hash</p>
+                <p className="text-sm text-coreed-bone font-mono truncate">{model.storageRootHash}</p>
               </div>
-            </dl>
+            </div>
           </div>
         </div>
 
-        <div className="mb-8 flex flex-wrap gap-2">
-          <button
-            onClick={handleLike}
-            disabled={!address}
-            className={`rounded border px-3 py-1.5 font-mono text-xs transition-colors ${
-              liked
-                ? "border-coreed-moss-bright bg-coreed-panel-raised text-coreed-moss-bright"
-                : "border-coreed-line bg-transparent text-coreed-bone hover:border-coreed-moss"
-            } disabled:opacity-50`}
-          >
-            {liked ? "❤️ Liked" : "♡ Like"}
-          </button>
-          <button
-            onClick={handleDownload}
-            className="rounded border border-coreed-line bg-transparent px-3 py-1.5 font-mono text-xs text-coreed-bone transition-colors hover:border-coreed-moss hover:text-coreed-moss-bright"
-          >
-            ↓ Download
-          </button>
-          <button
-            onClick={handleLaunchAgent}
-            disabled={!address}
-            className="rounded border border-coreed-line bg-coreed-panel-raised px-3 py-1.5 font-mono text-xs text-coreed-bone transition-colors hover:border-coreed-moss disabled:opacity-50"
-          >
-            ✏️ Launch Agent
-          </button>
-          {isCreator && (
-            <Link
-              href={`/hub/models/${model.modelId}/edit`}
-              className="rounded border border-coreed-line px-3 py-1.5 font-mono text-xs text-coreed-sage hover:border-coreed-moss hover:text-coreed-bone"
-            >
-              ⚙️ Edit
-            </Link>
-          )}
-          <a
-            href={`${GALILEO_EXPLORER_URL}/address/${model.creator}`}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded border border-coreed-line px-3 py-1.5 font-mono text-xs text-coreed-sage hover:border-coreed-moss hover:text-coreed-bone"
-          >
-            🔍 View Creator
-          </a>
-        </div>
+        {/* Tags */}
+        {model.tags && model.tags.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-coreed-bone mb-4">
+              Tags
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {model.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-sage text-xs rounded-full"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <div className="coreed-panel rounded-lg p-6">
-          <h2 className="mb-4 font-mono text-xs uppercase tracking-wide text-coreed-sage">
-            About This Model
+        {/* Storage Info */}
+        <div className="bg-coreed-panel-raised border border-coreed-line/30 rounded-lg p-6 mb-8">
+          <h2 className="text-lg font-semibold text-coreed-bone mb-4">
+            Storage Information
           </h2>
-          <p className="text-sm leading-relaxed text-coreed-sage">
-            This model is stored on 0G Storage, a decentralized storage network.
-            The Merkle root hash above serves as cryptographic proof of the model's
-            integrity. Only the 32-byte hash is stored on-chain, while the full model
-            data is distributed across 0G's storage nodes.
-          </p>
-          <p className="mt-4 text-sm leading-relaxed text-coreed-sage">
-            You can download this model and use it locally, or launch an agent
-            that uses this model to provide inference services.
-          </p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-coreed-moss/10 rounded-lg flex items-center justify-center">
+              <span className="text-xl">📦</span>
+            </div>
+            <div>
+              <p className="text-sm text-coreed-bone/70">Storage Root Hash</p>
+              <p className="text-coreed-bone font-mono">{model.storageRootHash}</p>
+            </div>
+          </div>
+          <Link
+            href={`${GALILEO_EXPLORER_URL}/address/${model.storageRootHash}`}
+            target="_blank"
+            className="inline-block mt-4 px-4 py-2 bg-coreed-panel border border-coreed-line/30 text-coreed-sage text-sm rounded-md hover:border-coreed-moss transition-colors"
+          >
+            View on Explorer →
+          </Link>
         </div>
-      </main>
-    </>
+
+        {/* Downloads and Likes */}
+        <div className="grid md:grid-cols-2 gap-6 border-t border-coreed-line/30 pt-8">
+          <div className="p-6 bg-coreed-panel-raised border border-coreed-line/30 rounded-lg text-center">
+            <div className="text-3xl font-bold text-coreed-moss-bright mb-2">
+              {model.downloadCount}
+            </div>
+            <div className="text-coreed-sage">
+              Total Downloads
+            </div>
+          </div>
+          <div className="p-6 bg-coreed-panel-raised border border-coreed-line/30 rounded-lg text-center">
+            <div className="text-3xl font-bold text-coreed-moss-bright mb-2">
+              {likeCount}
+            </div>
+            <div className="text-coreed-sage">
+              Total Likes
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        {isConnected && (
+          <div className="mt-8 pt-8 border-t border-coreed-line/30">
+            <h2 className="text-lg font-semibold text-coreed-bone mb-4">
+              Actions
+            </h2>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={handleDeploy}
+                disabled={deploying}
+                className="px-4 py-2 bg-coreed-moss hover:bg-coreed-moss-bright disabled:bg-coreed-line disabled:cursor-not-allowed text-coreed-void rounded-md text-sm font-medium transition-colors"
+              >
+                {deploying ? "Deploying..." : "🚀 Deploy Space"}
+              </button>
+              <button
+                onClick={handleLike}
+                className="px-4 py-2 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors"
+              >
+                {liked ? "❤️ Unlike" : "❤️ Like"}
+              </button>
+              <button
+                onClick={handleDownload}
+                className="px-4 py-2 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors"
+              >
+                📥 Download
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

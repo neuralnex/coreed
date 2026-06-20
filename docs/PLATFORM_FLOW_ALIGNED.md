@@ -26,7 +26,7 @@ This guide maps the complete AI Platform workflow to Coreed's implementation, en
 
 **Coreed**: Get a 0G wallet (your identity on Coreed).
 
-### Step 1 - Wallet Setup (Equivalent to HF Account Credentials)
+### Step 1 - Wallet Setup (Equivalent to Traditional Platform Account Credentials)
 
 **Option A: MetaMask (Recommended)**
 ```bash
@@ -40,9 +40,9 @@ This guide maps the complete AI Platform workflow to Coreed's implementation, en
 #    - Explorer: https://chainscan-galileo.0g.ai
 ```
 
-**Option B: Private Key (CLI Users - Equivalent to HF Access Tokens)**
+**Option B: Private Key (CLI Users - Equivalent to Traditional Platform Access Tokens)**
 ```bash
-# Generate new private key (like HF Write token)
+# Generate new private key (like Traditional Platform Write token)
 openssl rand -hex 32
 
 # Export from MetaMask:
@@ -71,37 +71,37 @@ open https://cloud.google.com/application/web3/faucet/0g/galileo
 - ~0.1 0G for space deployment (gas: ~200K)
 - Additional for 0G Compute deposit (funding)
 
-### Step 3 - Install Coreed CLI (Equivalent to `huggingface_hub` package)
+### Step 3 - Install Coreed CLI (Equivalent to `ai-platform-hub` package)
 
 ```bash
 # Clone Coreed repository
 git clone https://github.com/coreed/coreed.git
 cd coreed
 
-# Install CLI package (like pip install huggingface_hub)
+# Install CLI package (like pip install ai-platform-hub)
 cd cli
 pip install -e .
 cd ..
 
-# Verify installation (like hf --version)
+# Verify installation (like --version)
 push-to-coreed --version
 # or
 python -m cli.coreed_cli --help
 ```
 
 **Authentication:**
-Unlike HF's separate API tokens, Coreed uses your **wallet private key** for all operations.
+Unlike Traditional Platform's separate API tokens, Coreed uses your **wallet private key** for all operations.
 
 ```bash
-# Set private key (NEVER commit this - like HF Write Token)
+# Set private key (NEVER commit this - like Traditional Platform Write Token)
 export PRIVATE_KEY=0xYOUR_PRIVATE_KEY
 
-# Or use .env file (like HF .env)
+# Or use .env file (like Traditional Platform .env)
 echo "PRIVATE_KEY=0xYOUR_PRIVATE_KEY" > .env
 echo ".env" >> .gitignore
 ```
 
-**Security Best Practices (Same as HF):**
+**Security Best Practices (Same as Traditional Platform):**
 - ✅ Use environment variables
 - ✅ Add `.env` to `.gitignore`
 - ✅ Use a dedicated wallet for deployments
@@ -125,16 +125,16 @@ echo ".env" >> .gitignore
 
 ### Web Interface (Equivalent to coreed.ai)
 
-While the web UI is being developed, the CLI provides **full functionality** equivalent to HF's web interface:
+While the web UI is being developed, the CLI provides **full functionality** equivalent to Traditional Platform's web interface:
 
 ```bash
-# List all commands (like hf --help)
+# List all commands (like --help)
 push-to-coreed --help
 
-# Validate your setup (like hf login --check)
+# Validate your setup (like login --check)
 push-to-coreed --dry-run
 
-# Save configuration (like hf repo create)
+# Save configuration (like repo create)
 push-to-coreed --save-config
 ```
 
@@ -156,11 +156,11 @@ push-to-coreed --save-config
 
 **Coreed**: Profile is your wallet. Settings are environment variables and config files.
 
-### 1. Authentication (Equivalent to HF Access Tokens)
+### 1. Authentication (Equivalent to Traditional Platform Access Tokens)
 
 Coreed uses **wallet private keys** instead of separate API tokens:
 
-| HF Concept | Coreed Equivalent | Environment Variable |
+| Traditional Platform Concept | Coreed Equivalent | Environment Variable |
 |------------|-------------------|---------------------|
 | Read Token | PRIVATE_KEY (read-only mode) | PRIVATE_KEY |
 | Write Token | PRIVATE_KEY (full access) | PRIVATE_KEY |
@@ -169,16 +169,16 @@ Coreed uses **wallet private keys** instead of separate API tokens:
 
 **Creating a "Token" (Wallet Setup):**
 ```bash
-# This is your "Write Token" - equivalent to HF Write token
+# This is your "Write Token" - equivalent to Traditional Platform Write token
 openssl rand -hex 32
 
 # Set it
 export PRIVATE_KEY=0xYOUR_PRIVATE_KEY
 ```
 
-**Note**: Unlike HF, Coreed doesn't have separate Read/Write tokens. Your private key gives you full access to all operations.
+**Note**: Unlike Traditional Platform, Coreed doesn't have separate Read/Write tokens. Your private key gives you full access to all operations.
 
-### 2. Git SSH Keys (Equivalent to HF Git Integration)
+### 2. Git SSH Keys (Equivalent to Traditional Platform Git Integration)
 
 Coreed repositories **are** Git repositories. You can use SSH or HTTPS.
 
@@ -186,16 +186,16 @@ Coreed repositories **are** Git repositories. You can use SSH or HTTPS.
 # Add your SSH key to git (standard git setup)
 ssh-add ~/.ssh/id_rsa
 
-# Clone using SSH (like HF)
+# Clone using SSH (like Traditional Platform)
 git clone git@github.com:your-repo/my-coreed-space.git
 
 # Or use HTTPS
 git clone https://github.com/your-repo/my-coreed-space.git
 ```
 
-### 3. Configuration Files (Equivalent to HF Settings)
+### 3. Configuration Files (Equivalent to Traditional Platform Settings)
 
-**User-Level Configuration** (like HF global settings):
+**User-Level Configuration** (like Traditional Platform global settings):
 ```json
 # ~/.coreed/config.json
 {
@@ -206,7 +206,7 @@ git clone https://github.com/your-repo/my-coreed-space.git
 }
 ```
 
-**Project-Level Configuration** (like HF repo settings):
+**Project-Level Configuration** (like Traditional Platform repo settings):
 ```json
 # coreed.json (in your project directory)
 {
@@ -222,18 +222,18 @@ git clone https://github.com/your-repo/my-coreed-space.git
 }
 ```
 
-### 4. Organizations (Equivalent to HF Organizations)
+### 4. Organizations (Equivalent to Traditional Platform Organizations)
 
 Coreed uses **AgentRegistry** for multi-developer collaboration:
 
 ```bash
-# Create an agent (organization) - equivalent to HF Organization
+# Create an agent (organization) - equivalent to Traditional Platform Organization
 # This is done via frontend or direct contract call
 # AgentRegistry.sol handles developer tracking
 ```
 
 **Comparison:**
-| HF Organizations | Coreed Agents |
+| Traditional Platform Organizations | Coreed Agents |
 |-----------------|----------------|
 | Collaborate on private repos | Multi-developer agent spaces |
 | Billing for compute | Gas payments on 0G Chain |
@@ -248,13 +248,13 @@ Coreed uses **AgentRegistry** for multi-developer collaboration:
 
 **Coreed**: Use CLI or frontend to create model/space repositories.
 
-### Via CLI (Recommended - Equivalent to `hf repo create`)
+### Via CLI (Recommended - Equivalent to `repo create`)
 
-#### Create a Model Repository (Equivalent to HF Model Repo)
+#### Create a Model Repository (Equivalent to Traditional Platform Model Repo)
 
 ```bash
 # Register your model - equivalent to:
-# hf create-model --repo-id username/model-name --type model
+# create-model --repo-id username/model-name --type model
 
 push-to-coreed \
   --model-path models/my-model.gguf \
@@ -269,7 +269,7 @@ push-to-coreed \
 
 **Field-by-Field Comparison:**
 
-| Field | HF | Coreed | Type | Required | Description |
+| Field | Traditional Platform | Coreed | Type | Required | Description |
 |-------|----|--------|------|----------|-------------|
 | Owner | Dropdown | Wallet Address | string | ✅ | Determines on-chain ownership |
 | Repository Name | Text Input | Model Name | string | ✅ | Model identifier (max 128 chars) |
@@ -279,14 +279,14 @@ push-to-coreed \
 
 **Coreed-Specific Fields:**
 
-| Field | Coreed Only | Type | Required | Description | HF Equivalent |
+| Field | Coreed Only | Type | Required | Description | Traditional Platform Equivalent |
 |-------|-------------|------|----------|-------------|-----------------|
 | architecture | Yes | string | ❌ | Model type (Qwen2.5, Llama3) | model-card metadata |
 | parameters | Yes | uint256 | ❌ | Number of parameters | model-card metadata |
 | tags | Yes | string[] | ❌ | Search keywords | tags in README |
 | storageRootHash | Yes | bytes32 | ✅ | 0G Storage root hash | LFS pointer |
 
-#### Via Frontend (Coming - Equivalent to HF Web UI)
+#### Via Frontend (Coming - Equivalent to Traditional Platform Web UI)
 
 1. Click "New Model"
 2. Fill form:
@@ -300,11 +300,11 @@ push-to-coreed \
 3. Click "Create"
 4. Upload files via web interface or CLI
 
-### Create a Space Repository (Equivalent to HF Space)
+### Create a Space Repository (Equivalent to Traditional Platform Space)
 
 ```bash
 # Deploy a new space - equivalent to:
-# hf create-repo --repo-id username/space-name --type space --space-sdk gradio
+# create-repo --repo-id username/space-name --type space --space-sdk gradio
 
 push-to-coreed \
   --model-id 1 \
@@ -318,7 +318,7 @@ push-to-coreed \
 
 **Field-by-Field Comparison:**
 
-| Field | HF | Coreed | Type | Required | Description |
+| Field | Traditional Platform | Coreed | Type | Required | Description |
 |-------|----|--------|------|----------|-------------|
 | Owner | Dropdown | Wallet Address | string | ✅ | Your address |
 | Repository Name | Text Input | Space Name | string | ✅ | Space identifier |
@@ -328,7 +328,7 @@ push-to-coreed \
 
 **Coreed-Specific Fields:**
 
-| Field | Coreed Only | Type | Required | Description | HF Equivalent |
+| Field | Coreed Only | Type | Required | Description | Traditional Platform Equivalent |
 |-------|-------------|------|----------|-------------|-----------------|
 | version | Yes | string | ❌ | Space version | Space settings |
 | modelId | Yes | uint256 | ❌ | Linked model ID | Model dependency |
@@ -343,15 +343,15 @@ push-to-coreed \
 
 **Coreed**: Model card (README.md), repository structure, on-chain metadata, health monitoring.
 
-### 1. The Model Card (README.md - Equivalent to HF Model Card)
+### 1. The Model Card (README.md - Equivalent to Traditional Platform Model Card)
 
 Coreed uses **README.md** with YAML metadata at the top, just like AI Platform:
 
 ```markdown
 ---
-# Coreed Model Card Metadata (Equivalent to HF YAML block)
+# Coreed Model Card Metadata (Equivalent to Traditional Platform YAML block)
 
-# Required fields (like HF)
+# Required fields (like Traditional Platform)
 language: en                    # Model language (e.g., en, es, fr)
 license: apache-2.0            # SPDX license identifier
 model_id: 1                    # Coreed model ID (auto-assigned)
@@ -366,7 +366,7 @@ architecture: Qwen2.5          # Model architecture
 parameters: 7000000000         # Parameter count
 storage_hash: 0xabc123...       # 0G Storage root hash
 
-# Optional fields (like HF)
+# Optional fields (like Traditional Platform)
 datasets: []                   # Training datasets
 metrics: []                    # Evaluation metrics
 ---
@@ -388,7 +388,7 @@ from transformers import AutoModelForCausalLM
 model = AutoModelForCausalLM.from_pretrained("./models/my-model.gguf")
 ```
 
-## Pipeline Tags (Coreed Equivalent to HF Inference Widget)
+## Pipeline Tags (Coreed Equivalent to Traditional Platform Inference Widget)
 
 Pipeline tags tell Coreed what kind of task this model performs. This enables the inference API.
 
@@ -404,7 +404,7 @@ Available tags:
 - `automatic-speech-recognition` - Transcribe speech
 ```
 
-### 2. Files and Versions (Equivalent to HF Files Tab)
+### 2. Files and Versions (Equivalent to Traditional Platform Files Tab)
 
 **AI Platform**: Uses Git LFS for large files (.bin, .safetensors, .onnx).
 
@@ -442,11 +442,11 @@ Available tags:
 **Repository Structure (Standard):**
 ```
 my-repository/
-├── README.md              # Model card + metadata (Like HF)
+├── README.md              # Model card + metadata (Like Traditional Platform)
 ├── .gitignore             # Ignore patterns
-├── .env                   # Environment (SECRET! - Like HF)
+├── .env                   # Environment (SECRET! - Like Traditional Platform)
 ├── .env.example           # Example env vars
-├── coreed.json            # Coreed config (Like HF repo settings)
+├── coreed.json            # Coreed config (Like Traditional Platform repo settings)
 ├── app.py                 # Main application (Spaces only)
 ├── requirements.txt       # Python deps
 ├── package.json           # Node.js deps (if applicable)
@@ -455,7 +455,7 @@ my-repository/
     └── my-model.gguf      # Stored on 0G Storage
 ```
 
-### 3. Commit (Equivalent to HF Commits)
+### 3. Commit (Equivalent to Traditional Platform Commits)
 
 Every change in Coreed asks for a **commit message**, just like Git:
 
@@ -473,7 +473,7 @@ push-to-coreed \
 # 3. git commit -m "Deploy v1.0.0"
 # 4. git push
 
-# Manual commit (like HF)
+# Manual commit (like Traditional Platform)
 git add .
 git commit -m "Update model card"
 git push
@@ -487,13 +487,13 @@ git push
 
 ### 4. Community & Settings Tabs
 
-**Community Tab (Equivalent to HF Discussions):**
+**Community Tab (Equivalent to Traditional Platform Discussions):**
 - **Discussions**: Open issues or questions about the model/space
 - **Pull Requests**: Submit changes to model card or code
 - **Likes**: Like models (on-chain via ModelRegistry.likeModel())
 - **Downloads**: Track downloads (on-chain via ModelRegistry.recordDownload())
 
-**Settings Tab (Equivalent to HF Repo Settings):**
+**Settings Tab (Equivalent to Traditional Platform Repo Settings):**
 ```bash
 # Rename repository - Not directly supported, but you can:
 # 1. Deploy new space with new name
@@ -532,7 +532,7 @@ git push
 
 While the full web UI is in development, here's how to use the CLI for all interface-level operations:
 
-#### 1. Browse Models (Equivalent to HF Models Hub)
+#### 1. Browse Models (Equivalent to Traditional Platform Models Hub)
 ```bash
 # List all models (via contract query)
 # This will be available in the web UI at /hub
@@ -547,7 +547,7 @@ print(models)
 "
 ```
 
-#### 2. Create New Model (Equivalent to HF New Model Button)
+#### 2. Create New Model (Equivalent to Traditional Platform New Model Button)
 ```bash
 # Use push-to-coreed with --register-only
 push-to-coreed \
@@ -556,7 +556,7 @@ push-to-coreed \
   --register-only
 ```
 
-#### 3. Upload Files (Equivalent to HF File Uploader)
+#### 3. Upload Files (Equivalent to Traditional Platform File Uploader)
 ```bash
 # Upload to 0G Storage
 0g-storage-client upload \
@@ -572,7 +572,7 @@ push-to-coreed \
   --register-only
 ```
 
-#### 4. Edit Model Card (Equivalent to HF README.md Editor)
+#### 4. Edit Model Card (Equivalent to Traditional Platform README.md Editor)
 ```bash
 # Edit README.md locally
 nano README.md
@@ -582,7 +582,7 @@ nano README.md
 # Use contract functions to update
 ```
 
-#### 5. Deploy Space (Equivalent to HF New Space Button)
+#### 5. Deploy Space (Equivalent to Traditional Platform New Space Button)
 ```bash
 # Deploy a space from your model
 push-to-coreed \
@@ -595,19 +595,19 @@ push-to-coreed \
 
 # CLI Level Guide
 
-**For users who prefer the command line (like `huggingface_hub` CLI)**
+**For users who prefer the command line (like `ai-platform-hub` CLI)**
 
 ### Installation
 
 ```bash
-# Install Coreed CLI (equivalent to: pip install huggingface_hub)
+# Install Coreed CLI (equivalent to: pip install ai-platform-hub)
 pip install -e ./cli
 ```
 
 ### Authentication
 
 ```bash
-# Set private key (equivalent to: hf login)
+# Set private key (equivalent to: login)
 export PRIVATE_KEY=0xYOUR_PRIVATE_KEY
 
 # Verify authentication
@@ -616,7 +616,7 @@ push-to-coreed --dry-run
 
 ### Repository Operations
 
-#### Create Model Repository (Equivalent to `hf create-repo`)
+#### Create Model Repository (Equivalent to `create-repo`)
 ```bash
 # Register a model
 push-to-coreed \
@@ -629,7 +629,7 @@ push-to-coreed \
   --register-only
 ```
 
-#### Upload Files (Equivalent to `hf upload`)
+#### Upload Files (Equivalent to `upload`)
 ```bash
 # Method 1: Via push-to-coreed (recommended)
 push-to-coreed \
@@ -651,9 +651,9 @@ push-to-coreed \
   --register-only
 ```
 
-#### Download Files (Equivalent to `hf download`)
+#### Download Files (Equivalent to `download`)
 ```bash
-# Download from 0G Storage (equivalent to: hf download username/model file)
+# Download from 0G Storage (equivalent to: download username/model file)
 0g-storage-client download \
   --indexer https://indexer-storage-testnet-turbo.0g.ai \
   --root 0x... \
@@ -668,10 +668,10 @@ download_model_from_storage(
 )
 ```
 
-#### Delete Repository (Equivalent to `hf delete-repo`)
+#### Delete Repository (Equivalent to `delete-repo`)
 ```bash
 # Deactivate model on-chain
-# This is equivalent to deleting a repo on HF
+# This is equivalent to deleting a repo on Traditional Platform
 from web3 import Web3
 w3 = Web3(Web3.HTTPProvider('https://evmrpc-testnet.0g.ai'))
 contract = w3.eth.contract(address='0xFA81366Ba81C19d848191B8e49eC0948230d4216', abi=[...])
@@ -685,7 +685,7 @@ w3.eth.send_raw_transaction(signed_tx.rawTransaction)
 
 ### Space Operations
 
-#### Create Space (Equivalent to `hf repo create --type space`)
+#### Create Space (Equivalent to `repo create --type space`)
 ```bash
 push-to-coreed \
   --model-id 1 \
@@ -696,7 +696,7 @@ push-to-coreed \
   --port 7860
 ```
 
-#### Deploy Space (Equivalent to HF Space deployment)
+#### Deploy Space (Equivalent to Traditional Platform Space deployment)
 ```bash
 # Full deployment (upload + register + deploy)
 push-to-coreed \
@@ -710,7 +710,7 @@ push-to-coreed \
   --space-name "My Chatbot"
 ```
 
-#### Update Space (Equivalent to HF Space settings update)
+#### Update Space (Equivalent to Traditional Platform Space settings update)
 ```bash
 # Update space metadata
 from web3 import Web3
@@ -724,7 +724,7 @@ tx = contract.functions.updateEndpoint(spaceId, newEndpoint).build_transaction({
 
 # SDK Level Guide
 
-**For users who prefer Python/JavaScript SDKs (like `huggingface_hub` library)**
+**For users who prefer Python/JavaScript SDKs (like `ai-platform-hub` library)**
 
 ### Python SDK
 
@@ -744,7 +744,7 @@ from coreed_cli import (
 
 #### Model Operations
 
-**Register Model (Equivalent to `HfApi().create_repo()`)**
+**Register Model (Equivalent to `API().create_repo()`)**
 ```python
 from coreed_cli import register_model, ModelMetadata
 
@@ -774,7 +774,7 @@ print(f"Model ID: {result.model_id}")
 print(f"Storage Hash: {result.storage_root_hash}")
 ```
 
-**Download Model (Equivalent to `HfApi().download_file()`)**
+**Download Model (Equivalent to `API().download_file()`)**
 ```python
 from coreed_cli import download_model_from_storage
 
@@ -787,7 +787,7 @@ success = download_model_from_storage(
 
 #### Space Operations
 
-**Deploy Space (Equivalent to HF Space creation + deployment)**
+**Deploy Space (Equivalent to Traditional Platform Space creation + deployment)**
 ```python
 from coreed_cli import deploy_space, PushResult
 
@@ -806,7 +806,7 @@ print(f"Space ID: {result.space_id}")
 print(f"Endpoint: {result.endpoint_url}")
 ```
 
-**Full Deployment (Equivalent to HF model upload + space creation)**
+**Full Deployment (Equivalent to Traditional Platform model upload + space creation)**
 ```python
 from coreed_cli import push_to_coreed, CoreedConfig
 
@@ -849,7 +849,7 @@ import {
 
 #### Model Operations
 
-**Register Model (Equivalent to HF API model creation)**
+**Register Model (Equivalent to Traditional Platform API model creation)**
 ```typescript
 import { useModelRegistry } from "@/lib/useModelRegistry";
 
@@ -868,7 +868,7 @@ const result = await registerModel(signer, {
 console.log(`Model ID: ${result.modelId}`);
 ```
 
-**Get Model (Equivalent to `HfApi().model_info()`)**
+**Get Model (Equivalent to `API().model_info()`)**
 ```typescript
 const { getModel } = useModelRegistry();
 const model = await getModel(signer, modelId);
@@ -880,7 +880,7 @@ console.log(`Architecture: ${model.architecture}`);
 
 #### Space Operations
 
-**Deploy Space (Equivalent to HF Space creation)**
+**Deploy Space (Equivalent to Traditional Platform Space creation)**
 ```typescript
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 
@@ -900,7 +900,7 @@ const result = await deploySpace(signer, {
 console.log(`Space ID: ${result.spaceId}`);
 ```
 
-**Get Space (Equivalent to HF Space info)**
+**Get Space (Equivalent to Traditional Platform Space info)**
 ```typescript
 const { getSpace } = useAgentSpaceRegistry();
 const space = await getSpace(spaceId);
@@ -910,7 +910,7 @@ console.log(`Endpoint: ${space.endpointUrl}`);
 console.log(`Status: ${space.isActive ? 'Active' : 'Inactive'}`);
 ```
 
-**Update Health Status (Coreed-specific - automatic in HF)**
+**Update Health Status (Coreed-specific - automatic in Traditional Platform)**
 ```typescript
 const { updateHealthStatus } = useAgentSpaceRegistry();
 
@@ -924,7 +924,7 @@ await updateHealthStatus(signer, spaceId, true);
 
 **How to host your Coreed spaces on various platforms**
 
-## Option 1: 0G Compute (Recommended - Equivalent to HF Free Spaces)
+## Option 1: 0G Compute (Recommended - Equivalent to Traditional Platform Free Spaces)
 
 **Why 0G Compute?**
 - 90% cheaper than traditional cloud
@@ -934,7 +934,7 @@ await updateHealthStatus(signer, spaceId, true);
 - Pay-per-use
 - Decentralized (no single point of failure)
 
-### Router API (Simplest - Equivalent to HF default hosting)
+### Router API (Simplest - Equivalent to Traditional Platform default hosting)
 
 ```python
 from openai import OpenAI
@@ -1000,7 +1000,7 @@ pnpm add -g @0gfoundation/0g-compute-ts-sdk
 # Login with wallet
 0g-compute-cli login
 
-# Deposit funds (like HF billing)
+# Deposit funds (like Traditional Platform billing)
 0g-compute-cli deposit --amount 10
 
 # List available providers
@@ -1020,7 +1020,7 @@ pnpm add -g @0gfoundation/0g-compute-ts-sdk
 0g-compute-cli logs --deployment DEPLOYMENT_ID
 ```
 
-## Option 2: Docker (Local Development - Equivalent to HF Local Testing)
+## Option 2: Docker (Local Development - Equivalent to Traditional Platform Local Testing)
 
 ```bash
 # Build Docker image
@@ -1072,7 +1072,7 @@ docker-compose up -d
 docker-compose down
 ```
 
-## Option 3: Google Cloud Run (Equivalent to HF Paid Spaces)
+## Option 3: Google Cloud Run (Equivalent to Traditional Platform Paid Spaces)
 
 ```bash
 # Build and push to Google Container Registry
@@ -1091,7 +1091,7 @@ gcloud run deploy my-coreed-space \
   --port 7860
 ```
 
-## Option 4: Fly.io (Equivalent to HF Alternative Hosting)
+## Option 4: Fly.io (Equivalent to Traditional Platform Alternative Hosting)
 
 ```bash
 # Install flyctl
@@ -1157,9 +1157,9 @@ railway up
 | **Large Files** | Git LFS | 0G Storage | Decentralized, verified |
 | **Health Checks** | Automatic | /health endpoint | Customizable |
 | **Cost** | Free + Paid tiers | Pay-per-use | No subscriptions |
-| **CLI** | `huggingface_hub` | `push-to-coreed` | Feature-equivalent |
-| **Python SDK** | `huggingface_hub` | `coreed_cli` | Feature-equivalent |
-| **JS SDK** | `huggingface.js` | Frontend hooks | React-ready |
+| **CLI** | `ai-platform-hub` | `push-to-coreed` | Feature-equivalent |
+| **Python SDK** | `ai-platform-hub` | `coreed_cli` | Feature-equivalent |
+| **JS SDK** | `AI Library` | Frontend hooks | React-ready |
 
 ---
 
@@ -1196,18 +1196,18 @@ railway up
 
 | Action | AI Platform | Coreed |
 |--------|-------------|--------|
-| Create model | `hf create-repo` | `push-to-coreed --register-only` |
-| Upload files | `hf upload` | `push-to-coreed --model-path` |
-| Download files | `hf download` | `0g-storage-client download` or `download_model_from_storage()` |
+| Create model | `create-repo` | `push-to-coreed --register-only` |
+| Upload files | `upload` | `push-to-coreed --model-path` |
+| Download files | `download` | `0g-storage-client download` or `download_model_from_storage()` |
 | List models | Browser / API | `ModelRegistry.getModelsByCreator()` |
-| Delete model | HF Settings | `ModelRegistry.deactivateModel()` |
+| Delete model | Traditional Platform Settings | `ModelRegistry.deactivateModel()` |
 
 ## Space Operations
 
 | Action | AI Platform | Coreed |
 |--------|-------------|--------|
 | Create space | New Space button | `push-to-coreed` |
-| Deploy space | HF Hosting | 0G Compute deployment |
+| Deploy space | Traditional Platform Hosting | 0G Compute deployment |
 | Update space | Space Settings | `AgentSpaceRegistry.updateEndpoint()` |
 | Delete space | Space Settings | `AgentSpaceRegistry.deactivateSpace()` |
 
@@ -1260,15 +1260,15 @@ AgentSpaceRegistry: 0xff34F1281A8D4F14d503c28E8A45cAF98Acc235C
 ### Key Differences to Remember:
 1. **Authentication**: Use wallet private key instead of API tokens
 2. **Storage**: 0G Storage instead of Git LFS
-3. **Compute**: 0G Compute instead of HF hosting
+3. **Compute**: 0G Compute instead of Traditional Platform hosting
 4. **Visibility**: All repositories are public (on-chain transparency)
 5. **Cost**: Pay-per-use on 0G instead of subscriptions
 
 ### Everything is Aligned!
 
 ✅ **Interface Level**: Web UI equivalent via CLI
-✅ **CLI Level**: `push-to-coreed` equivalent to `huggingface_hub` CLI
-✅ **SDK Level**: Python and JavaScript SDKs equivalent to HF SDKs
+✅ **CLI Level**: `push-to-coreed` equivalent to `ai-platform-hub` CLI
+✅ **SDK Level**: Python and JavaScript SDKs equivalent to Traditional Platform SDKs
 ✅ **Hosting**: Multiple hosting options including 0G Compute (recommended)
 
 **The AI Platform workflow you know, now on 0G Chain with decentralized superpowers!** 🚀
