@@ -5,16 +5,20 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useWalletContext } from "@/lib/contexts/WalletContext";
 import { WalletConnector } from "./WalletConnector";
-import { ThemeToggle } from "./ThemeToggle";
+
+const NAV_LINKS = [
+  { href: "/hub", label: "Models" },
+  { href: "/spaces", label: "Spaces" },
+  { href: "/playground", label: "Playground" },
+  { href: "/docs", label: "Docs" },
+];
 
 export function Navbar() {
-  const { address, isConnected, isConnecting, connect, disconnect, hasWallet, error } = useWalletContext();
+  const { address, isConnected, isConnecting, connect, disconnect, hasWallet } = useWalletContext();
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  const formatAddress = (addr: string) => {
-    return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : null;
-  };
+  const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 
   const handleConnectClick = () => {
     if (hasWallet) {
@@ -24,22 +28,16 @@ export function Navbar() {
     }
   };
 
-  const handleWalletSelect = async (walletId: string) => {
+  const handleWalletSelect = async () => {
     setShowWalletModal(false);
-    try {
-      await connect();
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-    }
+    try { await connect(); } catch { /* ignore */ }
   };
 
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setShowMobileMenu(false);
-      }
+      if (window.innerWidth >= 768) setShowMobileMenu(false);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -47,131 +45,134 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="flex items-center justify-between px-4 py-3 bg-coreed-panel border-b border-coreed-line/50 sticky top-0 z-50">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleMobileMenu}
-            className="md:hidden p-2 rounded-md hover:bg-coreed-panel-raised transition-colors touch-manipulation active:scale-[0.98] min-h-[40px] min-w-[40px] flex items-center justify-center"
-            aria-label="Toggle menu"
-            aria-expanded={showMobileMenu}
-          >
-            <span className="text-xl">☰</span>
-          </button>
-          
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/logo.png"
-              alt="Coreed Logo"
-              width={32}
-              height={32}
-              className="rounded"
-              priority
-            />
-            <span className="text-xl font-bold bg-gradient-to-r from-coreed-moss-bright to-coreed-clay bg-clip-text text-transparent">
-              Coreed
-            </span>
-          </Link>
-
-          <div className="hidden lg:flex items-center gap-2">
-            <span className="px-2 py-1 bg-coreed-moss/10 text-coreed-moss-bright text-xs rounded-full border border-coreed-moss/20">
-              0G Galileo
-            </span>
-            <span className="text-xs text-coreed-sage">16602</span>
-          </div>
-        </div>
-
-        <div className="hidden md:flex items-center gap-8">
-          <Link href="/" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2">
-            Launch
-          </Link>
-          <Link href="/playground" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2">
-            Playground
-          </Link>
-          <Link href="/hub" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2">
-            Hub
-          </Link>
-          <Link href="/docs" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2">
-            Docs
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {isConnecting ? (
-            <button disabled className="px-4 py-2.5 bg-coreed-moss/20 text-coreed-bone rounded-md text-sm min-h-[40px] touch-manipulation">
-              Connecting...
-            </button>
-          ) : isConnected && address ? (
-            <div className="hidden md:flex items-center gap-2">
-              <span className="px-3 py-1.5 bg-coreed-panel-raised border border-coreed-line/30 rounded-md text-sm">
-                {formatAddress(address)}
+      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl">
+        <div className="bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/15 rounded-full shadow-lg shadow-black/60">
+          <div className="flex items-center justify-between px-8 h-14">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 flex-shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Coreed"
+                width={28}
+                height={28}
+                className="rounded"
+                priority
+              />
+              <span className="text-lg font-bold tracking-tight text-white">
+                Coreed
               </span>
+            </Link>
+
+            {/* Center nav links */}
+            <div className="hidden md:flex items-center gap-1">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="px-4 py-2 text-sm text-white/50 hover:text-white rounded-full hover:bg-white/5 transition-all"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center gap-3">
+              {isConnecting ? (
+                <button disabled className="px-4 py-2 text-sm text-white/50 border border-white/10 rounded-full opacity-50">
+                  Connecting...
+                </button>
+              ) : isConnected && address ? (
+                <div className="flex items-center gap-3">
+                  <span className="hidden sm:block px-3 py-1.5 text-sm text-white/60 border border-white/10 rounded-full">
+                    {formatAddress(address)}
+                  </span>
+                  <button
+                    onClick={disconnect}
+                    className="text-sm text-white/40 hover:text-white/70 transition-colors"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/docs"
+                    className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/20 rounded-full transition-all"
+                  >
+                    Getting Started
+                  </Link>
+                <button
+                  onClick={handleConnectClick}
+                  className="px-4 py-2 text-sm font-medium text-black bg-modal-green hover:brightness-110 rounded-full transition-all"
+                >
+                  Connect Wallet
+                </button>
+                </div>
+              )}
+
+              {/* Mobile menu button */}
               <button
-                onClick={disconnect}
-                className="px-3 py-1.5 text-coreed-sage hover:text-coreed-bone text-sm transition-colors min-h-[40px] touch-manipulation active:scale-[0.98]"
+                onClick={toggleMobileMenu}
+                className="md:hidden p-2 text-white/50 hover:text-white transition-colors"
+                aria-label="Toggle menu"
               >
-                Disconnect
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={showMobileMenu ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
               </button>
             </div>
-          ) : (
-            <button
-              onClick={handleConnectClick}
-              disabled={isConnecting}
-              className="px-4 py-2.5 bg-coreed-moss hover:bg-coreed-moss-bright text-coreed-void rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] w-full md:w-auto touch-manipulation active:scale-[0.98]"
-            >
-              {hasWallet ? "Connect Wallet" : "Install Wallet"}
-            </button>
-          )}
-          
-          {error && (
-            <span className="text-red-500 text-sm">{error.message}</span>
-          )}
-          
-          {/* Theme Toggle */}
-          <ThemeToggle />
-        </div>
-      </nav>
-      
-      {showMobileMenu && (
-        <div className="md:hidden bg-coreed-panel border-b border-coreed-line/50 px-4 py-3">
-          <div className="flex flex-col gap-3">
-            <Link href="/" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2" onClick={() => setShowMobileMenu(false)}>
-              Launch
-            </Link>
-            <Link href="/playground" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2" onClick={() => setShowMobileMenu(false)}>
-              Playground
-            </Link>
-            <Link href="/hub" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2" onClick={() => setShowMobileMenu(false)}>
-              Hub
-            </Link>
-            <Link href="/docs" className="text-coreed-bone/70 hover:text-coreed-bone transition-colors touch-manipulation active:scale-[0.98] min-h-[44px] px-2 py-2" onClick={() => setShowMobileMenu(false)}>
-              Docs
-            </Link>
-            <div className="flex items-center gap-2 pt-2 border-t border-coreed-line/30">
-              <span className="px-2 py-1 bg-coreed-moss/10 text-coreed-moss-bright text-xs rounded-full border border-coreed-moss/20">
-                0G Galileo
-              </span>
-              <span className="text-xs text-coreed-sage">16602</span>
-            </div>
-            {isConnected && address && (
-              <div className="flex items-center gap-2 pt-2 border-t border-coreed-line/30">
-                <span className="px-3 py-1.5 bg-coreed-panel-raised border border-coreed-line/30 rounded-md text-sm">
-                  {formatAddress(address)}
-                </span>
-                <button
-                  onClick={() => {
-                    disconnect();
-                    setShowMobileMenu(false);
-                  }}
-                  className="px-3 py-1.5 text-coreed-sage hover:text-coreed-bone text-sm transition-colors min-h-[40px] touch-manipulation active:scale-[0.98]"
-                >
-                  Disconnect
-                </button>
-              </div>
-            )}
           </div>
         </div>
-      )}
-      
+
+        {/* Mobile menu */}
+        {showMobileMenu && (
+          <div className="mt-2 md:hidden bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/15 rounded-full shadow-lg shadow-black/60 px-6 py-4">
+            <div className="flex flex-col gap-1">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="px-4 py-3 text-sm text-white/50 hover:text-white rounded-full hover:bg-white/5 transition-all"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="mt-2 pt-2 border-t border-white/5">
+                {isConnected && address ? (
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm text-white/60">{formatAddress(address)}</span>
+                    <button
+                      onClick={() => { disconnect(); setShowMobileMenu(false); }}
+                      className="text-sm text-white/40 hover:text-white/70"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2 px-4 pt-2">
+                    <Link
+                      href="/docs"
+                      className="w-full text-center px-4 py-3 text-sm font-medium text-white/60 border border-white/10 rounded-full"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      Getting Started
+                    </Link>
+                  <button
+                    onClick={() => { handleConnectClick(); setShowMobileMenu(false); }}
+                    className="w-full px-4 py-3 text-sm font-medium text-black bg-modal-green rounded-full"
+                  >
+                    Connect Wallet
+                  </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+
       {showWalletModal && hasWallet && (
         <WalletConnector
           onClose={() => setShowWalletModal(false)}

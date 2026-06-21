@@ -36,13 +36,13 @@ const formatDate = (timestamp: number): string => {
 
 const getArchitectureColor = (arch: string): string => {
   const colors: Record<string, string> = {
-    "Qwen2.5": "text-coreed-moss-bright",
-    "Llama3": "text-coreed-clay",
-    "Mistral": "text-coreed-sage",
-    "Phi-3": "text-coreed-bone",
-    "Gemma": "text-coreed-moss"
+    "Qwen2.5": "text-modal-green",
+    "Llama3": "text-white/80",
+    "Mistral": "text-modal-text-dim",
+    "Phi-3": "text-white",
+    "Gemma": "text-modal-green/80"
   };
-  return colors[arch] || "text-coreed-sage";
+  return colors[arch] || "text-modal-text-dim";
 };
 
 export function ModelCard({ model }: ModelCardProps) {
@@ -51,47 +51,47 @@ export function ModelCard({ model }: ModelCardProps) {
   return (
     <Link
       href={`/hub/models/${model.modelId}`}
-      className="coreed-panel rounded-lg p-5 transition-colors hover:border-coreed-moss"
+      className="modal-card hover:border-modal-green transition-all duration-200"
     >
-      <div className="mb-3 flex items-start justify-between">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 className="font-mono text-sm font-medium text-coreed-bone truncate">
+          <h3 className="font-sans text-base font-semibold text-white truncate">
             {model.name}
           </h3>
-          <p className={`font-mono text-xs ${getArchitectureColor(model.architecture)}`}>
+          <p className={`font-mono text-xs mt-1 ${getArchitectureColor(model.architecture)}`}>
             {model.architecture}
           </p>
         </div>
-        <span className="font-mono text-xs text-coreed-sage">
+        <span className="font-mono text-xs text-modal-text-dim bg-white/5 px-2 py-0.5 rounded border border-white/5">
           #{model.modelId}
         </span>
       </div>
 
-      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-coreed-sage/80">
+      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-modal-text-dim">
         {model.description || "No description provided."}
       </p>
 
       <div className="mb-4 flex items-center gap-4">
-        <span className="font-mono text-xs text-coreed-sage">
+        <span className="font-mono text-xs text-modal-text-dim">
           {formatNumber(model.parameters)} params
         </span>
-        <span className="font-mono text-xs text-coreed-sage">
+        <span className="font-mono text-xs text-modal-text-dim">
           {model.license}
         </span>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between border-t border-white/5 pt-3">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 font-mono text-xs text-coreed-sage">
-            <span className="text-coreed-moss-bright">♻️</span>
+          <span className="flex items-center gap-1 font-mono text-xs text-modal-text-dim">
+            <span className="text-modal-green">♻️</span>
             {formatNumber(model.downloadCount)}
           </span>
-          <span className="flex items-center gap-1 font-mono text-xs text-coreed-sage">
-            <span className="text-coreed-clay">❤️</span>
+          <span className="flex items-center gap-1 font-mono text-xs text-modal-text-dim">
+            <span className="text-red-400">❤️</span>
             {formatNumber(model.likeCount)}
           </span>
         </div>
-        <span className="font-mono text-xs text-coreed-sage/60">
+        <span className="font-mono text-xs text-modal-text-dim/80">
           {formatDate(model.createdAt)}
         </span>
       </div>

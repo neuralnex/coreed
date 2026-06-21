@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ErrorBlob from "@/components/ErrorBlob";
 import { SpaceCard } from "@/components/space/SpaceCard";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 import { useWalletContext } from "@/lib/contexts/WalletContext";
@@ -45,154 +46,146 @@ export default function SpacesPage() {
   const otherSpaces = filteredSpaces.filter((space) => space.owner?.toLowerCase() !== address?.toLowerCase());
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-1 flex-col px-6 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-coreed-moss-bright to-coreed-clay bg-clip-text text-transparent mb-2">
-          AGENT SPACES
-        </h1>
-        <p className="text-coreed-sage">
-          {spaces.length} spaces deployed on Coreed
-        </p>
-      </div>
-
-      {/* Navigation */}
-      <div className="flex gap-2 mb-8 flex-wrap">
-        <Link
-          href="/spaces"
-          className="px-4 py-2 bg-coreed-moss/20 text-coreed-bone rounded-md text-sm font-medium"
-        >
-          All Spaces
-        </Link>
-        <button
-          onClick={() => setStatusFilter("active")}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            statusFilter === "active"
-              ? "bg-coreed-moss/20 text-coreed-bone"
-              : "text-coreed-sage hover:bg-coreed-panel-raised"
-          }`}
-        >
-          Active
-        </button>
-        <button
-          onClick={() => setStatusFilter("inactive")}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            statusFilter === "inactive"
-              ? "bg-coreed-moss/20 text-coreed-bone"
-              : "text-coreed-sage hover:bg-coreed-panel-raised"
-          }`}
-        >
-          Inactive
-        </button>
-        <button
-          onClick={() => setStatusFilter("asleep")}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            statusFilter === "asleep"
-              ? "bg-coreed-moss/20 text-coreed-bone"
-              : "text-coreed-sage hover:bg-coreed-panel-raised"
-          }`}
-        >
-          Asleep
-        </button>
-        {isConnected && (
-          <Link
-            href="/spaces/new"
-            className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
-          >
-            + Deploy Space
-          </Link>
-        )}
-      </div>
-
-      {error && (
-        <div className="mb-6 rounded border border-coreed-clay bg-coreed-panel-raised p-4">
-          <p className="font-mono text-sm text-coreed-clay" role="alert">
-            {error}
-          </p>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="flex-1 flex items-center justify-center py-12">
-          <p className="text-coreed-sage coreed-pulse">Loading spaces...</p>
-        </div>
-      ) : (
-        <>
-          {filteredSpaces.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center py-12">
-              <div className="text-center">
-                <p className="text-xl text-coreed-sage/70 mb-2">
-                  No spaces found
-                </p>
-                <p className="text-coreed-sage/50 text-sm">
-                  {isConnected 
-                    ? "Be the first to deploy a space!" 
-                    : "Connect your wallet to deploy spaces"}
-                </p>
-                {isConnected && (
-                  <Link
-                    href="/spaces/new"
-                    className="inline-block mt-4 px-4 py-2 bg-coreed-moss hover:bg-coreed-moss-bright text-coreed-void rounded-md text-sm transition-colors"
-                  >
-                    Deploy Space
-                  </Link>
-                )}
-              </div>
+    <div className="flex flex-col min-h-full">
+      <main className="flex-1 flex-col">
+        {/* Hero Section */}
+        <section className="px-6 py-24">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-12">
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-modal-green mb-2 block">
+                Agent Registry
+              </span>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-2">
+                Agent Spaces
+              </h1>
+              <p className="text-modal-text-dim text-sm">
+                {spaces.length} active agent environments deployed on Modal
+              </p>
             </div>
-          ) : (
-            <>
-              {/* My Spaces Section */}
-              {mySpaces.length > 0 && (
-                <section className="mb-12">
-                  <h2 className="text-xl font-semibold text-coreed-bone mb-6">
-                    My Spaces ({mySpaces.length})
-                  </h2>
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {mySpaces.map((space) => (
-                      <SpaceCard key={space.spaceId} deployment={{ space, model: { modelId: space.modelId.toString(), name: "Unknown", storageRootHash: "" }, healthStatus: { isActive: space.isActive, lastChecked: space.lastHealthCheck } }} signer={null} showSleepStatus />
-                    ))}
-                  </div>
-                </section>
-              )}
 
-              {/* All Spaces Section */}
-              <section>
-                <h2 className="text-xl font-semibold text-coreed-bone mb-6">
-                  All Spaces ({otherSpaces.length})
-                </h2>
-                {otherSpaces.length > 0 ? (
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {otherSpaces.map((space) => (
-                      <SpaceCard key={space.spaceId} deployment={{ space, model: { modelId: space.modelId.toString(), name: "Unknown", storageRootHash: "" }, healthStatus: { isActive: space.isActive, lastChecked: space.lastHealthCheck } }} signer={null} showSleepStatus />
-                    ))}
+            {/* Filter Navigation */}
+            <div className="flex gap-3 mb-12 flex-wrap items-center">
+              <button
+                onClick={() => setStatusFilter("all")}
+                className={statusFilter === "all" ? "modal-button-primary" : "modal-button-secondary"}
+              >
+                All Spaces
+              </button>
+              <button
+                onClick={() => setStatusFilter("active")}
+                className={statusFilter === "active" ? "modal-button-primary" : "modal-button-secondary"}
+              >
+                Active
+              </button>
+              <button
+                onClick={() => setStatusFilter("inactive")}
+                className={statusFilter === "inactive" ? "modal-button-primary" : "modal-button-secondary"}
+              >
+                Inactive
+              </button>
+              <button
+                onClick={() => setStatusFilter("asleep")}
+                className={statusFilter === "asleep" ? "modal-button-primary" : "modal-button-secondary"}
+              >
+                Asleep
+              </button>
+              {isConnected && (
+                <Link
+                  href="/spaces/new"
+                  className="modal-button-secondary"
+                >
+                  + Deploy Space
+                </Link>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Spaces Content Section */}
+        <section className="px-6 py-24 bg-black border-t border-modal-border">
+          <div className="max-w-6xl mx-auto">
+            <ErrorBlob error={error} />
+
+            {loading ? (
+              <div className="flex-1 flex items-center justify-center py-20">
+                <p className="text-modal-text-dim animate-pulse">Loading spaces...</p>
+              </div>
+            ) : (
+              <>
+                {filteredSpaces.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center py-20 border border-dashed border-modal-border rounded-2xl">
+                    <div className="text-center">
+                      <p className="text-lg text-modal-text-dim mb-4">
+                        No spaces found
+                      </p>
+                      {isConnected && (
+                        <Link
+                          href="/spaces/new"
+                          className="modal-button-primary text-xs px-6 py-2"
+                        >
+                          Deploy Space
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-coreed-sage/50 text-sm text-center py-8">
-                    No other spaces found
-                  </p>
-                )}
-              </section>
+                  <>
+                    {/* My Spaces Section */}
+                    {mySpaces.length > 0 && (
+                      <section className="mb-16">
+                        <h2 className="text-4xl font-bold tracking-tight text-white mb-8">
+                          My Spaces ({mySpaces.length})
+                        </h2>
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                          {mySpaces.map((space) => (
+                            <SpaceCard key={space.spaceId} deployment={{ space, model: { modelId: space.modelId.toString(), name: "Unknown", storageRootHash: "" }, healthStatus: { isActive: space.isActive, lastChecked: space.lastHealthCheck } }} signer={null} showSleepStatus />
+                          ))}
+                        </div>
+                      </section>
+                    )}
 
-              {/* Stats */}
-              <div className="mt-8 pt-6 border-t border-coreed-line/30 flex flex-wrap gap-6 text-sm text-coreed-sage">
-                <div>
-                  <span className="text-coreed-bone/70">Active: </span>
-                  {activeSpaces.length}
-                </div>
-                <div>
-                  <span className="text-coreed-bone/70">Total: </span>
-                  {spaces.length}
-                </div>
-                {mySpaces.length > 0 && (
-                  <div>
-                    <span className="text-coreed-bone/70">Mine: </span>
-                    {mySpaces.length}
-                  </div>
+                    {/* All Spaces Section */}
+                    <section>
+                      <h2 className="text-4xl font-bold tracking-tight text-white mb-8">
+                        All Spaces ({otherSpaces.length})
+                      </h2>
+                      {otherSpaces.length > 0 ? (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                          {otherSpaces.map((space) => (
+                            <SpaceCard key={space.spaceId} deployment={{ space, model: { modelId: space.spaceId.toString(), name: "Unknown", storageRootHash: "" }, healthStatus: { isActive: space.isActive, lastChecked: space.lastHealthCheck } }} signer={null} showSleepStatus />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-modal-text-dim text-sm text-center py-8">
+                          No other spaces found
+                        </p>
+                      )}
+                    </section>
+
+                    {/* Stats */}
+                    <div className="mt-16 pt-6 border-t border-modal-border flex flex-wrap gap-6 text-xs font-mono text-modal-text-dim">
+                      <div>
+                        <span className="text-white/60">Active: </span>
+                        {activeSpaces.length}
+                      </div>
+                      <div>
+                        <span className="text-white/60">Total: </span>
+                        {spaces.length}
+                      </div>
+                      {mySpaces.length > 0 && (
+                        <div>
+                          <span className="text-white/60">Mine: </span>
+                          {mySpaces.length}
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
-              </div>
-            </>
-          )}
-        </>
-      )}
-    </main>
+              </>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }

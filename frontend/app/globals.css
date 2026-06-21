@@ -1,19 +1,33 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-coreed-void: #0b0e0c;
-  --color-coreed-panel: #151916;
-  --color-coreed-panel-raised: #1d2220;
-  --color-coreed-line: #2a2e2b;
-  --color-coreed-bone: #e8e4d8;
-  --color-coreed-sage: #7a8b7e;
-  --color-coreed-moss: #5b7a62;
-  --color-coreed-moss-bright: #8fb89a;
-  --color-coreed-clay: #c97b4a;
-  --color-coreed-clay-dim: #8a5836;
+  --color-bg: #000000;
+  --color-surface: #111111;
+  --color-surface-raised: #1a1a1a;
+  --color-surface-hover: #222222;
+  --color-border: #2a2a2a;
+  --color-border-light: #333333;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #888888;
+  --color-text-muted: #666666;
+  --color-accent-purple: #7C3AED;
+  --color-accent-magenta: #EC4899;
+  --color-accent-pink: #FF3B7F;
+  --color-accent-blue: #6366F1;
 
+  /* Modal Theme */
+  --color-modal-green: #bfff00;
+  --color-modal-green-dim: rgba(191, 255, 0, 0.1);
+  --color-modal-bg: #000000;
+  --color-modal-surface: #0a0a0a;
+  --color-modal-surface-raised: #141414;
+  --color-modal-border: #1f1f1f;
+  --color-modal-text: #ffffff;
+  --color-modal-text-dim: #888888;
+  --color-modal-mint: #e4f1e1;
+
+  --font-sans: "Manrope", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --font-sans: "Inter", system-ui, sans-serif;
 }
 
 * {
@@ -29,7 +43,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-coreed-moss-bright);
+  outline: 2px solid var(--color-accent-purple);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -43,16 +57,12 @@ body {
   }
 }
 
-.coreed-panel {
-  background-color: var(--color-coreed-panel);
-  border: 1px solid var(--color-coreed-line);
-  background-image: repeating-linear-gradient(
-    180deg,
-    rgba(232, 228, 216, 0.012) 0px,
-    rgba(232, 228, 216, 0.012) 1px,
-    transparent 1px,
-    transparent 3px
-  );
+@keyframes coreed-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.coreed-pulse {
+  animation: coreed-pulse 1.6s ease-in-out infinite;
 }
 
 @keyframes coreed-resolve {
@@ -63,255 +73,174 @@ body {
   animation: coreed-resolve 280ms ease-out;
 }
 
-@keyframes coreed-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
 }
-.coreed-pulse {
-  animation: coreed-pulse 1.6s ease-in-out infinite;
+
+@keyframes glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-accent-purple), var(--color-accent-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient border utility */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--color-accent-purple), var(--color-accent-magenta));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Glow effect for hero */
+.hero-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.15), transparent 70%);
+  pointer-events: none;
+}
+
+.hero-glow-2 {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.1), transparent 70%);
+  pointer-events: none;
 }
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
-  /* Base touch targets - minimum 44x44px for accessibility */
-  button,
-  [role="button"],
-  a,
-  .touch-target {
+  button, [role="button"], a, .touch-target {
     min-height: 44px;
     min-width: 44px;
   }
-  
-  /* Prevent double-tap zoom on buttons */
-  button,
-  [role="button"] {
+
+  button, [role="button"] {
     touch-action: manipulation;
   }
-  
-  /* Better touch feedback */
-  button:active,
-  [role="button"]:active {
+
+  button:active, [role="button"]:active {
     transform: scale(0.98);
     opacity: 0.9;
   }
-  
-  /* Ensure inputs are touch-friendly */
-  input,
-  select,
-  textarea {
+
+  input, select, textarea {
     min-height: 44px;
     padding: 12px 16px;
   }
-  
-  /* Prevent horizontal overflow */
+
   html {
     overflow-x: hidden;
   }
-  
-  /* Better scrolling on mobile */
+
   body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: auto;
   }
-  
-  /* Fix position: sticky for mobile */
-  .sticky {
-    position: -webkit-sticky;
-    position: sticky;
-  }
 }
 
-/* Tablet optimizations */
-@media (max-width: 1024px) and (min-width: 769px) {
-  /* Slightly larger touch targets for tablets */
-  button,
-  [role="button"] {
-    min-height: 40px;
-  }
-}
-
-/* Prevent text selection on buttons */
-button,
-[role="button"] {
+button, [role="button"] {
   user-select: none;
   -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
 }
 
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Theme support */
-:root {
-  /* Light theme variables (default) */
-  --bg-primary: #f8f8f8;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #e8e8e8;
-  --text-primary: #1a1a1a;
-  --text-secondary: #666666;
-  --text-tertiary: #999999;
-  --border-primary: #e0e0e0;
-  --border-secondary: #d0d0d0;
-  --accent-primary: #5b7a62;
-  --accent-secondary: #8fb89a;
-  --accent-tertiary: #c97b4a;
+/* Smooth scrolling for docs sidebar */
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
 }
 
-.dark {
-  /* Dark theme variables (already set in our color scheme) */
-  --bg-primary: #0b0e0c;
-  --bg-secondary: #151916;
-  --bg-tertiary: #1d2220;
-  --text-primary: #e8e4d8;
-  --text-secondary: #7a8b7e;
-  --text-tertiary: #5b7a62;
-  --border-primary: #2a2e2b;
-  --border-secondary: #3a3e3b;
-  --accent-primary: #8fb89a;
-  --accent-secondary: #5b7a62;
-  --accent-tertiary: #c97b4a;
+/* Modal Utility Classes */
+.modal-card {
+  background: var(--color-modal-surface);
+  border: 1px solid var(--color-modal-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
 }
 
-.light {
-  /* Light theme - override dark theme */
-  --color-coreed-void: #f8f8f8;
-  --color-coreed-panel: #ffffff;
-  --color-coreed-panel-raised: #f0f0f0;
-  --color-coreed-line: #e0e0e0;
-  --color-coreed-bone: #1a1a1a;
-  --color-coreed-sage: #666666;
-  --color-coreed-moss: #5b7a62;
-  --color-coreed-moss-bright: #8fb89a;
-  --color-coreed-clay: #c97b4a;
-  --color-coreed-clay-dim: #8a5836;
+.modal-card:hover {
+  border-color: var(--color-modal-green);
+  box-shadow: 0 0 20px rgba(191, 255, 0, 0.05);
 }
 
-/* Mobile Safari specific fixes */
-@supports (-webkit-touch-callout: none) {
-  /* iOS Safari */
-  button,
-  input,
-  select,
-  textarea {
-    cursor: pointer;
-  }
-  
-  /* Fix input zoom on focus */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="search"],
-  textarea {
-    font-size: 16px !important;
-  }
-  
-  /* Prevent default yellow input background on autofill */
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus,
-  input:-webkit-autofill:active {
-    -webkit-text-fill-color: var(--color-coreed-bone);
-    transition: background-color 5000s ease-in-out 0s;
-  }
+.modal-button-primary {
+  background: var(--color-modal-green);
+  color: #000000;
+  border-radius: 9999px;
+  padding: 0.625rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Enhanced Mobile Button Responsiveness */
-@media (max-width: 768px) {
-  /* Ensure all interactive elements have minimum touch size */
-  button:not(.text-xs):not(.text-sm),
-  [role="button"]:not(.text-xs):not(.text-sm),
-  a:not(.text-xs):not(.text-sm) {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 12px 24px;
-  }
-  
-  /* Better button feedback on mobile */
-  button:active:not(:disabled),
-  [role="button"]:active:not(:disabled),
-  a:active:not(:disabled) {
-    transform: scale(0.98);
-    opacity: 0.9;
-  }
-  
-  /* Prevent text overflow on small screens */
-  .truncate-mobile {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  /* Mobile-specific button sizing for action buttons */
-  .mobile-action-btn {
-    min-height: 48px;
-    padding: 14px 28px;
-    font-size: 16px;
-    line-height: 1.5;
-  }
-  
-  /* Fix button alignment in flex containers */
-  .flex.gap-4 button,
-  .flex.gap-4 a {
-    flex-shrink: 0;
-  }
-  
-  /* Ensure form inputs are touch-friendly */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="number"],
-  input[type="search"],
-  select,
-  textarea {
-    min-height: 48px;
-    padding: 14px 18px;
-    font-size: 16px;
-  }
-  
-  /* Better spacing for mobile forms */
-  .space-y-6 > div > input,
-  .space-y-6 > div > select,
-  .space-y-6 > div > textarea {
-    width: 100%;
-  }
-  
-  /* Mobile card touch targets */
-  .rounded-lg {
-    touch-action: manipulation;
-  }
-  
-  /* Fix mobile nav menu */
-  .md\:hidden .flex.col gap-3 > * {
-    min-height: 44px;
-    padding: 12px 16px;
-  }
+.modal-button-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
-/* Tablet optimizations */
-@media (max-width: 1024px) and (min-width: 769px) {
-  button,
-  [role="button"],
-  a {
-    min-height: 40px;
-    min-width: 40px;
-  }
+.modal-button-primary:active {
+  transform: translateY(0);
 }
 
-/* Very small screens (e.g., iPhone SE) */
-@media (max-width: 320px) {
-  button,
-  [role="button"],
-  a {
-    min-height: 44px;
-    min-width: 100%;
-    padding: 12px 16px;
-  }
-  
-  .flex.gap-4 {
-    flex-direction: column;
-    gap: 8px;
-  }
+.modal-button-secondary {
+  background: transparent;
+  color: var(--color-modal-text);
+  border: 1px solid var(--color-modal-border);
+  border-radius: 9999px;
+  padding: 0.625rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-button-secondary:hover {
+  border-color: var(--color-modal-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-glow {
+  position: absolute;
+  background: radial-gradient(circle, var(--color-modal-green-dim) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.modal-section-light {
+  background-color: var(--color-modal-mint);
+  color: #000000;
+}
+
+.modal-nav {
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
 }

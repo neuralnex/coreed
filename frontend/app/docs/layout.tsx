@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BookOpen, Laptop, Link as LinkIcon } from "lucide-react";
 
 export default function DocsLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -34,28 +35,28 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
   const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
   return (
-    <div className="flex min-h-screen bg-coreed-void">
+    <div className="flex min-h-screen bg-black">
       {/* Sidebar */}
-      <aside className="w-64 bg-coreed-panel border-r border-coreed-line/50 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
+      <aside className="w-64 bg-modal-surface border-r border-modal-border flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="p-6">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-coreed-moss-bright to-coreed-clay bg-clip-text text-transparent mb-6">
+          <h1 className="text-xl font-bold text-white mb-6">
             COREED DOCS
           </h1>
 
           {/* User Walkthrough Section */}
           <div className="mb-8">
-            <h2 className="text-xs font-semibold text-coreed-bone/70 uppercase tracking-wider mb-4 px-2">
-              📚 USER WALKTHROUGH
+            <h2 className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-4 px-2">
+              <BookOpen className="inline-block w-3.5 h-3.5 mr-1.5 -mt-0.5" /> USER WALKTHROUGH
             </h2>
             <nav className="space-y-1">
               {userWalkthroughItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`block px-3 py-2 rounded text-sm transition-colors ${
+                  className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                     isActive(item.path)
-                      ? "bg-coreed-moss/20 text-coreed-bone font-medium"
-                      : "text-coreed-sage hover:bg-coreed-panel-raised hover:text-coreed-bone"
+                      ? "bg-modal-green/20 text-white font-medium"
+                      : "text-modal-text-dim hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -66,18 +67,18 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
 
           {/* Developer Docs Section */}
           <div className="mb-8">
-            <h2 className="text-xs font-semibold text-coreed-bone/70 uppercase tracking-wider mb-4 px-2">
-              💻 DEVELOPER DOCS
+            <h2 className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-4 px-2">
+              <Laptop className="inline-block w-3.5 h-3.5 mr-1.5 -mt-0.5" /> DEVELOPER DOCS
             </h2>
             <nav className="space-y-1">
               {developerItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`block px-3 py-2 rounded text-sm transition-colors ${
+                  className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                     isActive(item.path)
-                      ? "bg-coreed-moss/20 text-coreed-bone font-medium"
-                      : "text-coreed-sage hover:bg-coreed-panel-raised hover:text-coreed-bone"
+                      ? "bg-modal-green/20 text-white font-medium"
+                      : "text-modal-text-dim hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -87,16 +88,16 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
           </div>
 
           {/* Quick Links */}
-          <div className="border-t border-coreed-line/30 pt-6">
-            <h2 className="text-xs font-semibold text-coreed-bone/70 uppercase tracking-wider mb-4 px-2">
-              🔗 QUICK LINKS
+          <div className="border-t border-modal-border pt-6">
+            <h2 className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-4 px-2">
+              <LinkIcon className="inline-block w-3.5 h-3.5 mr-1.5 -mt-0.5" /> QUICK LINKS
             </h2>
             <nav className="space-y-1">
               <a
                 href="https://github.com/neuralnex/coreed"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-3 py-2 rounded text-sm text-coreed-sage hover:bg-coreed-panel-raised hover:text-coreed-bone transition-colors"
+                className="block px-3 py-2 rounded text-sm text-modal-text-dim hover:bg-white/5 hover:text-white transition-colors"
               >
                 GitHub Repository
               </a>
@@ -104,7 +105,7 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
                 href="https://0g.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-3 py-2 rounded text-sm text-coreed-sage hover:bg-coreed-panel-raised hover:text-coreed-bone transition-colors"
+                className="block px-3 py-2 rounded text-sm text-modal-text-dim hover:bg-white/5 hover:text-white transition-colors"
               >
                 0G Chain
               </a>
@@ -112,7 +113,7 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
                 href="https://evmrpc-testnet.0g.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-3 py-2 rounded text-sm text-coreed-sage hover:bg-coreed-panel-raised hover:text-coreed-bone transition-colors"
+                className="block px-3 py-2 rounded text-sm text-modal-text-dim hover:bg-white/5 hover:text-white transition-colors"
               >
                 Galileo RPC
               </a>
@@ -120,7 +121,7 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
                 href="https://chainscan-galileo.0g.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-3 py-2 rounded text-sm text-coreed-sage hover:bg-coreed-panel-raised hover:text-coreed-bone transition-colors"
+                className="block px-3 py-2 rounded text-sm text-modal-text-dim hover:bg-white/5 hover:text-white transition-colors"
               >
                 Galileo Explorer
               </a>
@@ -128,11 +129,11 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
           </div>
 
           {/* Version Info */}
-          <div className="border-t border-coreed-line/30 pt-6 mt-6">
-            <p className="text-xs text-coreed-sage/50">
+          <div className="border-t border-modal-border pt-6 mt-6">
+            <p className="text-xs text-modal-text-dim/50">
               Coreed v3.0.0
             </p>
-            <p className="text-xs text-coreed-sage/50">
+            <p className="text-xs text-modal-text-dim/50">
               0G Chain Galileo Testnet
             </p>
           </div>

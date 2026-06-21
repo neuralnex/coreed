@@ -17,17 +17,17 @@ export function SpaceCard({ deployment, signer, showSleepStatus = true }: SpaceC
   const model = deployment.model;
   
   return (
-    <div className="rounded border border-coreed-line bg-coreed-panel p-5 hover:border-coreed-moss transition-colors">
-      <div className="flex items-start justify-between mb-3">
+    <div className="modal-card hover:border-modal-green transition-all duration-200">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded border border-coreed-line flex items-center justify-center">
-            <span className="font-mono text-xs text-coreed-sage">🤖</span>
+          <div className="w-8 h-8 rounded border border-white/5 flex items-center justify-center bg-white/5">
+            <span className="font-mono text-xs text-modal-text-dim">🤖</span>
           </div>
           <div>
-            <h3 className="font-mono text-sm font-medium text-coreed-bone">
+            <h3 className="font-sans text-base font-semibold text-white">
               {space.name}
             </h3>
-            <p className="font-mono text-xs text-coreed-sage">
+            <p className="font-mono text-xs text-modal-text-dim mt-0.5">
               v{space.version}
             </p>
           </div>
@@ -43,29 +43,29 @@ export function SpaceCard({ deployment, signer, showSleepStatus = true }: SpaceC
         </div>
       </div>
 
-      <p className="mb-4 text-sm leading-relaxed text-coreed-sage/80 line-clamp-2">
+      <p className="mb-4 text-sm leading-relaxed text-modal-text-dim line-clamp-2">
         {space.description || "No description provided"}
       </p>
 
       <div className="flex items-center justify-between text-xs">
         <div className="flex flex-wrap gap-x-4 gap-y-1">
-          <span className="font-mono text-coreed-sage/70">
+          <span className="font-mono text-modal-text-dim">
             Model: {model.name}
           </span>
-          <span className="font-mono text-coreed-sage/70">
+          <span className="font-mono text-modal-text-dim">
             Requests: {space.requestCount}
           </span>
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-coreed-line/50">
+      <div className="mt-4 pt-4 border-t border-white/5">
         <div className="flex items-center justify-between">
-          <span className="font-mono text-xs text-coreed-sage">
+          <span className="font-mono text-xs text-modal-text-dim">
             Space ID: {space.spaceId}
           </span>
           <Link
             href={`/spaces/${space.spaceId}`}
-            className="font-mono text-xs text-coreed-moss-bright hover:text-coreed-bone"
+            className="font-mono text-xs text-modal-green hover:text-white transition-colors"
           >
             view details →
           </Link>

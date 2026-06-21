@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { JsonRpcSigner } from "ethers";
 import Link from "next/link";
+import { Library } from "lucide-react";
 import { StatusStrip } from "@/components/StatusStrip";
 import { ResolvingHash } from "@/components/ResolvingHash";
 import { useAgentRegistry, type AgentMeta } from "@/lib/useAgentRegistry";
@@ -43,7 +44,7 @@ export default function Playground() {
   }
 
   return (
-    <>
+    <div className="flex flex-col min-h-full">
       <StatusStrip
         address={address}
         onConnect={(s, addr) => {
@@ -52,98 +53,106 @@ export default function Playground() {
         }}
       />
 
-      <main className="mx-auto flex max-w-4xl flex-1 flex-col px-6 py-12">
-        <div className="mb-8 flex items-baseline justify-between">
-          <div>
-            <h1 className="font-mono text-2xl font-medium tracking-tight text-coreed-bone">
-              playground
-            </h1>
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-coreed-sage">
-              Look up a registered Agentic ID to inspect its on-chain metadata.
-            </p>
-          </div>
-          <div className="flex gap-4">
-            <Link
-              href="/"
-              className="font-mono text-xs text-coreed-sage hover:text-coreed-bone"
-            >
-              ← launch
-            </Link>
-            <Link
-              href="/hub"
-              className="font-mono text-xs text-coreed-sage hover:text-coreed-bone"
-            >
-              🏛️ hub
-            </Link>
-          </div>
-        </div>
-
-        <form onSubmit={handleLookup} className="coreed-panel rounded-lg p-6">
-          <label htmlFor="agent-id" className="mb-1.5 block font-mono text-xs text-coreed-sage">
-            agentic id
-          </label>
-          <div className="flex gap-2">
-            <input
-              id="agent-id"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="1"
-              inputMode="numeric"
-              className="flex-1 rounded border border-coreed-line bg-coreed-void px-3 py-2 font-mono text-sm text-coreed-bone placeholder:text-coreed-sage/50 focus:border-coreed-moss"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded border border-coreed-line bg-coreed-panel-raised px-4 py-2 font-mono text-xs text-coreed-bone transition-colors hover:border-coreed-moss disabled:opacity-50"
-            >
-              {loading ? "querying…" : "query"}
-            </button>
-          </div>
-
-          {error && (
-            <p className="mt-4 font-mono text-xs text-coreed-clay" role="alert">
-              {error}
-            </p>
-          )}
-
-          {agent && (
-            <dl className="mt-6 space-y-4 border-t border-coreed-line pt-5">
+      <main className="flex-1 flex-col">
+        {/* Hero Section */}
+        <section className="px-6 py-24">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-12 flex items-baseline justify-between">
               <div>
-                <dt className="font-mono text-xs text-coreed-sage">name</dt>
-                <dd className="mt-1 font-mono text-sm text-coreed-bone">{agent.name}</dd>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-modal-green mb-2 block">
+                  Agent Lookup
+                </span>
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-2">
+                  playground
+                </h1>
+                <p className="text-modal-text-dim">
+                  Look up a registered Agentic ID to inspect its on-chain metadata.
+                </p>
               </div>
-              <div>
-                <dt className="font-mono text-xs text-coreed-sage">storage root hash</dt>
-                <dd className="mt-1">
-                  <ResolvingHash value={agent.storageRootHash} pending={false} className="text-sm" />
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono text-xs text-coreed-sage">developer</dt>
-                <dd className="mt-1 font-mono text-sm text-coreed-bone">
-                  {agent.developer.slice(0, 10)}…{agent.developer.slice(-8)}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono text-xs text-coreed-sage">launched</dt>
-                <dd className="mt-1 font-mono text-sm text-coreed-bone">
-                  {new Date(agent.launchTimestamp * 1000).toLocaleString()}
-                </dd>
-              </div>
-              <div className="pt-1">
-                <a
-                  href={`${GALILEO_EXPLORER_URL}/address/${agent.developer}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-mono text-xs text-coreed-bone underline decoration-coreed-line decoration-1 underline-offset-2 hover:decoration-coreed-moss-bright"
+              <div className="flex gap-4">
+                <Link
+                  href="/"
+                  className="modal-button-secondary"
                 >
-                  view developer on explorer ↗
-                </a>
+                  ← launch
+                </Link>
+                <Link
+                  href="/hub"
+                  className="modal-button-secondary"
+                >
+                  <Library className="inline-block w-4 h-4 mr-1 -mt-0.5" /> hub
+                </Link>
               </div>
-            </dl>
-          )}
-        </form>
+            </div>
+
+            <form onSubmit={handleLookup} className="modal-card">
+              <label htmlFor="agent-id" className="mb-1.5 block font-mono text-xs text-modal-text-dim">
+                agentic id
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="agent-id"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="1"
+                  inputMode="numeric"
+                  className="flex-1 rounded-lg border border-modal-border bg-black px-3 py-2 font-mono text-sm text-white placeholder:text-modal-text-dim/50 focus:border-modal-green focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="modal-button-primary"
+                >
+                  {loading ? "querying…" : "query"}
+                </button>
+              </div>
+
+              {error && (
+                <p className="mt-4 font-mono text-xs text-red-400" role="alert">
+                  {error}
+                </p>
+              )}
+
+              {agent && (
+                <dl className="mt-6 space-y-4 border-t border-modal-border pt-5">
+                  <div>
+                    <dt className="font-mono text-xs text-modal-text-dim">name</dt>
+                    <dd className="mt-1 font-mono text-sm text-white">{agent.name}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-mono text-xs text-modal-text-dim">storage root hash</dt>
+                    <dd className="mt-1">
+                      <ResolvingHash value={agent.storageRootHash} pending={false} className="text-sm" />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-mono text-xs text-modal-text-dim">developer</dt>
+                    <dd className="mt-1 font-mono text-sm text-white">
+                      {agent.developer.slice(0, 10)}…{agent.developer.slice(-8)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-mono text-xs text-modal-text-dim">launched</dt>
+                    <dd className="mt-1 font-mono text-sm text-white">
+                      {new Date(agent.launchTimestamp * 1000).toLocaleString()}
+                    </dd>
+                  </div>
+                  <div className="pt-1">
+                    <a
+                      href={`${GALILEO_EXPLORER_URL}/address/${agent.developer}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-xs text-white underline decoration-white/20 decoration-1 underline-offset-2 hover:decoration-modal-green"
+                    >
+                      view developer on explorer ↗
+                    </a>
+                  </div>
+                </dl>
+              )}
+            </form>
+          </div>
+        </section>
       </main>
-    </>
+    </div>
   );
 }

@@ -85,13 +85,13 @@ export function useWallet() {
     
     // Mobile-specific checks
     // OKX Wallet Mobile - checks both the global and the injected provider
-    if (window.okxwallet || (window.ethereum as ExtendedEip1193Provider)?.isOkxWallet || (window.ethereum as ExtendedEip1193Provider)?.isOKX) return true;
+    if (window.okxwallet || (window.ethereum as unknown as ExtendedEip1193Provider)?.isOkxWallet || (window.ethereum as unknown as ExtendedEip1193Provider)?.isOKX) return true;
     
     // WalletConnect mobile (injected by WalletConnect SDK)
     if (window.WalletConnect) return true;
     
     // Trust Wallet Mobile - checks both global and injected provider
-    if (window.Trust || window.trustwallet || (window.ethereum as ExtendedEip1193Provider)?.isTrust || (window.ethereum as ExtendedEip1193Provider)?.isTrustWallet) return true;
+    if (window.Trust || window.trustwallet || (window.ethereum as unknown as ExtendedEip1193Provider)?.isTrust || (window.ethereum as unknown as ExtendedEip1193Provider)?.isTrustWallet) return true;
     
     return false;
   }, []);

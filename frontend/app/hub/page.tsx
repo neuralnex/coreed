@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Flame, Sparkles, ArrowLeft } from "lucide-react";
+import ErrorBlob from "@/components/ErrorBlob";
 import { ModelCard } from "@/components/hub/ModelCard";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useWalletContext } from "@/lib/contexts/WalletContext";
@@ -38,120 +40,137 @@ export default function HubPage() {
   }, [getTrendingModels, getTotalModels, searchModels]);
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-1 flex-col px-6 py-12">
-        <div className="mb-8">
-          <div className="flex items-baseline justify-between">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-coreed-moss-bright to-coreed-clay bg-clip-text text-transparent mb-2">
-                COREED HUB
-              </h1>
-              <p className="text-coreed-sage">
-                Discover and deploy AI models on 0G. {totalModels} models registered.
-              </p>
+    <div className="flex flex-col min-h-full">
+      <main className="flex-1 flex-col">
+        {/* Hero Section */}
+        <section className="px-6 py-24">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-baseline justify-between mb-12">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-modal-green mb-2 block">
+                  Model Registry
+                </span>
+                <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
+                  COREED HUB
+                </h1>
+                <p className="text-modal-text-dim">
+                  Discover and deploy AI models on 0G. {totalModels} models registered.
+                </p>
+              </div>
+              <Link
+                href="/"
+                className="modal-button-secondary"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1.5" /> Launch Agent
+              </Link>
             </div>
-            <Link
-              href="/"
-              className="px-4 py-2 bg-coreed-panel-raised border border-coreed-line/30 rounded-md text-sm text-coreed-bone hover:border-coreed-moss-bright transition-colors"
-            >
-              ← Launch Agent
-            </Link>
-          </div>
-        </div>
 
-        <div className="flex gap-2 mb-8 flex-wrap">
-          <Link
-            href="/hub"
-            className="px-4 py-2 bg-coreed-moss/20 text-coreed-bone rounded-md text-sm font-medium"
-          >
-            Overview
-          </Link>
-          <Link
-            href="/hub/search"
-            className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
-          >
-            Browse All
-          </Link>
-          {isConnected && address && (
-            <Link
-              href="/hub/my-models"
-              className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
-            >
-              My Models
-            </Link>
-          )}
-          <Link
-            href="/spaces"
-            className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"
-          >
-            Spaces
-          </Link>
-        </div>
-
-        {error && (
-          <div className="mb-6 rounded border border-coreed-clay bg-coreed-panel-raised p-4">
-            <p className="font-mono text-xs text-coreed-clay" role="alert">
-              {error}
-            </p>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="font-mono text-coreed-sage coreed-pulse">Loading models...</p>
-          </div>
-        ) : (
-          <>
-            <section className="mb-12">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-coreed-bone">
-                  🔥 Trending Models
-                </h2>
+            {/* Navigation Tabs */}
+            <div className="flex gap-2 mb-12 flex-wrap">
+              <Link
+                href="/hub"
+                className="modal-button-primary text-xs px-5 py-1.5"
+              >
+                Overview
+              </Link>
+              <Link
+                href="/hub/search"
+                className="modal-button-secondary text-xs px-5 py-1.5"
+              >
+                Browse All
+              </Link>
+              {isConnected && address && (
                 <Link
-                  href="/hub/search?sort=popular"
-                  className="text-sm text-coreed-moss-bright hover:text-coreed-bone transition-colors"
+                  href="/hub/my-models"
+                  className="modal-button-secondary text-xs px-5 py-1.5"
                 >
-                  View All →
+                  My Models
                 </Link>
-              </div>
-              {trendingModels.length === 0 ? (
-                <p className="font-mono text-xs text-coreed-sage">
-                  No models yet. Be the first to upload!
-                </p>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {trendingModels.map((model) => (
-                    <ModelCard key={model.modelId} model={model} />
-                  ))}
-                </div>
               )}
-            </section>
+              <Link
+                href="/spaces"
+                className="modal-button-secondary text-xs px-5 py-1.5"
+              >
+                Spaces
+              </Link>
+            </div>
 
-            <section>
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-coreed-bone">
-                  🆕 Recently Added
-                </h2>
-                <Link
-                  href="/hub/search?sort=recent"
-                  className="text-sm text-coreed-moss-bright hover:text-coreed-bone transition-colors"
-                >
-                  View All →
-                </Link>
+            <ErrorBlob error={error} />
+          </div>
+        </section>
+
+        {/* Trending Models Section */}
+        <section className="px-6 py-24 bg-black">
+          <div className="max-w-6xl mx-auto">
+            {loading ? (
+              <div className="flex-1 flex items-center justify-center py-20">
+                <p className="text-modal-text-dim animate-pulse">Loading models...</p>
               </div>
-              {recentModels.length === 0 ? (
-                <p className="font-mono text-xs text-coreed-sage">
-                  No recent models.
-                </p>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {recentModels.map((model) => (
-                    <ModelCard key={model.modelId} model={model} />
-                  ))}
+            ) : (
+              <>
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-4xl font-bold tracking-tight text-white">
+                    <Flame className="inline-block w-6 h-6 mr-2 -mt-1 text-modal-green" /> Trending Models
+                  </h2>
+                  <Link
+                    href="/hub/search?sort=popular"
+                    className="text-sm font-medium text-modal-text-dim hover:text-white transition-colors"
+                  >
+                    View All →
+                  </Link>
                 </div>
-              )}
-            </section>
-          </>
-        )}
+                {trendingModels.length === 0 ? (
+                  <div className="text-center py-20 border border-dashed border-modal-border rounded-2xl">
+                    <p className="text-modal-text-dim">
+                      No models yet. Be the first to upload!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {trendingModels.map((model) => (
+                      <ModelCard key={model.modelId} model={model} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Recently Added Section */}
+        <section className="px-6 py-24 bg-[#0a0a0a] border-t border-modal-border">
+          <div className="max-w-6xl mx-auto">
+            {!loading && (
+              <>
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-4xl font-bold tracking-tight text-white">
+                    <Sparkles className="inline-block w-6 h-6 mr-2 -mt-1 text-modal-green" /> Recently Added
+                  </h2>
+                  <Link
+                    href="/hub/search?sort=recent"
+                    className="text-sm font-medium text-modal-text-dim hover:text-white transition-colors"
+                  >
+                    View All →
+                  </Link>
+                </div>
+                {recentModels.length === 0 ? (
+                  <div className="text-center py-20 border border-dashed border-modal-border rounded-2xl">
+                    <p className="text-modal-text-dim">
+                      No recent models.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {recentModels.map((model) => (
+                      <ModelCard key={model.modelId} model={model} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
       </main>
+    </div>
   );
 }
