@@ -90,7 +90,7 @@ export default function SearchPage() {
 
       {/* Search Bar */}
       <div className="mb-8">
-        <form onSubmit={handleSearch} className="flex gap-4">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
           <div className="flex-grow">
             <input
               type="search"

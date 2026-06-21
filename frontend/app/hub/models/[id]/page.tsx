@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Heart, Download, Rocket, Package } from "lucide-react";
 import { useWalletContext } from "@/lib/contexts/WalletContext";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentRegistry } from "@/lib/useAgentRegistry";
@@ -156,7 +157,7 @@ export default function ModelDetailPage() {
 
         {/* Model Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-coreed-moss-bright to-coreed-clay bg-clip-text text-transparent mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-coreed-moss-bright to-coreed-clay bg-clip-text text-transparent mb-4">
             {model.name}
           </h1>
           <div className="flex flex-wrap gap-4 items-center mb-4">
@@ -185,14 +186,14 @@ export default function ModelDetailPage() {
                   : "bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone hover:border-coreed-moss"
               }`}
             >
-              ❤️ {likeCount} {likeCount === 1 ? "like" : "likes"}
+              <Heart className="inline-block w-4 h-4 mr-1 -mt-0.5" /> {likeCount} {likeCount === 1 ? "like" : "likes"}
             </button>
             <button
               onClick={handleDownload}
               disabled={!isConnected}
               className="px-4 py-3 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
             >
-              📥 Download
+              <Download className="w-4 h-4" /> Download
             </button>
             {isConnected && (
               <button
@@ -200,7 +201,7 @@ export default function ModelDetailPage() {
                 disabled={deploying}
                 className="px-4 py-3 bg-coreed-moss hover:bg-coreed-moss-bright disabled:bg-coreed-line disabled:cursor-not-allowed text-coreed-void rounded-md text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
               >
-                {deploying ? "Deploying..." : "🚀 Deploy Space"}
+                {deploying ? "Deploying..." : <><Rocket className="inline-block w-4 h-4 mr-1 -mt-0.5" /> Deploy Space</>}
               </button>
             )}
           </div>
@@ -280,7 +281,7 @@ export default function ModelDetailPage() {
           </h2>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-coreed-moss/10 rounded-lg flex items-center justify-center">
-              <span className="text-xl">📦</span>
+              <Package className="w-6 h-6 text-coreed-moss-bright" />
             </div>
             <div>
               <p className="text-sm text-coreed-bone/70">Storage Root Hash</p>
@@ -328,19 +329,19 @@ export default function ModelDetailPage() {
                 disabled={deploying}
                 className="px-4 py-3 bg-coreed-moss hover:bg-coreed-moss-bright disabled:bg-coreed-line disabled:cursor-not-allowed text-coreed-void rounded-md text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
               >
-                {deploying ? "Deploying..." : "🚀 Deploy Space"}
+                {deploying ? "Deploying..." : <><Rocket className="inline-block w-4 h-4 mr-1 -mt-0.5" /> Deploy Space</>}
               </button>
               <button
                 onClick={handleLike}
                 className="px-4 py-3 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
               >
-                {liked ? "❤️ Unlike" : "❤️ Like"}
+                <Heart className="inline-block w-4 h-4 mr-1 -mt-0.5" /> {liked ? "Unlike" : "Like"}
               </button>
               <button
                 onClick={handleDownload}
                 className="px-4 py-3 bg-coreed-panel-raised border border-coreed-line/30 text-coreed-bone rounded-md text-sm font-medium hover:border-coreed-moss transition-colors touch-manipulation active:scale-[0.98] min-h-[44px]"
               >
-                📥 Download
+                <Download className="inline-block w-4 h-4 mr-1 -mt-0.5" /> Download
               </button>
             </div>
           </div>

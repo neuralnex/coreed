@@ -58,7 +58,7 @@ export default function Home() {
     <div className="flex flex-col min-h-full">
       <main className="flex-1 flex-col">
         {/* Hero Section */}
-        <section className="relative overflow-hidden pt-20 pb-32 px-6">
+        <section className="relative overflow-hidden pt-16 pb-20 md:pt-20 md:pb-32 px-6">
           <div className="modal-glow top-[-20%] left-1/2 translate-x-[-50%] w-[800px] h-[600px] opacity-20"></div>
 
           <div className="relative z-10 max-w-4xl mx-auto text-center">
@@ -102,14 +102,14 @@ export default function Home() {
         </section>
 
         {/* Featured Models Section (Dark) */}
-        <section className="px-6 py-24 bg-black">
+        <section className="px-6 py-16 md:py-24 bg-black">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-12">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-modal-green mb-2 block">
                   Model Registry
                 </span>
-                <h2 className="text-4xl font-bold tracking-tight text-white">
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
                   The production cloud for AI.
                 </h2>
               </div>
@@ -148,15 +148,15 @@ export default function Home() {
         </section>
 
         {/* How It Works Section (Light Mint) */}
-        <section className="modal-section-light py-24 px-6">
+        <section className="modal-section-light py-16 md:py-24 px-6">
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-black/40 mb-2 block">
                   Workloads
                 </span>
-                <h2 className="text-5xl font-bold tracking-tight text-black mb-8 leading-[1.1]">
-                  Build full-scale <br /> AI systems.
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-black mb-8 leading-[1.1]">
+                  Build full-scale <br className="hidden md:block" /> AI systems.
                 </h2>
                 <p className="text-lg text-black/70 mb-10 leading-relaxed">
                   From interactive coding agents to long-running RL rollouts, Modal Sandboxes 
@@ -207,9 +207,9 @@ export default function Home() {
         </section>
 
         {/* Quick Launch / Uploader Section (Dark) */}
-        <section className="px-6 py-24 bg-[#0a0a0a] border-t border-modal-border">
+        <section className="px-6 py-16 md:py-24 bg-[#0a0a0a] border-t border-modal-border">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-white mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-12">
               Ready to ship?
             </h2>
             <div className="modal-card bg-black/50 backdrop-blur-sm">
@@ -217,7 +217,7 @@ export default function Home() {
                 signer={signer || null} 
                 onRequireWallet={handleRequireWallet}
               />
-              <div className="mt-8 text-sm text-modal-text-dim flex justify-center gap-8">
+              <div className="mt-8 text-sm text-modal-text-dim flex justify-center gap-8 flex-wrap">
                 <div className="flex items-center gap-2">
                   <span className="text-modal-green">✓</span> No commitments
                 </div>

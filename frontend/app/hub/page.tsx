@@ -43,9 +43,9 @@ export default function HubPage() {
     <div className="flex flex-col min-h-full">
       <main className="flex-1 flex-col">
         {/* Hero Section */}
-        <section className="px-6 py-24">
+        <section className="px-6 py-16 md:py-24">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-baseline justify-between mb-12">
+            <div className="flex flex-col sm:flex-row items-baseline justify-between gap-4 mb-12">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-modal-green mb-2 block">
                   Model Registry
@@ -100,7 +100,7 @@ export default function HubPage() {
         </section>
 
         {/* Trending Models Section */}
-        <section className="px-6 py-24 bg-black">
+        <section className="px-6 py-16 md:py-24 bg-black">
           <div className="max-w-6xl mx-auto">
             {loading ? (
               <div className="flex-1 flex items-center justify-center py-20">
@@ -109,7 +109,7 @@ export default function HubPage() {
             ) : (
               <>
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-4xl font-bold tracking-tight text-white">
+                  <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
                     <Flame className="inline-block w-6 h-6 mr-2 -mt-1 text-modal-green" /> Trending Models
                   </h2>
                   <Link
@@ -138,12 +138,12 @@ export default function HubPage() {
         </section>
 
         {/* Recently Added Section */}
-        <section className="px-6 py-24 bg-[#0a0a0a] border-t border-modal-border">
+        <section className="px-6 py-16 md:py-24 bg-[#0a0a0a] border-t border-modal-border">
           <div className="max-w-6xl mx-auto">
             {!loading && (
               <>
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-4xl font-bold tracking-tight text-white">
+                  <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
                     <Sparkles className="inline-block w-6 h-6 mr-2 -mt-1 text-modal-green" /> Recently Added
                   </h2>
                   <Link

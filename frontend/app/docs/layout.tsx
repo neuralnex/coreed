@@ -37,7 +37,7 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-black">
       {/* Sidebar */}
-      <aside className="w-64 bg-modal-surface border-r border-modal-border flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
+      <aside className="hidden lg:block w-64 bg-modal-surface border-r border-modal-border flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="p-6">
           <h1 className="text-xl font-bold text-white mb-6">
             COREED DOCS
@@ -141,7 +141,7 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
         {children}
       </main>
     </div>

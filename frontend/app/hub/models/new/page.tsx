@@ -100,7 +100,7 @@ export default function NewModelPage() {
         </Link>
       </div>
 
-      <div className="bg-coreed-panel-raised border border-coreed-line/30 rounded-lg p-8 max-w-2xl mx-auto">
+      <div className="bg-coreed-panel-raised border border-coreed-line/30 rounded-lg p-4 md:p-8 max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
@@ -242,7 +242,7 @@ export default function NewModelPage() {
           )}
 
           {/* Submit Button */}
-          <div className="flex gap-4 pt-6">
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <button
               type="submit"
               disabled={!isConnected || loading || !isFormValid}

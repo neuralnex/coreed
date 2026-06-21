@@ -65,7 +65,7 @@ export default function MyModelsPage() {
         </p>
       </div>
 
-      <div className="flex gap-2 mb-8">
+      <div className="flex flex-wrap gap-2 mb-8">
         <Link
           href="/hub"
           className="px-4 py-2 text-coreed-sage hover:bg-coreed-panel-raised rounded-md text-sm transition-colors"

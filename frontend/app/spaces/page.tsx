@@ -49,7 +49,7 @@ export default function SpacesPage() {
     <div className="flex flex-col min-h-full">
       <main className="flex-1 flex-col">
         {/* Hero Section */}
-        <section className="px-6 py-24">
+        <section className="px-6 py-16 md:py-24">
           <div className="max-w-6xl mx-auto">
             <div className="mb-12">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-modal-green mb-2 block">
@@ -102,7 +102,7 @@ export default function SpacesPage() {
         </section>
 
         {/* Spaces Content Section */}
-        <section className="px-6 py-24 bg-black border-t border-modal-border">
+        <section className="px-6 py-16 md:py-24 bg-black border-t border-modal-border">
           <div className="max-w-6xl mx-auto">
             <ErrorBlob error={error} />
 
@@ -133,7 +133,7 @@ export default function SpacesPage() {
                     {/* My Spaces Section */}
                     {mySpaces.length > 0 && (
                       <section className="mb-16">
-                        <h2 className="text-4xl font-bold tracking-tight text-white mb-8">
+                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-6 md:mb-8">
                           My Spaces ({mySpaces.length})
                         </h2>
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -146,7 +146,7 @@ export default function SpacesPage() {
 
                     {/* All Spaces Section */}
                     <section>
-                      <h2 className="text-4xl font-bold tracking-tight text-white mb-8">
+                      <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-6 md:mb-8">
                         All Spaces ({otherSpaces.length})
                       </h2>
                       {otherSpaces.length > 0 ? (

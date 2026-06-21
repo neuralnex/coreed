@@ -55,9 +55,9 @@ export default function Playground() {
 
       <main className="flex-1 flex-col">
         {/* Hero Section */}
-        <section className="px-6 py-24">
+        <section className="px-6 py-16 md:py-24">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-12 flex items-baseline justify-between">
+            <div className="mb-12 flex flex-col sm:flex-row items-baseline justify-between gap-4">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-modal-green mb-2 block">
                   Agent Lookup

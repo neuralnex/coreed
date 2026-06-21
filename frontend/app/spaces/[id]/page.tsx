@@ -176,16 +176,16 @@ export default function SpaceDetailPage() {
 
       <main className="mx-auto flex max-w-4xl flex-1 flex-col px-6 py-12">
         <div className="mb-8">
-          <div className="flex items-baseline justify-between">
+          <div className="flex flex-col sm:flex-row items-baseline justify-between gap-4">
             <div>
-              <h1 className="font-mono text-2xl font-medium tracking-tight text-coreed-bone">
+              <h1 className="font-mono text-xl md:text-2xl font-medium tracking-tight text-coreed-bone">
                 {space.name}
               </h1>
               <p className="mt-2 max-w-md text-sm leading-relaxed text-coreed-sage">
                 Agent Space ID: {space.spaceId}
               </p>
             </div>
-            <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
               <Link
                 href="/spaces"
                 className="font-mono text-xs text-coreed-sage hover:text-coreed-bone"
@@ -204,7 +204,7 @@ export default function SpaceDetailPage() {
           </div>
         )}
 
-        <div className="mb-8 flex gap-4">
+        <div className="mb-8 flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <HealthBadge isActive={space.isActive} lastChecked={space.lastHealthCheck} />
             <button

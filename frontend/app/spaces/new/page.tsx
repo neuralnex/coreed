@@ -7,6 +7,7 @@ import { useWalletContext } from "@/lib/contexts/WalletContext";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 import type { ModelMeta } from "@/types/model";
+import { Terminal, FileCode, Box } from "lucide-react";
 import { SPACE_TEMPLATES, type DeploymentConfig } from "@/types/space";
 
 export default function NewSpacePage() {
@@ -158,7 +159,7 @@ export default function NewSpacePage() {
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-coreed-moss/20 rounded-lg flex items-center justify-center">
-                  <span className="text-xl">{template.runtime === "python" ? "🐍" : template.runtime === "node" ? "🟢" : "🐳"}</span>
+                  {template.runtime === "python" ? <Terminal className="w-6 h-6 text-coreed-moss-bright" /> : template.runtime === "node" ? <FileCode className="w-6 h-6 text-coreed-moss-bright" /> : <Box className="w-6 h-6 text-coreed-moss-bright" />}
                 </div>
                 <div>
                   <h3 className="font-semibold text-coreed-bone mb-1">{template.name}</h3>
@@ -203,13 +204,13 @@ export default function NewSpacePage() {
         </button>
       </div>
 
-      <div className="bg-coreed-panel-raised border border-coreed-line/30 rounded-lg p-8">
+      <div className="bg-coreed-panel-raised border border-coreed-line/30 rounded-lg p-4 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Template Info */}
           <div className="p-4 bg-coreed-panel border border-coreed-line/20 rounded-lg mb-6">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-coreed-moss/20 rounded-lg flex items-center justify-center">
-                <span className="text-lg">{formData.runtime === "python" ? "🐍" : formData.runtime === "node" ? "🟢" : "🐳"}</span>
+                {formData.runtime === "python" ? <Terminal className="w-5 h-5 text-coreed-moss-bright" /> : formData.runtime === "node" ? <FileCode className="w-5 h-5 text-coreed-moss-bright" /> : <Box className="w-5 h-5 text-coreed-moss-bright" />}
               </div>
               <div>
                 <h3 className="font-semibold text-coreed-bone">{SPACE_TEMPLATES[formData.template as keyof typeof SPACE_TEMPLATES].name}</h3>
@@ -379,7 +380,7 @@ export default function NewSpacePage() {
           )}
 
           {/* Submit Button */}
-          <div className="flex gap-4 pt-6">
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <button
               type="submit"
               disabled={!isConnected || loading || !isFormValid}

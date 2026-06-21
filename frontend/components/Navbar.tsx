@@ -95,10 +95,10 @@ export function Navbar() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3">
                   <Link
                     href="/docs"
-                    className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/20 rounded-full transition-all"
+                    className="px-4 py-2 text-sm font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/20 rounded-full transition-all"
                   >
                     Getting Started
                   </Link>
@@ -127,13 +127,13 @@ export function Navbar() {
 
         {/* Mobile menu */}
         {showMobileMenu && (
-          <div className="mt-2 md:hidden bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/15 rounded-full shadow-lg shadow-black/60 px-6 py-4">
+          <div className="mt-2 md:hidden bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/15 rounded-none shadow-lg shadow-black/60 px-6 py-4">
             <div className="flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="px-4 py-3 text-sm text-white/50 hover:text-white rounded-full hover:bg-white/5 transition-all"
+                  className="px-4 py-3 text-sm text-white/50 hover:text-white rounded-none hover:bg-white/5 transition-all"
                   onClick={() => setShowMobileMenu(false)}
                 >
                   {link.label}
@@ -154,14 +154,14 @@ export function Navbar() {
                   <div className="flex flex-col gap-2 px-4 pt-2">
                     <Link
                       href="/docs"
-                      className="w-full text-center px-4 py-3 text-sm font-medium text-white/60 border border-white/10 rounded-full"
+                      className="w-full text-center px-4 py-3 text-sm font-medium text-white/60 border border-white/10 rounded-none"
                       onClick={() => setShowMobileMenu(false)}
                     >
                       Getting Started
                     </Link>
                   <button
                     onClick={() => { handleConnectClick(); setShowMobileMenu(false); }}
-                    className="w-full px-4 py-3 text-sm font-medium text-black bg-modal-green rounded-full"
+                    className="w-full px-4 py-3 text-sm font-medium text-black bg-modal-green rounded-none"
                   >
                     Connect Wallet
                   </button>
