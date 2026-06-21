@@ -23,41 +23,67 @@ const WALLET_STORAGE_KEY = "coreed_wallet_connected";
 async function getWalletProvider(walletId?: string): Promise<ExtendedEip1193Provider | null> {
   if (typeof window === "undefined") return null;
 
-  // If a specific wallet was selected, try that provider first
   if (walletId) {
     switch (walletId) {
+      case "metamask":
+        if (window.ethereum && (window.ethereum as any).isMetaMask)
+          return window.ethereum as ExtendedEip1193Provider;
+        return null;
       case "okx":
         if (window.okxwallet) return window.okxwallet as unknown as ExtendedEip1193Provider;
-        break;
+        if (window.ethereum && ((window.ethereum as any).isOkxWallet || (window.ethereum as any).isOKX))
+          return window.ethereum as ExtendedEip1193Provider;
+        return null;
       case "trust":
         if (window.Trust) return window.Trust as unknown as ExtendedEip1193Provider;
         if (window.trustwallet) return window.trustwallet as unknown as ExtendedEip1193Provider;
-        break;
+        if (window.ethereum && ((window.ethereum as any).isTrust || (window.ethereum as any).isTrustWallet))
+          return window.ethereum as ExtendedEip1193Provider;
+        return null;
       case "walletconnect":
         if (window.WalletConnect) return window.WalletConnect as unknown as ExtendedEip1193Provider;
-        break;
+        if (window.ethereum) return window.ethereum as ExtendedEip1193Provider;
+        return null;
+      case "coinbase":
+        if (window.ethereum && (window.ethereum as any).isCoinbaseWallet)
+          return window.ethereum as ExtendedEip1193Provider;
+        return null;
+      case "rabby":
+        if (window.ethereum && (window.ethereum as any).isRabby)
+          return window.ethereum as ExtendedEip1193Provider;
+        return null;
+      case "ledger":
+        if (window.ethereum && (window.ethereum as any).isLedgerLive)
+          return window.ethereum as ExtendedEip1193Provider;
+        return null;
+      case "imtoken":
+        if (window.ethereum && (window.ethereum as any).isImToken)
+          return window.ethereum as ExtendedEip1193Provider;
+        return null;
+      case "brave":
+        if (window.ethereum && (window.ethereum as any).isBraveWallet)
+          return window.ethereum as ExtendedEip1193Provider;
+        return null;
+      default:
+        // "any-evm" or unknown — use whatever is injected
+        if (window.ethereum) return window.ethereum as ExtendedEip1193Provider;
+        return null;
     }
   }
   
-  // Standard EIP-1193 provider
+  // No wallet selected — try providers in priority order
   if (window.ethereum) {
     return window.ethereum as ExtendedEip1193Provider;
   }
-  
-  // OKX Wallet Mobile - may inject as window.okxwallet
   if (window.okxwallet) {
     return window.okxwallet as unknown as ExtendedEip1193Provider;
   }
-  
-  // Trust Wallet Mobile - may inject as window.Trust or window.trustwallet
   if (window.Trust) {
     return window.Trust as unknown as ExtendedEip1193Provider;
   }
-  
   if (window.trustwallet) {
     return window.trustwallet as unknown as ExtendedEip1193Provider;
   }
-  
   return null;
 }
 
