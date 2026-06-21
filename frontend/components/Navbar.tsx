@@ -28,9 +28,9 @@ export function Navbar() {
     }
   };
 
-  const handleWalletSelect = async () => {
+  const handleWalletSelect = async (walletId: string) => {
     setShowWalletModal(false);
-    try { await connect(); } catch { /* ignore */ }
+    try { await connect(walletId); } catch { /* ignore */ }
   };
 
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);

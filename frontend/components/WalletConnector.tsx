@@ -22,11 +22,7 @@ const WALLET_OPTIONS: WalletOption[] = [
       if (typeof window === "undefined") return false;
       return Boolean(window.ethereum);
     },
-    connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "metamask",
@@ -39,11 +35,7 @@ const WALLET_OPTIONS: WalletOption[] = [
       if (!ethereum) return false;
       return Boolean((ethereum as { isMetaMask?: boolean }).isMetaMask);
     },
-    connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "okx",
@@ -60,17 +52,7 @@ const WALLET_OPTIONS: WalletOption[] = [
         window.okxwallet
       );
     },
-    connect: async () => {
-      if (typeof window !== "undefined") {
-        // Try the injected provider first
-        if (window.ethereum) {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-        } else if (window.okxwallet) {
-          // Use the mobile global if available
-          await (window.okxwallet as any).request({ method: "eth_requestAccounts" });
-        }
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "walletconnect",
@@ -79,20 +61,9 @@ const WALLET_OPTIONS: WalletOption[] = [
     description: "Connect mobile wallets via QR code",
     available: () => {
       if (typeof window === "undefined") return false;
-      // WalletConnect is available if we have the injected provider or the global
       return Boolean(window.ethereum || window.WalletConnect);
     },
-    connect: async () => {
-      if (typeof window !== "undefined") {
-        // WalletConnect typically injects into window.ethereum when active
-        if (window.ethereum) {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-        } else if (window.WalletConnect) {
-          // Initialize WalletConnect if available
-          await (window.WalletConnect as any).connect();
-        }
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "coinbase",
@@ -105,11 +76,7 @@ const WALLET_OPTIONS: WalletOption[] = [
       if (!ethereum) return false;
       return Boolean((ethereum as { isCoinbaseWallet?: boolean }).isCoinbaseWallet);
     },
-    connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "rabby",
@@ -122,11 +89,7 @@ const WALLET_OPTIONS: WalletOption[] = [
       if (!ethereum) return false;
       return Boolean((ethereum as { isRabby?: boolean }).isRabby);
     },
-    connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "trust",
@@ -144,20 +107,7 @@ const WALLET_OPTIONS: WalletOption[] = [
         window.trustwallet
       );
     },
-    connect: async () => {
-      if (typeof window !== "undefined") {
-        // Try the injected provider first
-        if (window.ethereum) {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-        } else if (window.Trust) {
-          // Use Trust Wallet mobile global
-          await (window.Trust as any).request({ method: "eth_requestAccounts" });
-        } else if (window.trustwallet) {
-          // Use trustwallet global
-          await (window.trustwallet as any).request({ method: "eth_requestAccounts" });
-        }
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "ledger",
@@ -170,11 +120,7 @@ const WALLET_OPTIONS: WalletOption[] = [
       if (!ethereum) return false;
       return Boolean((ethereum as { isLedgerLive?: boolean }).isLedgerLive);
     },
-    connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "imtoken",
@@ -187,11 +133,7 @@ const WALLET_OPTIONS: WalletOption[] = [
       if (!ethereum) return false;
       return Boolean((ethereum as { isImToken?: boolean }).isImToken);
     },
-    connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      }
-    }
+    connect: async () => {}
   },
   {
     id: "brave",
@@ -207,11 +149,7 @@ const WALLET_OPTIONS: WalletOption[] = [
         (navigator as { brave?: any }).brave
       );
     },
-    connect: async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      }
-    }
+    connect: async () => {}
   }
 ];
 

@@ -81,7 +81,7 @@ export async function connectWallet(): Promise<{ signer: JsonRpcSigner; address:
   return { signer, address };
 }
 
-async function ensureGalileoNetwork(): Promise<void> {
+export async function ensureGalileoNetwork(): Promise<void> {
   if (!window.ethereum) return;
 
   try {

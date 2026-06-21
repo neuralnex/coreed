@@ -4,7 +4,7 @@ import { createContext, useContext, ReactNode } from "react";
 import { useWallet, WalletState } from "../hooks/useWallet";
 
 interface WalletContextType extends WalletState {
-  connect: () => Promise<void>;
+  connect: (walletId?: string) => Promise<void>;
   disconnect: () => void;
   hasWallet: boolean;
 }
