@@ -127,13 +127,13 @@ export function Navbar() {
 
         {/* Mobile menu */}
         {showMobileMenu && (
-          <div className="mt-2 md:hidden bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/15 rounded-none shadow-lg shadow-black/60 px-6 py-4">
+          <div className="mt-2 md:hidden bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/15 rounded-lg shadow-lg shadow-black/60 px-6 py-4">
             <div className="flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="px-4 py-3 text-sm text-white/50 hover:text-white rounded-none hover:bg-white/5 transition-all"
+                  className="px-4 py-3 text-sm text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition-all"
                   onClick={() => setShowMobileMenu(false)}
                 >
                   {link.label}
@@ -154,14 +154,14 @@ export function Navbar() {
                   <div className="flex flex-col gap-2 px-4 pt-2">
                     <Link
                       href="/docs"
-                      className="w-full text-center px-4 py-3 text-sm font-medium text-white/60 border border-white/10 rounded-none"
+                      className="w-full text-center px-4 py-3 text-sm font-medium text-white/60 border border-white/10 rounded-lg"
                       onClick={() => setShowMobileMenu(false)}
                     >
                       Getting Started
                     </Link>
                   <button
                     onClick={() => { handleConnectClick(); setShowMobileMenu(false); }}
-                    className="w-full px-4 py-3 text-sm font-medium text-black bg-modal-green rounded-none"
+                    className="w-full px-4 py-3 text-sm font-medium text-black bg-modal-green rounded-lg"
                   >
                     Connect Wallet
                   </button>
