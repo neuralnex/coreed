@@ -1,4 +1,4 @@
-# Coreed v3.0
+# Coreed v3.0 -
 
 **AI Deployment Platform for 0G Chain** 
 
