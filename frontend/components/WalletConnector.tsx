@@ -191,33 +191,33 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-4">
-      <div className="bg-coreed-panel border border-coreed-line/50 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-[#0a0a0a] border border-modal-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/60">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-coreed-bone">Connect Wallet</h2>
+          <h2 className="text-xl font-semibold text-white">Connect Wallet</h2>
           <button
             onClick={onClose}
-            className="text-coreed-sage hover:text-coreed-bone text-2xl touch-manipulation active:scale-90"
+            className="text-modal-text-dim hover:text-white text-2xl touch-manipulation active:scale-90 transition-colors"
             aria-label="Close"
           >
             ×
           </button>
         </div>
 
-        <p className="text-coreed-sage/70 text-sm mb-6">
+        <p className="text-modal-text-dim/70 text-sm mb-6">
           Choose a wallet to connect to Coreed. We support all EIP-1193 compatible EVM wallets including OKX, Trust Wallet, and MetaMask Mobile.
         </p>
         {isMobileDevice() && (
-          <div className="mb-4 p-3 bg-coreed-moss/10 border border-coreed-moss/30 rounded-md">
-            <p className="text-coreed-moss-bright text-sm">
-              📱 On mobile? We support OKX Wallet, Trust Wallet, and MetaMask Mobile. 
+          <div className="mb-4 p-3 bg-modal-green/10 border border-modal-green/30 rounded-lg">
+            <p className="text-modal-green text-sm">
+              On mobile? We support OKX Wallet, Trust Wallet, and MetaMask Mobile. 
               Make sure your wallet's browser is connected.
             </p>
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded-md">
+          <div className="mb-4 p-3 bg-red-900/20 border border-red-900/30 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
@@ -232,22 +232,22 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
                 key={wallet.id}
                 onClick={() => handleConnect(wallet.id)}
                 disabled={isConnectingThis || (!hasWallet && !isAvailable)}
-                className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 touch-manipulation active:scale-[0.98] ${
+                className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 touch-manipulation active:scale-[0.98] ${
                   isConnectingThis
-                    ? "border-coreed-moss/50 bg-coreed-moss/10 cursor-wait"
-                    : "border-coreed-line/30 hover:border-coreed-moss/50 hover:bg-coreed-panel-raised cursor-pointer"
+                    ? "border-modal-green/50 bg-modal-green/10 cursor-wait"
+                    : "border-modal-border hover:border-modal-green/50 hover:bg-white/5 cursor-pointer"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <span className="text-2xl">{wallet.icon}</span>
                 <div className="flex-1 text-left">
-                  <div className="font-medium text-coreed-bone">{wallet.name}</div>
-                  <div className="text-sm text-coreed-sage/70">{wallet.description}</div>
+                  <div className="font-medium text-white">{wallet.name}</div>
+                  <div className="text-sm text-modal-text-dim/70">{wallet.description}</div>
                 </div>
                 {isConnectingThis && (
-                  <span className="text-coreed-moss-bright text-sm whitespace-nowrap">Connecting...</span>
+                  <span className="text-modal-green text-sm whitespace-nowrap">Connecting...</span>
                 )}
                 {!hasWallet && !isAvailable && (
-                  <span className="text-coreed-sage/50 text-sm whitespace-nowrap">Not detected</span>
+                  <span className="text-modal-text-dim/50 text-sm whitespace-nowrap">Not detected</span>
                 )}
               </button>
             );
@@ -255,16 +255,16 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
         </div>
 
         {!hasWallet && availableWallets.length === 0 && (
-          <div className="mt-6 p-4 bg-coreed-panel-raised border border-coreed-line/30 rounded-lg">
-            <p className="text-coreed-sage text-sm mb-3">
+          <div className="mt-6 p-4 bg-black/50 border border-modal-border rounded-xl">
+            <p className="text-modal-text-dim text-sm mb-3">
               No Web3 wallet detected. Please install a wallet.
             </p>
             {isMobileDevice() ? (
-              <p className="text-coreed-sage/70 text-xs mb-3">
+              <p className="text-modal-text-dim/70 text-xs mb-3">
                 On mobile, we recommend OKX Wallet, Trust Wallet, or MetaMask Mobile
               </p>
             ) : (
-              <p className="text-coreed-sage/70 text-xs mb-3">
+              <p className="text-modal-text-dim/70 text-xs mb-3">
                 On desktop, we recommend MetaMask, OKX Wallet, or Coinbase Wallet
               </p>
             )}
@@ -273,7 +273,7 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
                 href="https://www.okx.com/web3" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-coreed-moss-bright hover:text-coreed-moss text-sm font-medium"
+                className="text-modal-green hover:text-white text-sm font-medium transition-colors"
               >
                 OKX Wallet →
               </a>
@@ -281,7 +281,7 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
                 href="https://metamask.io/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-coreed-moss-bright hover:text-coreed-moss text-sm font-medium"
+                className="text-modal-green hover:text-white text-sm font-medium transition-colors"
               >
                 MetaMask →
               </a>
@@ -289,7 +289,7 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
                 href="https://trustwallet.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-coreed-moss-bright hover:text-coreed-moss text-sm font-medium"
+                className="text-modal-green hover:text-white text-sm font-medium transition-colors"
               >
                 Trust Wallet →
               </a>
@@ -297,8 +297,8 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
           </div>
         )}
 
-        <div className="mt-6 pt-4 border-t border-coreed-line/30">
-          <p className="text-xs text-coreed-sage/50 text-center">
+        <div className="mt-6 pt-4 border-t border-modal-border">
+          <p className="text-xs text-modal-text-dim/50 text-center">
             By connecting, you agree to Coreed's Terms of Service
           </p>
         </div>
