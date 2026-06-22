@@ -224,6 +224,7 @@ export async function POST(request: Request) {
     fs.mkdirSync(repoPath, { recursive: true });
 
     execSync('git init', { cwd: repoPath, stdio: 'pipe' });
+    execSync('git config receive.denyCurrentBranch ignore', { cwd: repoPath, stdio: 'pipe' });
     execSync('git checkout -b main', { cwd: repoPath, stdio: 'pipe' });
     execSync('git config user.email "coreed@0g.ai"', { cwd: repoPath, stdio: 'pipe' });
     execSync('git config user.name "Coreed Platform"', { cwd: repoPath, stdio: 'pipe' });
