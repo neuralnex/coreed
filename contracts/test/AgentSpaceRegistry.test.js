@@ -51,16 +51,17 @@ describe("AgentSpaceRegistry", function () {
       expect(total).to.equal(2);
     });
 
-    it("should revert with InvalidModelId when modelId is 0", async function () {
-      await expect(
-        registry.connect(owner).deploySpace(
-          SAMPLE_NAME,
-          SAMPLE_DESCRIPTION,
-          SAMPLE_VERSION,
-          0, // invalid modelId
-          SAMPLE_ENDPOINT
-        )
-      ).to.be.revertedWithCustomError(registry, "InvalidModelId");
+    it("should deploy a standalone space without a registered model", async function () {
+      await registry.connect(owner).deploySpace(
+        SAMPLE_NAME,
+        SAMPLE_DESCRIPTION,
+        SAMPLE_VERSION,
+        0,
+        SAMPLE_ENDPOINT
+      );
+
+      const space = await registry.getSpace(1);
+      expect(space.modelId).to.equal(0);
     });
 
     it("should revert with EmptyEndpoint when endpoint is empty", async function () {

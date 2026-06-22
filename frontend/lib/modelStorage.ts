@@ -2,8 +2,9 @@ import { Indexer, Blob as ZgBlob, MemData } from "@0gfoundation/0g-storage-ts-sd
 import type { Signer } from "ethers";
 import type { ModelCard, UploadModelResult } from "@/types/model";
 
-const ZERO_G_INDEXER_RPC = "https://indexer-storage-testnet-turbo.0g.ai";
-const ZERO_G_EVM_RPC = "https://evmrpc-testnet.0g.ai";
+const ZERO_G_INDEXER_RPC =
+  process.env.NEXT_PUBLIC_STORAGE_INDEXER ?? "https://indexer-storage-testnet-turbo.0g.ai";
+const ZERO_G_EVM_RPC = process.env.NEXT_PUBLIC_RPC_URL ?? "https://evmrpc-testnet.0g.ai";
 
 export interface ModelUploadOptions {
   modelCard: ModelCard;

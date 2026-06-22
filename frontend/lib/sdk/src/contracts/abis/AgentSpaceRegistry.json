@@ -511,7 +511,7 @@
       },
       {
         "internalType": "address",
-        "name": "spaceOwner",
+        "name": "owner",
         "type": "address"
       },
       {

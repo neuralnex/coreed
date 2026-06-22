@@ -1,27 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useWalletContext } from "@/lib/contexts/WalletContext";
-import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
-import type { ModelMeta } from "@/types/model";
 import { Terminal, FileCode, Box } from "lucide-react";
 import { SPACE_TEMPLATES, type DeploymentConfig } from "@/types/space";
 
 export default function NewSpacePage() {
   const router = useRouter();
-  const { signer, address, isConnected } = useWalletContext();
+  const { signer, isConnected } = useWalletContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [myModels, setMyModels] = useState<ModelMeta[]>([]);
 
-  const { getModelsByCreator } = useModelRegistry();
-  const { deploySpace } = useAgentSpaceRegistry();
+  const { deploySpace, setSleepTimeout } = useAgentSpaceRegistry();
 
-  const [formData, setFormData] = useState<DeploymentConfig & { name: string; description: string; modelId: string }>({
+  const [formData, setFormData] = useState<DeploymentConfig & { name: string; description: string; modelId: string; endpointUrl: string }>({
     modelId: "",
     name: "",
     description: "",
@@ -30,24 +26,10 @@ export default function NewSpacePage() {
     template: "gradio",
     port: 7860,
     healthEndpoint: "/health",
+    endpointUrl: "",
     sleepTimeout: 0,
     autoSleep: false
   });
-
-  // Fetch user's models
-  useEffect(() => {
-    if (isConnected && address) {
-      const fetchMyModels = async () => {
-        try {
-          const models = await getModelsByCreator(address);
-          setMyModels(models);
-        } catch (err) {
-          console.error("Failed to fetch user models:", err);
-        }
-      };
-      fetchMyModels();
-    }
-  }, [isConnected, address, getModelsByCreator]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -80,7 +62,7 @@ export default function NewSpacePage() {
       return;
     }
 
-    if (!formData.name || !formData.modelId) {
+    if (!formData.name || !formData.endpointUrl) {
       setError("Please fill in all required fields");
       return;
     }
@@ -95,9 +77,13 @@ export default function NewSpacePage() {
         name: formData.name,
         description: formData.description,
         version: formData.version,
-        modelId: parseInt(formData.modelId),
-        endpointUrl: "" // Will be set after deployment
+        modelId: formData.modelId ? parseInt(formData.modelId) : 0,
+        endpointUrl: formData.endpointUrl
       });
+
+      if (formData.autoSleep && Number(formData.sleepTimeout) > 0) {
+        await setSleepTimeout(signer, result.spaceId, Number(formData.sleepTimeout));
+      }
 
       setSuccess(`Space deployed successfully! Space ID: ${result.spaceId}`);
       setFormData({
@@ -109,6 +95,7 @@ export default function NewSpacePage() {
         template: "gradio",
         port: 7860,
         healthEndpoint: "/health",
+        endpointUrl: "",
         sleepTimeout: 0,
         autoSleep: false
       });
@@ -126,7 +113,7 @@ export default function NewSpacePage() {
     }
   };
 
-  const isFormValid = formData.name && formData.modelId;
+  const isFormValid = formData.name && formData.endpointUrl;
 
   // Show template selection UI
   if (!formData.template) {
@@ -185,7 +172,7 @@ export default function NewSpacePage() {
           DEPLOY NEW SPACE
         </h1>
         <p className="text-coreed-sage">
-          Deploy a live agent space from your model
+          Deploy a live app space. You can load open-source models at runtime or run a simple app without registering a model.
         </p>
       </div>
 
@@ -260,23 +247,21 @@ export default function NewSpacePage() {
 
             <div>
               <label className="block text-sm font-medium text-coreed-bone/70 mb-2" htmlFor="modelId">
-                Model *
+                Registered Model ID
               </label>
-              <select
+              <input
                 id="modelId"
                 name="modelId"
+                type="number"
+                min={0}
                 value={formData.modelId}
                 onChange={handleChange}
-                required
-                className="w-full px-4 py-3 bg-coreed-panel border border-coreed-line/30 rounded-md text-coreed-bone focus:outline-none focus:ring-2 focus:ring-coreed-moss-bright/20 focus:border-coreed-moss-bright"
-              >
-                <option value="">Select a model</option>
-                {myModels.map((model) => (
-                  <option key={model.modelId} value={model.modelId}>
-                    {model.name} ({model.architecture})
-                  </option>
-                ))}
-              </select>
+                placeholder="Optional. Leave empty for a standalone Space."
+                className="w-full px-4 py-3 bg-coreed-panel border border-coreed-line/30 rounded-md text-coreed-bone placeholder-coreed-sage/50 focus:outline-none focus:ring-2 focus:ring-coreed-moss-bright/20 focus:border-coreed-moss-bright"
+              />
+              <p className="text-xs text-coreed-sage/60 mt-2">
+                Most Spaces should leave this empty and load models from code, package dependencies, or external open-source sources.
+              </p>
             </div>
           </div>
 
@@ -329,6 +314,25 @@ export default function NewSpacePage() {
                   placeholder="/health"
                   className="w-full px-4 py-3 bg-coreed-panel border border-coreed-line/30 rounded-md text-coreed-bone placeholder-coreed-sage/50 focus:outline-none focus:ring-2 focus:ring-coreed-moss-bright/20 focus:border-coreed-moss-bright"
                 />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-coreed-bone/70 mb-2" htmlFor="endpointUrl">
+                  Endpoint URL *
+                </label>
+                <input
+                  id="endpointUrl"
+                  name="endpointUrl"
+                  type="url"
+                  value={formData.endpointUrl}
+                  onChange={handleChange}
+                  placeholder="https://my-agent.example.com"
+                  required
+                  className="w-full px-4 py-3 bg-coreed-panel border border-coreed-line/30 rounded-md text-coreed-bone placeholder-coreed-sage/50 focus:outline-none focus:ring-2 focus:ring-coreed-moss-bright/20 focus:border-coreed-moss-bright"
+                />
+                <p className="text-xs text-coreed-sage/60 mt-2">
+                  Deploy your app with a reachable health endpoint before registering it on-chain.
+                </p>
               </div>
 
               <div className="flex items-center gap-4">
@@ -401,18 +405,6 @@ export default function NewSpacePage() {
           <div className="mt-6 p-4 bg-coreed-panel-raised border border-coreed-clay/20 rounded-md">
             <p className="text-sm text-coreed-sage">
               Connect your wallet to deploy spaces
-            </p>
-          </div>
-        )}
-
-        {myModels.length === 0 && isConnected && (
-          <div className="mt-6 p-4 bg-coreed-panel-raised border border-coreed-clay/20 rounded-md">
-            <p className="text-sm text-coreed-sage">
-              You don't have any models yet. {
-                <Link href="/hub/models/new" className="text-coreed-moss-bright underline">
-                  Upload a model first
-                </Link>
-              }
             </p>
           </div>
         )}

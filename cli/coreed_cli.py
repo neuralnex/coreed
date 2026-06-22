@@ -14,7 +14,6 @@ from typing import Optional, Dict, Any, List, Tuple
 from dataclasses import dataclass, field, asdict
 import time
 import hashlib
-import requests
 
 
 # ============================================================================
@@ -31,10 +30,10 @@ class CoreedConfig:
     storage_indexer: str = "https://indexer-storage-testnet-turbo.0g.ai"
     
     # Contract Addresses (Galileo Testnet)
-    # Deployed: June 2026 from 0x9BF31B4e9Cb0d49e17CAF356445Fd2b91c032A0A
-    model_registry_address: str = "0xcF86ae04785D1d211954EcE5C819Ae333D622671"
-    agent_registry_address: str = "0xFb7B78eD0F405568ce4FDbbA97B051E0248C33c4"
+    model_registry_address: str = "0xFA81366Ba81C19d848191B8e49eC0948230d4216"
+    agent_registry_address: str = "0xff34F1281A8D4F14d503c28E8A45cAF98Acc235C"
     space_registry_address: str = "0xedF4958de1e22979EaE3dec3ECb84C4D63cA510A"
+    private_key: str = ""
     
     # API Configuration
     router_api_url: str = "https://router-api.0g.ai/v1"
@@ -52,6 +51,7 @@ class CoreedConfig:
     model_parameters: int = 0
     model_license: str = "MIT"
     model_tags: List[str] = field(default_factory=list)
+    model_id: Optional[int] = None
     
     # Space Configuration
     space_name: str = ""
@@ -223,44 +223,11 @@ def upload_to_0g_storage(
     """
     Upload a file to 0G Storage and return (tx_hash, root_hash)
     
-    Uses the 0G Storage CLI as a fallback, or TypeScript SDK via subprocess.
-    For production use, install @0gfoundation/0g-storage-ts-sdk.
+    Uses the official 0G Storage CLI if available. The 0G docs note that
+    TypeScript SDK uploads resolve the Flow contract internally through the
+    Indexer; the Python CLI keeps this path explicit by shelling out to the
+    storage client.
     """
-    try:
-        from zerog_storage_sdk import ZgFile, Indexer
-        from ethers import Wallet, providers
-        
-        # Initialize provider and signer
-        provider = providers.JsonRpcProvider(rpc_url)
-        if private_key:
-            signer = Wallet(private_key, provider)
-        else:
-            # Try to get from environment
-            private_key = os.getenv("PRIVATE_KEY")
-            if not private_key:
-                raise ValueError("PRIVATE_KEY environment variable not set")
-            signer = Wallet(private_key, provider)
-        
-        # Initialize indexer
-        indexer = Indexer(indexer_url)
-        
-        # Upload file
-        zg_file = ZgFile.fromFilePath(file_path)
-        tree, _ = await zg_file.merkleTree()
-        root_hash = tree.rootHash() if tree else None
-        
-        tx, _ = await indexer.upload(zg_file, rpc_url, signer)
-        tx_hash = tx.hash if tx else None
-        
-        await zg_file.close()
-        
-        return tx_hash, root_hash
-        
-    except ImportError:
-        # Fallback to CLI
-        pass
-    
-    # CLI fallback
     try:
         cmd = [
             "0g-storage-client", "upload",
@@ -271,6 +238,8 @@ def upload_to_0g_storage(
         
         if private_key:
             cmd.extend(["--key", private_key])
+        elif os.getenv("PRIVATE_KEY"):
+            cmd.extend(["--key", os.environ["PRIVATE_KEY"]])
         
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         
@@ -383,20 +352,16 @@ def register_model_on_chain(
         
         # Sign and send
         signed_tx = account.sign_transaction(tx)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        raw_tx = getattr(signed_tx, "rawTransaction", None) or getattr(signed_tx, "raw_transaction")
+        tx_hash = w3.eth.send_raw_transaction(raw_tx)
         
         # Wait for receipt
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
         
-        # Parse model ID from event
-        for log in receipt.logs:
-            try:
-                event = contract.events.SpaceDeployed().processReceipt(receipt)
-                if event:
-                    model_id = str(event[0].args.modelId)
-                    return tx_hash.hex(), model_id
-            except:
-                pass
+        events = contract.events.ModelRegistered().process_receipt(receipt)
+        if events:
+            model_id = str(events[0]["args"]["modelId"])
+            return tx_hash.hex(), model_id
         
         return tx_hash.hex(), None
         
@@ -488,7 +453,8 @@ def deploy_space_on_chain(
         
         # Sign and send
         signed_tx = account.sign_transaction(tx)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        raw_tx = getattr(signed_tx, "rawTransaction", None) or getattr(signed_tx, "raw_transaction")
+        tx_hash = w3.eth.send_raw_transaction(raw_tx)
         
         # Wait for receipt
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
@@ -496,7 +462,7 @@ def deploy_space_on_chain(
         # Parse space ID from event
         for log in receipt.logs:
             try:
-                event = contract.events.SpaceDeployed().processReceipt(receipt)
+                event = contract.events.SpaceDeployed().process_receipt(receipt)
                 if event:
                     space_id = str(event[0].args.spaceId)
                     return tx_hash.hex(), space_id
@@ -707,9 +673,10 @@ def create_space_config(
     return config
 
 
-def validate_environment() -> Tuple[bool, List[str]]:
+def validate_environment(config: Optional[CoreedConfig] = None) -> Tuple[bool, List[str]]:
     """Validate that the environment is properly configured"""
     errors = []
+    config = config or CoreedConfig()
     
     # Check for required tools
     required_tools = {
@@ -725,14 +692,14 @@ def validate_environment() -> Tuple[bool, List[str]]:
             errors.append(f"{message} ({tool} not found)")
     
     # Check for private key
-    if "PRIVATE_KEY" not in os.environ:
+    if not (config.private_key or os.getenv("PRIVATE_KEY")):
         errors.append("PRIVATE_KEY environment variable not set")
     
     # Check for contract addresses
-    if "MODEL_REGISTRY_ADDRESS" not in os.environ:
-        errors.append("MODEL_REGISTRY_ADDRESS environment variable not set")
-    if "SPACE_REGISTRY_ADDRESS" not in os.environ:
-        errors.append("SPACE_REGISTRY_ADDRESS environment variable not set")
+    if not config.model_registry_address:
+        errors.append("ModelRegistry address is not set")
+    if not config.space_registry_address:
+        errors.append("AgentSpaceRegistry address is not set")
     
     return len(errors) == 0, errors
 
@@ -790,9 +757,19 @@ def push_to_coreed(
             model_path=model_path,
             **kwargs,
         )
+    else:
+        for key, value in kwargs.items():
+            if hasattr(config, key) and value is not None:
+                setattr(config, key, value)
+
+    if space_name:
+        config.space_name = space_name
+    config.runtime = runtime or config.runtime
+    config.template = template or config.template
+    config.auto_deploy = auto_deploy
     
     # Step 1: Validate environment
-    is_valid, errors = validate_environment()
+    is_valid, errors = validate_environment(config)
     if not is_valid and not force:
         result.errors.extend(errors)
         return result
@@ -807,7 +784,7 @@ def push_to_coreed(
     
     # Step 3: Process model files
     model_metadata = None
-    if model_path:
+    if model_path and Path(model_path).is_file():
         model_file = Path(model_path)
         if not model_file.exists():
             result.errors.append(f"Model file not found: {model_path}")
@@ -823,6 +800,7 @@ def push_to_coreed(
                 model_path,
                 config.storage_indexer,
                 config.rpc_url,
+                config.private_key or None,
             )
             if root_hash:
                 storage_root_hash = root_hash
@@ -848,6 +826,7 @@ def push_to_coreed(
                 model_metadata,
                 config.rpc_url,
                 config.model_registry_address,
+                config.private_key or None,
             )
             if model_id:
                 model_metadata = None  # Force re-creation with ID
@@ -856,6 +835,14 @@ def push_to_coreed(
                 result.warnings.append("Model registration may have failed")
     
     # Step 4: Prepare space metadata
+    if config.model_id and not result.model_id:
+        result.model_id = str(config.model_id)
+
+    if not auto_deploy:
+        result.deployment_time = time.time() - start_time
+        result.success = len(result.errors) == 0
+        return result
+
     space_meta = SpaceMetadata(
         name=config.space_name,
         description=config.space_description,
@@ -886,7 +873,7 @@ def push_to_coreed(
         
         # Prepare environment variables
         env_vars = {
-            "MODEL_PATH": f"/app/models/{Path(model_path).name}" if model_path else "/app/models/model.gguf",
+            "MODEL_PATH": f"/app/models/{Path(model_path).name}" if model_path and Path(model_path).is_file() else "",
             "MODEL_NAME": space_meta.name,
             "SPACE_ID": "",  # Will be set after space registration
             "SPACE_VERSION": space_meta.version,
@@ -915,6 +902,7 @@ def push_to_coreed(
             space_meta,
             config.rpc_url,
             config.space_registry_address,
+            config.private_key or None,
         )
         
         if space_id:
@@ -1198,7 +1186,7 @@ Examples:
     # Dry run
     if args.dry_run:
         print("🔍 Dry run - Validating configuration...")
-        is_valid, errors = validate_environment()
+        is_valid, errors = validate_environment(config)
         if not is_valid:
             print("❌ Validation failed:")
             for error in errors:

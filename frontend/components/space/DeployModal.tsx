@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+import { useState } from "react";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
-import { useModelRegistry } from "@/lib/useModelRegistry";
 import { SPACE_TEMPLATES, RUNTIME_OPTIONS } from "@/types/space";
 import type { JsonRpcSigner } from "ethers";
 
@@ -14,7 +12,7 @@ interface DeployModalProps {
   onDeploySuccess: (spaceId: string) => void;
 }
 
-export function DeployModal({ signer, address, onClose, onDeploySuccess }: DeployModalProps) {
+export function DeployModal({ signer, onClose, onDeploySuccess }: DeployModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [version, setVersion] = useState("1.0.0");
@@ -26,34 +24,16 @@ export function DeployModal({ signer, address, onClose, onDeploySuccess }: Deplo
   const [error, setError] = useState<string | null>(null);
 
   const { deploySpace } = useAgentSpaceRegistry();
-  const { getModelsByCreator } = useModelRegistry();
-
-  const [models, setModels] = useState<Array<{ modelId: string; name: string }>>([]);
-  const [loadingModels, setLoadingModels] = useState(false);
-
-  // Load user's models
-  const loadModels = useCallback(async () => {
-    if (!address) return;
-    setLoadingModels(true);
-    try {
-      const userModels = await getModelsByCreator(address);
-      setModels(userModels.map(m => ({ modelId: m.modelId, name: m.name })));
-    } catch (err) {
-      console.error("Failed to load models:", err);
-    } finally {
-      setLoadingModels(false);
-    }
-  }, [address, getModelsByCreator]);
 
   // Available templates for selected runtime
-  const availableTemplates = RUNTIME_OPTIONS.includes(runtime as any)
-    ? Object.entries(SPACE_TEMPLATES).filter(([_, t]) => t.runtime === runtime).map(([key]) => key)
+  const availableTemplates = RUNTIME_OPTIONS.includes(runtime as (typeof RUNTIME_OPTIONS)[number])
+    ? Object.entries(SPACE_TEMPLATES).filter(([, t]) => t.runtime === runtime).map(([key]) => key)
     : [];
 
   const handleDeploy = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signer || !name || !selectedModelId || !endpointUrl) {
+    if (!signer || !name || !endpointUrl) {
       setError("Please fill in all required fields");
       return;
     }
@@ -66,7 +46,7 @@ export function DeployModal({ signer, address, onClose, onDeploySuccess }: Deplo
         name,
         description,
         version,
-        modelId: selectedModelId,
+        modelId: selectedModelId ? Number(selectedModelId) : 0,
         endpointUrl
       });
       
@@ -85,7 +65,7 @@ export function DeployModal({ signer, address, onClose, onDeploySuccess }: Deplo
     setRuntime(newRuntime);
     // Switch to a compatible template
     const firstTemplate = Object.entries(SPACE_TEMPLATES)
-      .find(([_, t]) => t.runtime === newRuntime)?.[0];
+      .find(([, t]) => t.runtime === newRuntime)?.[0];
     if (firstTemplate) {
       setTemplate(firstTemplate);
     }
@@ -163,35 +143,22 @@ export function DeployModal({ signer, address, onClose, onDeploySuccess }: Deplo
               />
             </div>
 
-            {/* Model Selection */}
+            {/* Optional Model Reference */}
             <div>
               <label className="mb-1.5 block font-mono text-xs text-coreed-sage">
-                Model *
+                Registered Model ID
               </label>
-              {loadingModels ? (
-                <div className="rounded border border-coreed-line bg-coreed-void px-3 py-2">
-                  <p className="font-mono text-xs text-coreed-sage/70">Loading your models...</p>
-                </div>
-              ) : models.length === 0 ? (
-                <div className="rounded border border-coreed-line bg-coreed-void px-3 py-2">
-                  <p className="font-mono text-xs text-coreed-sage/70">
-                    No models found. <a href="/hub/my-models" className="text-coreed-moss-bright underline">Upload a model first</a>
-                  </p>
-                </div>
-              ) : (
-                <select
-                  value={selectedModelId}
-                  onChange={(e) => setSelectedModelId(e.target.value)}
-                  className="w-full rounded border border-coreed-line bg-coreed-void px-3 py-2 font-mono text-sm text-coreed-bone focus:border-coreed-moss"
-                >
-                  <option value="">Select a model...</option>
-                  {models.map((model) => (
-                    <option key={model.modelId} value={model.modelId}>
-                      {model.name} (ID: {model.modelId})
-                    </option>
-                  ))}
-                </select>
-              )}
+              <input
+                value={selectedModelId}
+                onChange={(e) => setSelectedModelId(e.target.value)}
+                type="number"
+                min={0}
+                placeholder="Optional. Leave empty for standalone Spaces."
+                className="w-full rounded border border-coreed-line bg-coreed-void px-3 py-2 font-mono text-sm text-coreed-bone placeholder:text-coreed-sage/50 focus:border-coreed-moss"
+              />
+              <p className="mt-1 font-mono text-xs text-coreed-sage/70">
+                Use code dependencies or external model IDs for open-source models. On-chain model registration is optional.
+              </p>
             </div>
 
             {/* Runtime & Template */}
@@ -257,7 +224,7 @@ export function DeployModal({ signer, address, onClose, onDeploySuccess }: Deplo
               </button>
               <button
                 type="submit"
-                disabled={deploying || !name || !selectedModelId || !endpointUrl}
+                disabled={deploying || !name || !endpointUrl}
                 className="rounded border border-coreed-moss bg-coreed-panel-raised px-4 py-2 font-mono text-xs text-coreed-bone hover:border-coreed-moss-bright disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deploying ? "Deploying..." : "Deploy Space"}

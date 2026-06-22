@@ -26,6 +26,21 @@
   --color-modal-text-dim: #888888;
   --color-modal-mint: #e4f1e1;
 
+  /* Legacy Coreed theme tokens used across existing pages */
+  --color-coreed-bg: #000000;
+  --color-coreed-void: #0a0a0a;
+  --color-coreed-bone: #f5f5f0;
+  --color-coreed-sage: #8b9a7a;
+  --color-coreed-moss: #6b8c42;
+  --color-coreed-moss-bright: #8bc34a;
+  --color-coreed-clay: #b8704f;
+  --color-coreed-line: #3a3a3a;
+  --color-coreed-panel: #1a1a1a;
+  --color-coreed-panel-raised: #242424;
+  --color-coreed-panel-hover: #2c2c2c;
+  --color-coreed-gold: #f0c75e;
+  --color-coreed-rose: #ef6f6c;
+
   --font-sans: "Manrope", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }

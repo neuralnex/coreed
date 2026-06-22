@@ -44,7 +44,6 @@ contract AgentSpaceRegistry {
     event OperatorAdded(uint256 indexed spaceId, address indexed operator);
     event OperatorRemoved(uint256 indexed spaceId, address indexed operator);
 
-    error InvalidModelId();
     error EmptyEndpoint();
     error EndpointTooLong();
     error SpaceDoesNotExist();
@@ -66,8 +65,6 @@ contract AgentSpaceRegistry {
         uint256 modelId,
         string calldata endpointUrl
     ) external returns (uint256 spaceId) {
-        if (modelId == 0) revert InvalidModelId();
-
         bytes memory endpointBytes = bytes(endpointUrl);
         if (endpointBytes.length == 0) revert EmptyEndpoint();
         if (endpointBytes.length > MAX_ENDPOINT_LENGTH) revert EndpointTooLong();
@@ -237,7 +234,7 @@ contract AgentSpaceRegistry {
         bool isActive,
         bool isAsleep,
         uint256 sleepTimeout,
-        address spaceOwner,
+        address owner,
         uint256 requestCount
     ) {
         if (spaceId == 0 || spaceId > totalSpaces) revert SpaceDoesNotExist();

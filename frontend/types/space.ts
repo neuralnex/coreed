@@ -91,6 +91,7 @@ export interface DeploymentConfig {
   name: string;
   description: string;
   version: string;
+  endpointUrl?: string;
   runtime: "python" | "node" | "docker";
   template?: string;
   port?: number;

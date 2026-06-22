@@ -204,12 +204,12 @@ export function useModelRegistry() {
     }
   }, []);
 
-  const recordDownload = useCallback(async (modelId: string | number) => {
+  const recordDownload = useCallback(async (modelId: string | number, signer: JsonRpcSigner) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const contract = getContract(getReadProvider());
+      const contract = getContract(signer);
       const tx = await contract.recordDownload(modelId);
       await tx.wait();
     } catch (err) {

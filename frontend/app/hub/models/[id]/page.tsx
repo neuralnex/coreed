@@ -82,7 +82,7 @@ export default function ModelDetailPage() {
     if (!signer || !model) return;
     
     try {
-      await recordDownload(modelId);
+      await recordDownload(modelId, signer);
       // Increment download count locally for immediate feedback
       // Note: In production, you'd want to refetch or listen for events
     } catch (err) {

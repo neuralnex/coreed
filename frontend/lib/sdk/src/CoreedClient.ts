@@ -41,8 +41,7 @@ export class CoreedClient {
       metadata.architecture || '',
       metadata.parameters || 0,
       metadata.license || 'MIT',
-      metadata.storageRootHash,
-      metadata.tags || []
+      metadata.storageRootHash
     );
     const receipt = await tx.wait();
     return receipt.hash;
@@ -51,21 +50,25 @@ export class CoreedClient {
   async getModel(modelId: number | string): Promise<ModelInfo> {
     const result = await this.modelRegistry.getModel(modelId);
     return {
-      modelId: Number(result[0]),
-      name: result[1],
-      description: result[2],
-      architecture: result[3],
-      parameters: Number(result[4]),
-      license: result[5],
-      storageRootHash: result[6],
-      owner: result[7],
-      tags: result[8] || [],
+      modelId,
+      name: result.name ?? result[0],
+      description: result.description ?? result[1],
+      architecture: result.architecture ?? result[2],
+      parameters: Number(result.parameters ?? result[3]),
+      license: result.license ?? result[4],
+      storageRootHash: result.storageRootHash ?? result[5],
+      owner: result.creator ?? result[6],
+      tags: [],
     };
   }
 
   async getModelsByOwner(owner: string): Promise<number[]> {
-    const result = await this.modelRegistry.getModelsByOwner(owner);
+    const result = await this.modelRegistry.getModelsByCreator(owner);
     return result.map((id: bigint) => Number(id));
+  }
+
+  async getModelsByCreator(creator: string): Promise<number[]> {
+    return this.getModelsByOwner(creator);
   }
 
   async likeModel(modelId: number | string): Promise<string> {
@@ -93,12 +96,17 @@ export class CoreedClient {
     const receipt = await tx.wait();
     
     // Get the space ID from the SpaceDeployed event
-    const logs = receipt.logs;
-    const spaceDeployedEvent = logs.find((log: any) => 
-      log.fragment && log.fragment.name === 'SpaceDeployed'
-    );
-    
-    const spaceId = spaceDeployedEvent ? Number(spaceDeployedEvent.args[0]) : 0;
+    const spaceDeployedEvent = receipt.logs
+      .map((log: unknown) => {
+        try {
+          return this.agentSpaceRegistry.interface.parseLog(log as { topics: string[]; data: string });
+        } catch {
+          return null;
+        }
+      })
+      .find((event: { name: string } | null) => event?.name === 'SpaceDeployed');
+
+    const spaceId = spaceDeployedEvent ? Number(spaceDeployedEvent.args.spaceId ?? spaceDeployedEvent.args[0]) : 0;
     
     return {
       spaceId,
@@ -197,12 +205,32 @@ export class CoreedClient {
   // ==================== Agent Registry Methods ====================
 
   async registerAgent(name: string, description: string = '', metadataUri: string = ''): Promise<string> {
-    const tx = await this.agentRegistry.registerAgent(name, description, metadataUri);
+    const rootHash = metadataUri || description;
+    const tx = await this.agentRegistry.launchAgent(name, rootHash);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async getAgent(agentId: number | string): Promise<any> {
+  async launchAgent(name: string, rootHash: string): Promise<{ agentId: number; txHash: string }> {
+    const tx = await this.agentRegistry.launchAgent(name, rootHash);
+    const receipt = await tx.wait();
+    const launchedEvent = receipt.logs
+      .map((log: unknown) => {
+        try {
+          return this.agentRegistry.interface.parseLog(log as { topics: string[]; data: string });
+        } catch {
+          return null;
+        }
+      })
+      .find((event: { name: string } | null) => event?.name === 'AgentLaunched');
+
+    return {
+      agentId: launchedEvent ? Number(launchedEvent.args.agentId ?? launchedEvent.args[0]) : 0,
+      txHash: receipt.hash,
+    };
+  }
+
+  async getAgent(agentId: number | string): Promise<unknown> {
     const result = await this.agentRegistry.getAgent(agentId);
     return result;
   }
