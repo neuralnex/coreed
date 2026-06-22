@@ -58,7 +58,7 @@ export default function NewSpacePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isConnected || !signer || !address) {
+    if (!isConnected || !address) {
       setError("Please connect your wallet first");
       return;
     }
@@ -73,28 +73,9 @@ export default function NewSpacePage() {
 
     try {
       const slug = formData.name.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-      const endpointUrl = `https://coreed.app/${slug}`;
-
-      let onChainResult = null;
       
       // ========================================================================
-      // STEP 1: Try on-chain registration (optional for spaces-first approach)
-      // ========================================================================
-      try {
-        onChainResult = await deploySpace(signer, {
-          name: formData.name,
-          description: formData.description,
-          version: "1.0.0",
-          modelId: 0, // No model registration needed - pass as number for uint256
-          endpointUrl
-        });
-      } catch (onChainError: any) {
-        console.log('On-chain registration skipped (spaces-first mode):', onChainError.message);
-        // Continue without on-chain registration - spaces-first allows this
-      }
-
-      // ========================================================================
-      // STEP 2: Create Git repo and deploy to 0G Compute (main workflow)
+      // STEP 1: Create Git repo + 0G Compute setup (fast, main workflow)
       // ========================================================================
       const computeResponse = await fetch('/api/spaces/create', {
         method: 'POST',
@@ -107,37 +88,43 @@ export default function NewSpacePage() {
           sdk: formData.sdk,
           template: formData.sdk === 'gradio' ? 'blank' : undefined,
           owner: address,
-          spaceId: onChainResult?.spaceId, // Optional - might be undefined
-          spaceNameForUrl: slug
+          slug: slug,
+          skipOnChain: true
         })
       });
 
       const computeData = await computeResponse.json();
-
       setLoading(false);
       
       // Check if space creation was successful
       if (!computeResponse.ok || !computeData.success) {
-        // Git/Compute failed
         setError(computeData.error || 'Space creation failed');
-        sessionStorage.setItem('lastComputeError', JSON.stringify(computeData));
-        // Still redirect to spaces list, but user can retry
-        router.push('/spaces');
         return;
       }
 
       // Store complete info in session storage to show on space page
-      const spaceId = onChainResult?.spaceId || slug; // Use slug as spaceId if no on-chain registration
       sessionStorage.setItem('lastSpaceInfo', JSON.stringify({
-        spaceId: spaceId,
+        spaceId: slug,
         compute: computeData.compute,
         deployment: computeData.deployment,
-        repo: computeData.space?.gitRepo,
-        onChainRegistered: !!onChainResult
+        repo: computeData.space?.gitRepo
       }));
       
+      // ========================================================================
+      // STEP 2: Try on-chain registration in background (non-blocking)
+      // ========================================================================
+      if (signer) {
+        deploySpace(signer, {
+          name: formData.name,
+          description: formData.description,
+          version: "1.0.0",
+          modelId: 0,
+          endpointUrl: `https://${slug}.coreed.app`
+        }).catch(err => console.log('On-chain registration failed (optional):', err));
+      }
+      
       // Redirect to the new space with success
-      router.push(`/spaces/${spaceId}`);
+      router.push(`/spaces/${slug}`);
       
     } catch (err) {
       setLoading(false);
