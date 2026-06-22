@@ -222,7 +222,11 @@ ENDPOINT="${OG_COMPUTE_BASE_URL}/chat/completions"`,
   Object.entries(selectedTemplate).forEach(([filename, content]) => {
     if (typeof content === 'string') {
       const filePath = path.join(repoPath, filename);
-      fs.writeFileSync(filePath, content.replace(/\$\{spaceName\}/g, spaceName));
+      let processedContent = content
+        .replace(/\$\{spaceName\}/g, spaceName)
+        .replace(/\$\{appPort\}/g, appPort.toString())
+        .replace(/\$\{OG_COMPUTE_BASE_URL\}/g, OG_COMPUTE_BASE_URL);
+      fs.writeFileSync(filePath, processedContent);
     }
   });
 }
