@@ -348,7 +348,7 @@ def register_space_on_chain(config: DeployConfig, endpoint_url: str) -> Tuple[bo
             return False, "", errors
         
         cmd = [
-            "npx", "hardhat", "run", str(deploy_script),
+            "node", str(deploy_script),
             "--network", "galileo",
             "--name", config.name,
             "--description", config.description,

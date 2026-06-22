@@ -31,17 +31,26 @@ async function main() {
   const modelRegistryAddress = await modelRegistry.getAddress();
   console.log(`✅ ModelRegistry deployed to: ${modelRegistryAddress}\n`);
 
+  console.log("📦 Deploying AgentSpaceRegistry...");
+  const AgentSpaceRegistry = await hre.ethers.getContractFactory("AgentSpaceRegistry");
+  const agentSpaceRegistry = await AgentSpaceRegistry.deploy();
+  await agentSpaceRegistry.waitForDeployment();
+  const agentSpaceRegistryAddress = await agentSpaceRegistry.getAddress();
+  console.log(`✅ AgentSpaceRegistry deployed to: ${agentSpaceRegistryAddress}\n`);
+
   console.log("=" .repeat(60));
   console.log("✨ Deployment complete!");
   console.log("=" .repeat(60));
   console.log("\nContract Addresses:");
   console.log(`  AgentRegistry: ${agentRegistryAddress}`);
   console.log(`  ModelRegistry: ${modelRegistryAddress}`);
+  console.log(`  AgentSpaceRegistry: ${agentSpaceRegistryAddress}`);
   console.log("\n");
   console.log("Next steps:");
-  console.log("1. Add these addresses to frontend/.env.local:");
+  console.log("1. Add these addresses to frontend/.env:");
   console.log(`   NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS=${agentRegistryAddress}`);
   console.log(`   NEXT_PUBLIC_MODEL_REGISTRY_ADDRESS=${modelRegistryAddress}`);
+  console.log(`   NEXT_PUBLIC_AGENT_SPACE_REGISTRY_ADDRESS=${agentSpaceRegistryAddress}`);
   console.log("\n2. Run frontend:");
   console.log("   cd ../frontend");
   console.log("   npm install");
@@ -49,6 +58,7 @@ async function main() {
   console.log("\n3. Verify contracts on 0Gscan (if available):");
   console.log(`   npx hardhat verify --network galileo ${agentRegistryAddress}`);
   console.log(`   npx hardhat verify --network galileo ${modelRegistryAddress}`);
+  console.log(`   npx hardhat verify --network galileo ${agentSpaceRegistryAddress}`);
 }
 
 main()

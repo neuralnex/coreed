@@ -14,23 +14,32 @@ const NAV_LINKS = [
 ];
 
 export function Navbar() {
-  const { address, isConnected, isConnecting, connect, disconnect, hasWallet } = useWalletContext();
+  const { address, isConnected, isConnecting, connect, disconnect } = useWalletContext();
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [privyEmail, setPrivyEmail] = useState<string | null>(null);
 
   const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 
-  const handleConnectClick = () => {
-    if (hasWallet) {
-      setShowWalletModal(true);
+  useEffect(() => {
+    if (isConnected) {
+      setPrivyEmail(sessionStorage.getItem("privy_email"));
     } else {
-      connect();
+      setPrivyEmail(null);
     }
+  }, [isConnected]);
+
+  const handleConnectClick = () => {
+    setShowWalletModal(true);
   };
 
   const handleWalletSelect = async (walletId: string) => {
     setShowWalletModal(false);
-    try { await connect(walletId); } catch { /* ignore */ }
+  };
+
+  const handleDisconnect = () => {
+    sessionStorage.removeItem("privy_email");
+    disconnect();
   };
 
   const toggleMobileMenu = () => setShowMobileMenu(!showMobileMenu);
@@ -84,12 +93,12 @@ export function Navbar() {
                 </button>
               ) : isConnected && address ? (
                 <div className="flex items-center gap-3">
-                  <span className="hidden sm:block px-3 py-1.5 text-sm text-white/60 border border-white/10 rounded-full">
-                    {formatAddress(address)}
+                  <span className="hidden sm:block px-3 py-1.5 text-xs text-white/60 border border-white/10 rounded-full font-mono max-w-[260px] truncate">
+                    {privyEmail ? `${privyEmail} (${formatAddress(address)})` : formatAddress(address)}
                   </span>
                   <button
-                    onClick={disconnect}
-                    className="text-sm text-white/40 hover:text-white/70 transition-colors"
+                    onClick={handleDisconnect}
+                    className="text-sm text-white/40 hover:text-white/70 transition-colors cursor-pointer"
                   >
                     Disconnect
                   </button>
@@ -102,12 +111,12 @@ export function Navbar() {
                   >
                     Getting Started
                   </Link>
-                <button
-                  onClick={handleConnectClick}
-                  className="px-4 py-2 text-sm font-medium text-black bg-modal-green hover:brightness-110 rounded-full transition-all"
-                >
-                  Connect Wallet
-                </button>
+                  <button
+                    onClick={handleConnectClick}
+                    className="px-4 py-2 text-sm font-medium text-black bg-modal-green hover:brightness-110 rounded-full transition-all cursor-pointer"
+                  >
+                    Connect Wallet
+                  </button>
                 </div>
               )}
 
@@ -142,10 +151,12 @@ export function Navbar() {
               <div className="mt-2 pt-2 border-t border-white/5">
                 {isConnected && address ? (
                   <div className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm text-white/60">{formatAddress(address)}</span>
+                    <span className="text-xs text-white/60 font-mono truncate max-w-[200px]">
+                      {privyEmail ? `${privyEmail} (${formatAddress(address)})` : formatAddress(address)}
+                    </span>
                     <button
-                      onClick={() => { disconnect(); setShowMobileMenu(false); }}
-                      className="text-sm text-white/40 hover:text-white/70"
+                      onClick={() => { handleDisconnect(); setShowMobileMenu(false); }}
+                      className="text-sm text-white/40 hover:text-white/70 cursor-pointer"
                     >
                       Disconnect
                     </button>
@@ -159,12 +170,12 @@ export function Navbar() {
                     >
                       Getting Started
                     </Link>
-                  <button
-                    onClick={() => { handleConnectClick(); setShowMobileMenu(false); }}
-                    className="w-full px-4 py-3 text-sm font-medium text-black bg-modal-green rounded-4xl"
-                  >
-                    Connect Wallet
-                  </button>
+                    <button
+                      onClick={() => { handleConnectClick(); setShowMobileMenu(false); }}
+                      className="w-full px-4 py-3 text-sm font-medium text-black bg-modal-green rounded-4xl cursor-pointer"
+                    >
+                      Connect Wallet
+                    </button>
                   </div>
                 )}
               </div>
@@ -173,7 +184,7 @@ export function Navbar() {
         )}
       </nav>
 
-      {showWalletModal && hasWallet && (
+      {showWalletModal && (
         <WalletConnector
           onClose={() => setShowWalletModal(false)}
           onConnect={handleWalletSelect}

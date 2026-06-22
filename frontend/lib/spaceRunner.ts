@@ -83,6 +83,28 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
         return;
       }
 
+      // Load space-specific .env file if it exists
+      const spaceEnv: Record<string, string> = {};
+      const envPath = path.join(repoPath, '.env');
+      if (fs.existsSync(envPath)) {
+        try {
+          const envContent = fs.readFileSync(envPath, 'utf8');
+          envContent.split(/\r?\n/).forEach((line) => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+              const eqIdx = trimmed.indexOf('=');
+              const key = trimmed.substring(0, eqIdx).trim();
+              const value = trimmed.substring(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+              if (key) {
+                spaceEnv[key] = value;
+              }
+            }
+          });
+        } catch (err) {
+          console.error(`Error reading space .env file at ${envPath}:`, err);
+        }
+      }
+
       const command = sdk === 'gradio' || sdk === 'fastapi' ? 'python' : 'node';
       const script = mainFile;
 
@@ -93,7 +115,9 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
           ...process.env,
-          OG_COMPUTE_API_KEY: process.env.OG_COMPUTE_API_KEY || '',
+          PYTHONUNBUFFERED: '1',
+          ...spaceEnv,
+          OG_COMPUTE_API_KEY: spaceEnv.OG_COMPUTE_API_KEY || process.env.OG_COMPUTE_API_KEY || '',
           PATH: process.env.PATH || ''
         }
       });
@@ -109,7 +133,14 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
       spaceProcess.stdout?.on('data', (data) => {
         const output = data.toString();
         console.log(`Space ${spaceId} stdout: ${output}`);
-        if (output.includes('Running on') || output.includes('local URL') || output.includes('Serving')) {
+        const lowerOutput = output.toLowerCase();
+        if (
+          lowerOutput.includes('running') ||
+          lowerOutput.includes('local url') ||
+          lowerOutput.includes('serving') ||
+          lowerOutput.includes('listening') ||
+          lowerOutput.includes('started')
+        ) {
           started = true;
           clearTimeout(timeout);
           runningSpaces.set(spaceId, { process: spaceProcess, repoPath, port, sdk });

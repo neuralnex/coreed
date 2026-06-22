@@ -30,13 +30,13 @@ class CoreedConfig:
     storage_indexer: str = "https://indexer-storage-testnet-turbo.0g.ai"
     
     # Contract Addresses (Galileo Testnet)
-    model_registry_address: str = "0xFA81366Ba81C19d848191B8e49eC0948230d4216"
-    agent_registry_address: str = "0xff34F1281A8D4F14d503c28E8A45cAF98Acc235C"
-    space_registry_address: str = "0xedF4958de1e22979EaE3dec3ECb84C4D63cA510A"
+    model_registry_address: str = "0x2F8af0c73d86D029027AE723411fDE55da5D781F"
+    agent_registry_address: str = "0x147C73A88313Dd8E1C5161Ff84E5f0FbFb00D5D9"
+    space_registry_address: str = "0xEcD7F1a7446be7bf6035Bb417b76C43C349003FB"
     private_key: str = ""
     
     # API Configuration
-    router_api_url: str = "https://router-api.0g.ai/v1"
+    router_api_url: str = "https://router-api-testnet.integratenetwork.work/v1"
     
     # Local Configuration
     project_dir: str = "."
@@ -335,6 +335,14 @@ def register_model_on_chain(
         account = w3.eth.account.from_key(private_key)
         contract = w3.eth.contract(address=contract_address, abi=abi)
         
+        # Convert hex storage hash to bytes for Solidity bytes32
+        storage_hash_bytes = metadata.storage_root_hash
+        if isinstance(storage_hash_bytes, str):
+            if storage_hash_bytes.startswith("0x"):
+                storage_hash_bytes = bytes.fromhex(storage_hash_bytes[2:])
+            else:
+                storage_hash_bytes = bytes.fromhex(storage_hash_bytes)
+
         # Build transaction
         tx = contract.functions.registerModel(
             metadata.name,
@@ -342,7 +350,7 @@ def register_model_on_chain(
             metadata.architecture,
             metadata.parameters,
             metadata.license,
-            metadata.storage_root_hash,
+            storage_hash_bytes,
         ).build_transaction({
             "from": account.address,
             "nonce": w3.eth.get_transaction_count(account.address),
@@ -372,8 +380,8 @@ def register_model_on_chain(
     try:
         # Try to use Hardhat scripts
         cmd = [
-            "npx", "hardhat", "run",
-            Path(__file__).parent.parent / "contracts" / "scripts" / "register-model.js",
+            "node",
+            str(Path(__file__).parent.parent / "contracts" / "scripts" / "register-model.js"),
             "--network", "galileo",
             "--name", metadata.name,
             "--description", metadata.description,
@@ -460,14 +468,10 @@ def deploy_space_on_chain(
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
         
         # Parse space ID from event
-        for log in receipt.logs:
-            try:
-                event = contract.events.SpaceDeployed().process_receipt(receipt)
-                if event:
-                    space_id = str(event[0].args.spaceId)
-                    return tx_hash.hex(), space_id
-            except:
-                pass
+        events = contract.events.SpaceDeployed().process_receipt(receipt)
+        if events:
+            space_id = str(events[0]["args"]["spaceId"])
+            return tx_hash.hex(), space_id
         
         return tx_hash.hex(), None
         

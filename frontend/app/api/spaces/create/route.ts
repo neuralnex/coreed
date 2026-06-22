@@ -6,7 +6,7 @@ import { addSpace, getSpaceById, getSpacesByOwner, getAllSpaces, updateSpaceStat
 import { startSpace, installDependencies } from '@/lib/spaceRunner';
 
 const OG_COMPUTE_API_KEY = process.env.OG_COMPUTE_API_KEY;
-const OG_COMPUTE_BASE_URL = process.env.NEXT_PUBLIC_COMPUTE_ROUTER || 'https://router-api.0g.ai/v1';
+const OG_COMPUTE_BASE_URL = process.env.NEXT_PUBLIC_COMPUTE_ROUTER || 'https://router-api-testnet.integratenetwork.work/v1';
 const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './storage/repos';
 const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'localhost';
 
@@ -18,80 +18,85 @@ function scaffoldTemplate(repoPath: string, sdk: string, template: string, space
     gradio: {
       blank: {
         'app.py': `import gradio as gr
-import requests
+from openai import OpenAI
 import os
-import json
 
 def chat(message, history):
     api_key = os.getenv('OG_COMPUTE_API_KEY')
     if not api_key:
-        raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
+        return "Error: OG_COMPUTE_API_KEY environment variable not set. Please add it to your space secrets (.env file)."
     
-    print(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
-    response = requests.post(
-        "${OG_COMPUTE_BASE_URL}/chat/completions",
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50}
-    )
-    print(f"0G Router response status: {response.status_code}")
-    print(f"0G Router response: {json.dumps(response.json(), indent=2)}")
-    return response.json()["choices"][0]["message"]["content"]
+    print(f"Sending request to 0G Router using OpenAI SDK: model=qwen2.5-omni, message={message[:50]}...")
+    try:
+        client = OpenAI(
+            base_url="\${OG_COMPUTE_BASE_URL}",
+            api_key=api_key
+        )
+        response = client.chat.completions.create(
+            model="qwen2.5-omni",
+            messages=[{"role": "user", "content": message}],
+            max_tokens=100
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error communicating with 0G Router: {str(e)}"
 
 if __name__ == "__main__":
-    print("Starting Gradio app on port ${appPort}")
-    ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Powered by 0G Compute")
-    ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
+    print("Starting Gradio app on port \${appPort}")
+    ui = gr.ChatInterface(fn=chat, title="\${spaceName}", description="Powered by 0G Compute")
+    ui.launch(server_name="0.0.0.0", server_port=\${appPort}, share=False)
 `,
-        'requirements.txt': 'gradio==6.19.0\nrequests\n',
+        'requirements.txt': 'gradio==6.19.0\nopenai\n',
         '.env.example': envExampleContent
       },
       chatbot: {
         'app.py': `import gradio as gr
-import requests
+from openai import OpenAI
 import os
-import json
 
 def chat(message, history):
     api_key = os.getenv('OG_COMPUTE_API_KEY')
     if not api_key:
-        raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
+        return "Error: OG_COMPUTE_API_KEY environment variable not set. Please add it to your space secrets (.env file)."
     
-    print(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
-    response = requests.post(
-        "${OG_COMPUTE_BASE_URL}/chat/completions",
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 100}
-    )
-    print(f"0G Router response status: {response.status_code}")
-    print(f"0G Router response: {json.dumps(response.json(), indent=2)}")
-    return response.json()["choices"][0]["message"]["content"]
+    print(f"Sending request to 0G Router using OpenAI SDK: model=qwen2.5-omni, message={message[:50]}...")
+    try:
+        client = OpenAI(
+            base_url="\${OG_COMPUTE_BASE_URL}",
+            api_key=api_key
+        )
+        response = client.chat.completions.create(
+            model="qwen2.5-omni",
+            messages=[{"role": "user", "content": message}],
+            max_tokens=150
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error communicating with 0G Router: {str(e)}"
 
 if __name__ == "__main__":
-    print("Starting Gradio chatbot on port ${appPort}")
-    ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Chat with AI on 0G")
-    ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
+    print("Starting Gradio chatbot on port \${appPort}")
+    ui = gr.ChatInterface(fn=chat, title="\${spaceName}", description="Chat with AI on 0G")
+    ui.launch(server_name="0.0.0.0", server_port=\${appPort}, share=False)
 `,
-        'requirements.txt': 'gradio==6.19.0\nrequests\n',
+        'requirements.txt': 'gradio==6.19.0\nopenai\n',
         '.env.example': envExampleContent
       }
     },
     fastapi: {
       blank: {
         'main.py': `from fastapi import FastAPI
-import requests
+from openai import OpenAI
 import os
 import uvicorn
-import json
 
-app = FastAPI(title="${spaceName}")
+app = FastAPI(title="\${spaceName}")
 OG_API_KEY = os.getenv('OG_COMPUTE_API_KEY')
-if not OG_API_KEY:
-    raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
-OG_URL = "${OG_COMPUTE_BASE_URL}"
+OG_URL = "\${OG_COMPUTE_BASE_URL}"
 
 @app.get("/")
 def read_root():
-    return {"message": "${spaceName} - Powered by 0G Compute"}
+    return {"message": "\${spaceName} - Powered by 0G Compute"}
 
 @app.get("/health")
 def health():
@@ -99,31 +104,42 @@ def health():
 
 @app.post("/chat")
 def chat(message: str):
-    print(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
-    response = requests.post(f"{OG_URL}/chat/completions", headers={"Authorization": f"Bearer {OG_API_KEY}", "Content-Type": "application/json"}, json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50})
-    print(f"0G Router response status: {response.status_code}")
-    print(f"0G Router response: {json.dumps(response.json(), indent=2)}")
-    return response.json()
+    if not OG_API_KEY:
+        return {"error": "OG_COMPUTE_API_KEY environment variable not set"}
+    print(f"Sending request to 0G Router using OpenAI SDK: model=qwen2.5-omni, message={message[:50]}...")
+    try:
+        client = OpenAI(
+            base_url=OG_URL,
+            api_key=OG_API_KEY
+        )
+        response = client.chat.completions.create(
+            model="qwen2.5-omni",
+            messages=[{"role": "user", "content": message}],
+            max_tokens=100
+        )
+        return {"response": response.choices[0].message.content}
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
-    print(f"Starting FastAPI app on port ${appPort}")
-    uvicorn.run(app, host="0.0.0.0", port=${appPort})
+    print(f"Starting FastAPI app on port \${appPort}")
+    uvicorn.run(app, host="0.0.0.0", port=\${appPort})
 `,
-        'requirements.txt': 'fastapi==0.109.0\nuvicorn==0.27.0\nrequests\n',
+        'requirements.txt': 'fastapi==0.109.0\nuvicorn==0.27.0\nopenai\n',
         '.env.example': envExampleContent
       }
     },
     express: {
       blank: {
         'index.js': `const express = require('express');
-const axios = require('axios');
+const { OpenAI } = require('openai');
 const app = express();
-const port = ${appPort};
+const port = \${appPort};
 
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('${spaceName} - Powered by 0G Compute');
+  res.send('\${spaceName} - Powered by 0G Compute');
 });
 
 app.get('/health', (req, res) => {
@@ -137,30 +153,32 @@ app.post('/chat', async (req, res) => {
     if (!apiKey) {
       throw new Error("OG_COMPUTE_API_KEY environment variable not set");
     }
-    console.log('Sending request to 0G Router: model=zai-org/GLM-4-Flash, message=' + message.substring(0, 50) + '...');
-    const response = await axios.post('${OG_COMPUTE_BASE_URL}/chat/completions', {
-      model: 'zai-org/GLM-4-Flash',
+    console.log('Sending request to 0G Router using OpenAI SDK: model=qwen2.5-omni, message=' + message.substring(0, 50) + '...');
+    const client = new OpenAI({
+      baseURL: '\${OG_COMPUTE_BASE_URL}',
+      apiKey: apiKey
+    });
+    const response = await client.chat.completions.create({
+      model: 'qwen2.5-omni',
       messages: [{ role: 'user', content: message }],
-      max_tokens: 50
-    }, { headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' } });
-    console.log('0G Router response status: ' + response.status);
-    console.log('0G Router response: ' + JSON.stringify(response.data, null, 2));
-    res.json(response.data);
+      max_tokens: 100
+    });
+    res.json({ response: response.choices[0].message.content });
   } catch (error) {
     res.json({ error: error.message });
   }
 });
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(${spaceName} + ' running at http://localhost:' + port);
+  console.log('\${spaceName}' + ' running at http://localhost:' + port);
 });
 `,
         'package.json': `{
-  "name": "${spaceName}",
+  "name": "\${spaceName}",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": { "start": "node index.js" },
-  "dependencies": { "express": "^4.18.2", "axios": "^1.6.2" }
+  "dependencies": { "express": "^4.18.2", "openai": "^4.28.0" }
 }`,
         '.env.example': envExampleContent
       }
@@ -168,11 +186,11 @@ app.listen(port, '0.0.0.0', () => {
     static: {
       blank: {
         'index.html': `<!DOCTYPE html>
-<html><head><title>${spaceName}</title>
+<html><head><title>\${spaceName}</title>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <style>body{font-family:Arial,sans-serif;text-align:center;padding:40px}h1{color:#333}</style>
 </head><body>
-<h1>${spaceName}</h1><p>Powered by 0G Compute</p>
+<h1>\${spaceName}</h1><p>Powered by 0G Compute</p>
 <p style="color:red;font-size:14px;">Set OG_COMPUTE_API_KEY in .env file</p>
 <div><input type="text" id="message" placeholder="Type a message..." />
 <button onclick="sendMessage()">Send</button><div id="response"></div></div>
@@ -183,8 +201,8 @@ async function sendMessage(){
   try{
     const apiKey = prompt('Enter your OG_COMPUTE_API_KEY:');
     if(!apiKey) throw new Error('API key required');
-    const r=await axios.post('${OG_COMPUTE_BASE_URL}/chat/completions',{
-      model:'zai-org/GLM-4-Flash',messages:[{role:'user',content:msg}],max_tokens:50
+    const r=await axios.post('\${OG_COMPUTE_BASE_URL}/chat/completions',{
+      model:'qwen2.5-omni',messages:[{role:'user',content:msg}],max_tokens:100
     },{headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'}});
     document.getElementById('response').innerHTML=r.data.choices[0].message.content;
   }catch(e){document.getElementById('response').innerHTML='Error: '+e.message}
@@ -201,14 +219,16 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-EXPOSE ${appPort}
+EXPOSE \${appPort}
 CMD ["python", "app.py"]`,
-        'requirements.txt': '# Add your dependencies\n',
+        'requirements.txt': 'openai\n',
         'app.py': `import os
+from openai import OpenAI
 API_KEY=os.getenv("OG_COMPUTE_API_KEY")
 if not API_KEY:
     raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
-ENDPOINT="${OG_COMPUTE_BASE_URL}/chat/completions"`,
+client = OpenAI(base_url="\${OG_COMPUTE_BASE_URL}", api_key=API_KEY)
+response = client.chat.completions.create(model="qwen2.5-omni", messages=[{"role": "user", "content": "test"}])`,
         '.env.example': envExampleContent
       }
     }
@@ -298,7 +318,7 @@ Your app uses 0G Compute Router for AI inference:
 
     const ownerShort = owner.slice(2, 10);
     const platformDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || host || 'localhost';
-    const platformPort = process.env.PORT || (host?.includes('localhost:') ? host.split(':')[2] : '3000');
+    const platformPort = process.env.PORT || (host?.includes('localhost:') ? host.split(':')[1] : '3000');
     const coreedEndpointUrl = `${protocol}://${ownerShort}.${spaceSlug}.${baseDomain}`;
     const localEndpointUrl = `http://localhost:${appPort}`;
     const platformUrl = `http://${platformDomain}:${platformPort}/spaces/${spaceSlug}`;
@@ -343,7 +363,7 @@ Your app uses 0G Compute Router for AI inference:
           computeInfo = { ...computeInfo, connected: true, models: modelsData.data?.slice(0, 10) || [] };
           deployment = {
             id: `coreed-${spaceSlug}-${Date.now()}`,
-            model: modelsData.data?.[0]?.id || 'zai-org/GLM-4-Flash',
+            model: modelsData.data?.[0]?.id || 'qwen2.5-omni',
             endpoint: `${OG_COMPUTE_BASE_URL}/chat/completions`,
             status: 'ready'
           };

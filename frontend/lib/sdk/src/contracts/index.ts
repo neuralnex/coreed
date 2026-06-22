@@ -14,9 +14,9 @@ export default {
 
 // Default contract addresses for Galileo Testnet
 export const DEFAULT_CONTRACT_ADDRESSES = {
-  modelRegistry: '0xFA81366Ba81C19d848191B8e49eC0948230d4216',
-  agentRegistry: '0xff34F1281A8D4F14d503c28E8A45cAF98Acc235C',
-  agentSpaceRegistry: '0xedF4958de1e22979EaE3dec3ECb84C4D63cA510A',
+  modelRegistry: '0x2F8af0c73d86D029027AE723411fDE55da5D781F',
+  agentRegistry: '0x147C73A88313Dd8E1C5161Ff84E5f0FbFb00D5D9',
+  agentSpaceRegistry: '0xEcD7F1a7446be7bf6035Bb417b76C43C349003FB',
 };
 
 export const DEFAULT_NETWORK = {
