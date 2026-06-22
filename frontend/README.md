@@ -149,6 +149,41 @@ node index.js  # http://localhost:3000
 
 ---
 
+## 🌐 Space URL Provisioning
+
+Coreed **automatically provisions public URLs** for your spaces based on the deployment environment:
+
+### Local Development
+When running on `localhost`:
+```
+Space: my-space
+Owner: 0x9BF31B4e9Cb0d49e17CAF356445Fd2b91c032A0A
+
+Provisioned URL: https://9BF31B4e.my-space.coreed.app
+Local URL:      http://localhost:7860
+```
+
+### Production (Vercel, etc.)
+When deployed with a custom domain:
+```
+Host: coreed.ai
+Provisioned URL: https://9BF31B4e.my-space.coreed.ai
+```
+
+### URL Format
+```
+{owner-short}.{space-slug}.{base-domain}
+
+Where:
+- owner-short: First 8 characters of owner address (without 0x)
+- space-slug: Lowercase, hyphenated space name
+- base-domain: coreed.app (localhost) or your custom domain
+```
+
+**Note:** All spaces are also accessible via their local development URL for testing.
+
+---
+
 ## 🔗 0G Network Configuration
 
 ```

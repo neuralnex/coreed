@@ -1,9 +1,0 @@
-#!/bin/bash
-while read oldrev newrev refname; do
-  if [ "$refname" = "refs/heads/main" ]; then
-    REPO_DIR=$(dirname $(dirname $(dirname "$0")))
-    curl -X POST http://localhost:3000/api/webhooks/git-push \
-      -H "Content-Type: application/json" \
-      -d "{\"repoPath\": \"$REPO_DIR\", \"owner\": \"0x9BF31B4e9Cb0d49e17CAF356445Fd2b91c032A0A\", \"space\": \"chem\"}" &
-  fi
-done

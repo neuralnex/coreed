@@ -47,7 +47,7 @@ def chat(message, history):
         return f"Error: {str(e)}"
 
 ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Powered by 0G Compute")
-ui.launch(server_name="0.0.0.0", server_port=${appPort})
+ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
 `,
         'requirements.txt': 'gradio==4.31.0\nrequests\n'
       },
@@ -69,7 +69,7 @@ def chat(message, history):
         return f"Error: {str(e)}"
 
 ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Chat with AI on 0G")
-ui.launch(server_name="0.0.0.0", server_port=${appPort})
+ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
 `,
         'requirements.txt': 'gradio==4.31.0\nrequests\n'
       }
@@ -262,7 +262,22 @@ Your app uses 0G Compute Router for AI inference:
     execSync('git commit -m "Initial space scaffold - 0G Powered"', { cwd: repoPath, stdio: 'pipe' });
 
     // Store the space in memory so it can be listed
-    const coreedEndpointUrl = `https://${owner.slice(2)}.${spaceSlug}.${APP_DOMAIN === 'localhost' ? 'coreed.app' : APP_DOMAIN}`;
+    // Dynamic domain detection for provisioned URLs
+    const headers = request.headers;
+    const host = headers.get('host') || headers.get('x-forwarded-host') || 'localhost';
+    const protocol = headers.get('x-forwarded-proto') || 'https';
+    
+    // Determine the base domain for provisioned URLs
+    let baseDomain = APP_DOMAIN;
+    
+    // If running locally, use coreed.app as the base
+    if (host === 'localhost' || host === '127.0.0.1' || host.includes('localhost:')) {
+      baseDomain = 'coreed.app';
+    }
+    
+    // Generate provisioned URL: {owner-short}.{space-slug}.{base-domain}
+    const ownerShort = owner.slice(2, 10); // Use first 8 chars of address (without 0x)
+    const coreedEndpointUrl = `${protocol}://${ownerShort}.${spaceSlug}.${baseDomain}`;
     const localEndpointUrl = `http://localhost:${appPort}`;
     
     // Store space info
@@ -275,6 +290,7 @@ Your app uses 0G Compute Router for AI inference:
       template,
       owner,
       endpointUrl: coreedEndpointUrl,
+      localEndpointUrl: localEndpointUrl,
       gitRepo: {
         cloneUrl: `file://${repoPath}`,
         repoPath: repoPath

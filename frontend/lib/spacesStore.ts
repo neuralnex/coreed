@@ -12,6 +12,7 @@ interface StoredSpace {
   template: string;
   owner: string;
   endpointUrl: string;
+  localEndpointUrl?: string;
   gitRepo: {
     cloneUrl: string;
     repoPath: string;
