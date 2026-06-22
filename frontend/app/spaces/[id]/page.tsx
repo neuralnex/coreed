@@ -10,7 +10,7 @@ import { FileBrowser } from "@/components/space/FileBrowser";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentRegistry } from "@/lib/useAgentRegistry";
-import { GitBranch, Globe } from "lucide-react";
+import { GitBranch, Globe, PlayCircle, StopCircle, RefreshCw, Terminal } from "lucide-react";
 import type { AgentSpace, SpaceDeployment } from "@/types/space";
 import type { JsonRpcSigner, TransactionResponse } from "ethers";
 
@@ -27,6 +27,9 @@ export default function SpaceDetailPage() {
   const [healthLoading, setHealthLoading] = useState(false);
   const [updatingHealth, setUpdatingHealth] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [spaceRunning, setSpaceRunning] = useState(false);
+  const [spacePort, setSpacePort] = useState<number | null>(null);
+  const [spaceActionLoading, setSpaceActionLoading] = useState<string | null>(null);
 
   const {
     getSpace,
@@ -53,6 +56,7 @@ export default function SpaceDetailPage() {
             version: '1.0.0',
             modelId: '0',
             endpointUrl: storedInfo.space?.endpointUrl || storedInfo.space?.localEndpointUrl || `http://localhost:7860`,
+            platformUrl: storedInfo.space?.platformUrl,
             localEndpointUrl: storedInfo.space?.localEndpointUrl,
             deployedAt: Date.now() / 1000,
             lastHealthCheck: 0,
@@ -63,7 +67,8 @@ export default function SpaceDetailPage() {
             owner: storedInfo.space?.owner || '',
             requestCount: 0,
             sdk: storedInfo.space?.sdk || 'gradio',
-            template: storedInfo.space?.template || 'blank'
+            template: storedInfo.space?.template || 'blank',
+            status: storedInfo.space?.status || 'created'
           };
           setSpace(spaceFromSession);
 
@@ -73,6 +78,7 @@ export default function SpaceDetailPage() {
           setModelName("0G Compute Router");
           setModelStorageHash("");
           setLoading(false);
+          checkSpaceRunning(spaceFromSession);
           return;
         }
       }
@@ -93,6 +99,7 @@ export default function SpaceDetailPage() {
           setModelName("Unknown Model");
           setModelStorageHash("");
         }
+        checkSpaceRunning(spaceData);
       } catch (chainErr) {
         console.log("On-chain lookup failed:", chainErr);
         if (sessionData) {
@@ -104,6 +111,7 @@ export default function SpaceDetailPage() {
             version: '1.0.0',
             modelId: '0',
             endpointUrl: storedInfo.space?.endpointUrl || storedInfo.space?.localEndpointUrl || `http://localhost:7860`,
+            platformUrl: storedInfo.space?.platformUrl,
             localEndpointUrl: storedInfo.space?.localEndpointUrl,
             deployedAt: Date.now() / 1000,
             lastHealthCheck: 0,
@@ -114,11 +122,13 @@ export default function SpaceDetailPage() {
             owner: storedInfo.space?.owner || '',
             requestCount: 0,
             sdk: storedInfo.space?.sdk || 'gradio',
-            template: storedInfo.space?.template || 'blank'
+            template: storedInfo.space?.template || 'blank',
+            status: storedInfo.space?.status || 'created'
           };
           setSpace(spaceFromSession);
           setModelName("0G Compute Router");
           setModelStorageHash("");
+          checkSpaceRunning(spaceFromSession);
         }
       }
 
@@ -126,6 +136,47 @@ export default function SpaceDetailPage() {
       console.error("Failed to fetch space:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkSpaceRunning = async (spaceData: AgentSpace) => {
+    try {
+      const response = await fetch(`/api/spaces/run?spaceId=${spaceData.spaceId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSpaceRunning(data.isRunning);
+        setSpacePort(data.port || null);
+      }
+    } catch {
+      setSpaceRunning(false);
+      setSpacePort(null);
+    }
+  };
+
+  const handleSpaceAction = async (action: 'start' | 'stop' | 'restart' | 'install-deps') => {
+    if (!space) return;
+
+    setSpaceActionLoading(action);
+    try {
+      const response = await fetch('/api/spaces/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spaceId: space.spaceId, action })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          checkSpaceRunning(space);
+        }
+      } else {
+        const error = await response.json();
+        console.error('Space action error:', error);
+      }
+    } catch (err) {
+      console.error('Failed to perform space action:', err);
+    } finally {
+      setSpaceActionLoading(null);
     }
   };
 
@@ -250,7 +301,7 @@ export default function SpaceDetailPage() {
                 Agent Space ID: {space.spaceId}
               </p>
             </div>
-        <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4">
               <Link
                 href="/spaces"
                 className="font-mono text-xs text-coreed-sage hover:text-coreed-bone"
@@ -294,7 +345,25 @@ export default function SpaceDetailPage() {
               <Globe className="w-4 h-4" />
               Endpoint
             </h3>
-            <p className="font-mono text-xs text-coreed-sage/70 mb-1">Coreed URL</p>
+            
+            {space.platformUrl && (
+              <>
+                <p className="font-mono text-xs text-coreed-sage/70 mb-1">Platform URL</p>
+                <p className="font-mono text-sm text-coreed-bone break-all">
+                  {space.platformUrl}
+                </p>
+                <a
+                  href={space.platformUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-coreed-moss-bright hover:text-coreed-bone mt-2 inline-block"
+                >
+                  open on platform
+                </a>
+              </>
+            )}
+
+            <p className="font-mono text-xs text-coreed-sage/70 mb-1 mt-3">Coreed URL</p>
             <p className="font-mono text-sm text-coreed-bone break-all">
               {space.endpointUrl}
             </p>
@@ -325,12 +394,16 @@ export default function SpaceDetailPage() {
             </p>
           </div>
           <div className="rounded border border-coreed-line bg-coreed-panel p-5">
-            <h3 className="font-mono text-xs text-coreed-sage mb-3">
-              Requests
+            <h3 className="font-mono text-xs text-coreed-sage mb-3 flex items-center gap-2">
+              <Terminal className="w-4 h-4" />
+              Status
             </h3>
-            <p className="font-mono text-sm text-coreed-bone">
-              {space.requestCount}
+            <p className={`font-mono text-sm ${spaceRunning ? 'text-green-400' : 'text-yellow-400'}`}>
+              {spaceRunning ? 'Running' : 'Stopped'}
             </p>
+            {spacePort && (
+              <p className="font-mono text-xs text-coreed-sage/70 mt-1">Port: {spacePort}</p>
+            )}
           </div>
         </div>
 
@@ -341,6 +414,57 @@ export default function SpaceDetailPage() {
           <p className="font-mono text-sm text-coreed-sage/80">
             {space.description || "No description provided"}
           </p>
+        </div>
+
+        <div className="rounded border border-coreed-line bg-coreed-panel p-5 mb-8">
+          <h3 className="font-mono text-xs text-coreed-sage mb-3 flex items-center gap-2">
+            <PlayCircle className="w-4 h-4" />
+            Space Controls
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {!spaceRunning ? (
+              <button
+                onClick={() => handleSpaceAction('start')}
+                disabled={spaceActionLoading === 'start'}
+                className="rounded border border-coreed-moss px-4 py-2 font-mono text-xs text-coreed-bone hover:bg-coreed-moss/10 disabled:opacity-50 flex items-center gap-2"
+              >
+                <PlayCircle className="w-3 h-3" />
+                {spaceActionLoading === 'start' ? 'Starting...' : 'Start Space'}
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSpaceAction('stop')}
+                disabled={spaceActionLoading === 'stop'}
+                className="rounded border border-coreed-clay px-4 py-2 font-mono text-xs text-coreed-clay hover:bg-coreed-clay/10 disabled:opacity-50 flex items-center gap-2"
+              >
+                <StopCircle className="w-3 h-3" />
+                {spaceActionLoading === 'stop' ? 'Stopping...' : 'Stop Space'}
+              </button>
+            )}
+            
+            <button
+              onClick={() => handleSpaceAction('restart')}
+              disabled={spaceActionLoading === 'restart'}
+              className="rounded border border-coreed-line px-4 py-2 font-mono text-xs text-coreed-sage hover:border-coreed-moss disabled:opacity-50 flex items-center gap-2"
+            >
+              <RefreshCw className="w-3 h-3" />
+              {spaceActionLoading === 'restart' ? 'Restarting...' : 'Restart'}
+            </button>
+
+            <button
+              onClick={() => handleSpaceAction('install-deps')}
+              disabled={spaceActionLoading === 'install-deps'}
+              className="rounded border border-coreed-line px-4 py-2 font-mono text-xs text-coreed-sage hover:border-coreed-moss disabled:opacity-50 flex items-center gap-2"
+            >
+              <Terminal className="w-3 h-3" />
+              {spaceActionLoading === 'install-deps' ? 'Installing...' : 'Install Deps'}
+            </button>
+          </div>
+          {spaceRunning && (
+            <p className="font-mono text-xs text-coreed-sage/50 mt-2">
+              Space is running in the background. Dependencies are installed automatically.
+            </p>
+          )}
         </div>
 
         {(() => {

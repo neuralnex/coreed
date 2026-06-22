@@ -4,30 +4,30 @@ import { getSpacePort } from '@/lib/spaceRunner';
 import http from 'http';
 import https from 'https';
 
-export async function GET(request: Request, { params }: { params: { path: string[], spaceId: string } }) {
-  return handleProxyRequest(request, params);
+export async function GET(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+  return handleProxyRequest(request, context);
 }
 
-export async function POST(request: Request, { params }: { params: { path: string[], spaceId: string } }) {
-  return handleProxyRequest(request, params);
+export async function POST(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+  return handleProxyRequest(request, context);
 }
 
-export async function PUT(request: Request, { params }: { params: { path: string[], spaceId: string } }) {
-  return handleProxyRequest(request, params);
+export async function PUT(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+  return handleProxyRequest(request, context);
 }
 
-export async function DELETE(request: Request, { params }: { params: { path: string[], spaceId: string } }) {
-  return handleProxyRequest(request, params);
+export async function DELETE(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+  return handleProxyRequest(request, context);
 }
 
-export async function PATCH(request: Request, { params }: { params: { path: string[], spaceId: string } }) {
-  return handleProxyRequest(request, params);
+export async function PATCH(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+  return handleProxyRequest(request, context);
 }
 
-async function handleProxyRequest(request: Request, { params }: { params: { path: string[], spaceId: string } }): Promise<NextResponse> {
+async function handleProxyRequest(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }): Promise<NextResponse> {
   try {
-    const spaceId = params.spaceId;
-    const pathParts = params.path || [];
+    const { spaceId, path: pathParts } = await context.params;
+    
     const proxyPath = '/' + pathParts.join('/');
 
     const storedSpace = getSpaceById(spaceId);
@@ -66,7 +66,7 @@ async function handleProxyRequest(request: Request, { params }: { params: { path
       const req = protocol.request({
         hostname: targetUrl.hostname,
         port: targetUrl.port,
-        path: targetUrl.path,
+        path: targetUrl.pathname + targetUrl.search,
         method: method,
         headers: headers
       }, (res) => {

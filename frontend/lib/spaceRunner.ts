@@ -29,8 +29,7 @@ export const installDependencies = (repoPath: string, sdk: string): Promise<stri
     console.log(`Installing dependencies for ${sdk} space at ${repoPath}`);
     
     const installProcess = exec(command, { 
-      cwd: repoPath,
-      stdio: 'pipe'
+      cwd: repoPath
     });
 
     installProcess.stdout?.on('data', (data) => {
@@ -89,7 +88,7 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
 
       console.log(`Starting space ${spaceId} with ${command} ${script} on port ${port}`);
 
-      const process = spawn(command, [script], {
+      const spaceProcess = spawn(command, [script], {
         cwd: repoPath,
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
@@ -102,34 +101,34 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
       let started = false;
       const timeout = setTimeout(() => {
         if (!started) {
-          process.kill();
+          spaceProcess.kill();
           resolve({ success: false, port, error: 'Space failed to start within timeout' });
         }
       }, 10000);
 
-      process.stdout?.on('data', (data) => {
+      spaceProcess.stdout?.on('data', (data) => {
         const output = data.toString();
         console.log(`Space ${spaceId} stdout: ${output}`);
         if (output.includes('Running on') || output.includes('local URL') || output.includes('Serving')) {
           started = true;
           clearTimeout(timeout);
-          runningSpaces.set(spaceId, { process, repoPath, port, sdk });
+          runningSpaces.set(spaceId, { process: spaceProcess, repoPath, port, sdk });
           resolve({ success: true, port });
         }
       });
 
-      process.stderr?.on('data', (data) => {
+      spaceProcess.stderr?.on('data', (data) => {
         const error = data.toString();
         console.error(`Space ${spaceId} stderr: ${error}`);
       });
 
-      process.on('close', (code) => {
+      spaceProcess.on('close', (code) => {
         clearTimeout(timeout);
         runningSpaces.delete(spaceId);
         console.log(`Space ${spaceId} process closed with code ${code}`);
       });
 
-      process.on('error', (err) => {
+      spaceProcess.on('error', (err) => {
         clearTimeout(timeout);
         console.error(`Space ${spaceId} process error: ${err.message}`);
         resolve({ success: false, port, error: err.message });
