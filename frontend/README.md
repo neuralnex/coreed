@@ -43,18 +43,32 @@ npm install
 ```
 
 ### Configuration
-Copy `.env.local.example` to `.env.local` and add:
+Copy `.env.example` to `.env.local` and configure:
 
 ```env
+# REQUIRED: 0G Chain
 NEXT_PUBLIC_RPC_URL=https://evmrpc-testnet.0g.ai
 NEXT_PUBLIC_CHAIN_ID=16602
+
+# REQUIRED: Smart Contracts
 NEXT_PUBLIC_AGENT_SPACE_REGISTRY_ADDRESS=0xedF4958de1e22979EaE3dec3ECb84C4D63cA510A
+
+# REQUIRED: 0G Services
 NEXT_PUBLIC_STORAGE_INDEXER=https://indexer-storage-testnet-turbo.0g.ai
 NEXT_PUBLIC_COMPUTE_ROUTER=https://router-api.0g.ai/v1
-OG_COMPUTE_API_KEY=sk-your-api-key-from-pc.0g.ai
+
+# REQUIRED: Your 0G Compute API Key (get from https://pc.0g.ai)
+# IMPORTANT: Each space you create will require users to set THEIR OWN API key
+#            This key is for the platform itself (optional for basic functionality)
+OG_COMPUTE_API_KEY=your-api-key-here
+
+# Application Settings
 REPO_STORAGE_PATH=./storage/repos
 PORT=3000
+NEXT_PUBLIC_APP_DOMAIN=localhost
 ```
+
+> **⚠️ IMPORTANT:** When users create spaces, the generated code **requires them to set their own `OG_COMPUTE_API_KEY`** environment variable. The platform does NOT hardcode or share API keys. Each user must get their own key from [https://pc.0g.ai](https://pc.0g.ai) and set it when running their space.
 
 ### Run Development Server
 ```bash

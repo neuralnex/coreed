@@ -36,7 +36,11 @@ import os
 
 def chat(message, history):
     try:
-        api_key = os.getenv('OG_COMPUTE_API_KEY', '${OG_COMPUTE_API_KEY}')
+        # Get API key from environment variable - YOU MUST SET THIS
+        api_key = os.getenv('OG_COMPUTE_API_KEY')
+        if not api_key:
+            raise ValueError("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai")
+        
         response = requests.post(
             "${OG_COMPUTE_BASE_URL}/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -58,7 +62,11 @@ import os
 
 def chat(message, history):
     try:
-        api_key = os.getenv('OG_COMPUTE_API_KEY', '${OG_COMPUTE_API_KEY}')
+        # Get API key from environment variable - YOU MUST SET THIS
+        api_key = os.getenv('OG_COMPUTE_API_KEY')
+        if not api_key:
+            raise ValueError("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai")
+        
         response = requests.post(
             "${OG_COMPUTE_BASE_URL}/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -82,7 +90,10 @@ import os
 import uvicorn
 
 app = FastAPI(title="${spaceName}")
-OG_API_KEY = os.getenv('OG_COMPUTE_API_KEY', '${OG_COMPUTE_API_KEY}')
+# Get API key from environment variable - YOU MUST SET THIS
+OG_API_KEY = os.getenv('OG_COMPUTE_API_KEY')
+if not OG_API_KEY:
+    raise ValueError("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai")
 OG_URL = "${OG_COMPUTE_BASE_URL}"
 
 @app.get("/")
@@ -127,7 +138,11 @@ app.get('/health', (req, res) => {
 app.post('/chat', async (req, res) => {
   try {
     const message = req.body.message;
-    const apiKey = process.env.OG_COMPUTE_API_KEY || '${OG_COMPUTE_API_KEY}';
+    // Get API key from environment variable - YOU MUST SET THIS
+    const apiKey = process.env.OG_COMPUTE_API_KEY;
+    if (!apiKey) {
+      throw new Error("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai");
+    }
     const response = await axios.post('${OG_COMPUTE_BASE_URL}/chat/completions', {
       model: 'zai-org/GLM-4-Flash',
       messages: [{ role: 'user', content: message }],
@@ -160,16 +175,21 @@ app.listen(port, '0.0.0.0', () => {
 <style>body{font-family:Arial,sans-serif;text-align:center;padding:40px}h1{color:#333}</style>
 </head><body>
 <h1>${spaceName}</h1><p>Powered by 0G Compute</p>
+<p style="color:red;font-size:14px;">SET OG_COMPUTE_API_KEY in environment before using!</p>
 <div><input type="text" id="message" placeholder="Type a message..." />
 <button onclick="sendMessage()">Send</button><div id="response"></div></div>
 <script>
+// YOU MUST SET OG_COMPUTE_API_KEY as an environment variable
+// Get your API key from: https://pc.0g.ai
 async function sendMessage(){
   const msg=document.getElementById('message').value;
   document.getElementById('response').innerHTML='Thinking...';
   try{
+    const apiKey = prompt('Enter your OG_COMPUTE_API_KEY (get from https://pc.0g.ai):');
+    if(!apiKey) throw new Error('API key required');
     const r=await axios.post('${OG_COMPUTE_BASE_URL}/chat/completions',{
       model:'zai-org/GLM-4-Flash',messages:[{role:'user',content:msg}],max_tokens:50
-    },{headers:{'Authorization':'Bearer ${OG_COMPUTE_API_KEY}','Content-Type':'application/json'}});
+    },{headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'}});
     document.getElementById('response').innerHTML=r.data.choices[0].message.content;
   }catch(e){document.getElementById('response').innerHTML='Error: '+e.message}
 }
@@ -181,7 +201,7 @@ async function sendMessage(){
       blank: {
         'Dockerfile': `FROM python:3.10-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .\nEXPOSE ${appPort}\nCMD ["python", "app.py"]`,
         'requirements.txt': '# Add your dependencies\n',
-        'app.py': '# Your app here\nimport os\nAPI_KEY=os.getenv("OG_COMPUTE_API_KEY","${OG_COMPUTE_API_KEY}")\nENDPOINT="${OG_COMPUTE_BASE_URL}/chat/completions"'
+        'app.py': '# Your app here\nimport os\n# Get API key from environment variable - YOU MUST SET THIS\nAPI_KEY=os.getenv("OG_COMPUTE_API_KEY")\nif not API_KEY:\n    raise ValueError("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai")\nENDPOINT="${OG_COMPUTE_BASE_URL}/chat/completions"'
       }
     }
   };
