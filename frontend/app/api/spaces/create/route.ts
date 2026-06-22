@@ -21,149 +21,59 @@ function scaffoldTemplate(repoPath: string, sdk: string, template: string, space
 import requests
 import os
 import json
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 def chat(message, history):
     api_key = os.getenv('OG_COMPUTE_API_KEY')
     if not api_key:
-        error_msg = "OG_COMPUTE_API_KEY environment variable not set"
-        logger.error(error_msg)
-        raise ValueError(error_msg)
+        raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
     
-    base_url = os.getenv('OG_COMPUTE_BASE_URL', 'https://router-api.0g.ai/v1')
-    
-    logger.info(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
-    logger.info(f"Using endpoint: {base_url}/chat/completions")
-    
-    try:
-        response = requests.post(
-            f"{base_url}/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50, "stream": False},
-            timeout=60
-        )
-        
-        logger.info(f"0G Router response status: {response.status_code}")
-        try:
-            headers_dict = dict(response.headers) if hasattr(response, 'headers') and response.headers else {}
-            logger.info(f"0G Router response headers: {headers_dict}")
-        except (TypeError, ValueError):
-            logger.info("0G Router response headers: <unable to parse>")
-        
-        response_data = response.json()
-        logger.info(f"0G Router response: {json.dumps(response_data, indent=2)}")
-        
-        if response.status_code == 200 and 'choices' in response_data:
-            content = response_data["choices"][0]["message"]["content"]
-            logger.info(f"Returning content: {content[:100]}...")
-            return content
-        else:
-            error_msg = f"Unexpected response: {response.status_code} - {json.dumps(response_data)}"
-            logger.error(error_msg)
-            return error_msg
-            
-    except requests.exceptions.Timeout as e:
-        error_msg = f"Request timeout: {e}"
-        logger.error(error_msg)
-        return error_msg
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Request failed: {e}"
-        logger.error(error_msg)
-        return error_msg
-    except json.JSONDecodeError as e:
-        error_msg = f"Invalid JSON response: {e}"
-        logger.error(error_msg)
-        return error_msg
-    except KeyError as e:
-        error_msg = f"Missing expected field in response: {e}"
-        logger.error(error_msg)
-        return error_msg
+    print(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
+    response = requests.post(
+        "${OG_COMPUTE_BASE_URL}/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50}
+    )
+    print(f"0G Router response status: {response.status_code}")
+    print(f"0G Router response: {json.dumps(response.json(), indent=2)}")
+    return response.json()["choices"][0]["message"]["content"]
 
 if __name__ == "__main__":
-    logger.info("Starting ${spaceName} Gradio app on port ${appPort}")
-    logger.info("Powered by 0G Compute")
+    print("Starting Gradio app on port ${appPort}")
     ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Powered by 0G Compute")
     ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False, enable_queue=True)
+`,
+        'requirements.txt': 'gradio==6.19.0\nrequests\n',
+        '.env.example': envExampleContent
+      },
       chatbot: {
         'app.py': `import gradio as gr
 import requests
 import os
 import json
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 def chat(message, history):
     api_key = os.getenv('OG_COMPUTE_API_KEY')
     if not api_key:
-        error_msg = "OG_COMPUTE_API_KEY environment variable not set"
-        logger.error(error_msg)
-        raise ValueError(error_msg)
+        raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
     
-    base_url = os.getenv('OG_COMPUTE_BASE_URL', 'https://router-api.0g.ai/v1')
-    
-    logger.info(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
-    logger.info(f"Using endpoint: {base_url}/chat/completions")
-    
-    try:
-        response = requests.post(
-            f"{base_url}/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 100, "stream": False},
-            timeout=60
-        )
-        
-        logger.info(f"0G Router response status: {response.status_code}")
-        try:
-            headers_dict = dict(response.headers) if hasattr(response, 'headers') and response.headers else {}
-            logger.info(f"0G Router response headers: {headers_dict}")
-        except (TypeError, ValueError):
-            logger.info("0G Router response headers: <unable to parse>")
-        
-        response_data = response.json()
-        logger.info(f"0G Router response: {json.dumps(response_data, indent=2)}")
-        
-        if response.status_code == 200 and 'choices' in response_data:
-            content = response_data["choices"][0]["message"]["content"]
-            logger.info(f"Returning content: {content[:100]}...")
-            return content
-        else:
-            error_msg = f"Unexpected response: {response.status_code} - {json.dumps(response_data)}"
-            logger.error(error_msg)
-            return error_msg
-            
-    except requests.exceptions.Timeout as e:
-        error_msg = f"Request timeout: {e}"
-        logger.error(error_msg)
-        return error_msg
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Request failed: {e}"
-        logger.error(error_msg)
-        return error_msg
-    except json.JSONDecodeError as e:
-        error_msg = f"Invalid JSON response: {e}"
-        logger.error(error_msg)
-        return error_msg
-    except KeyError as e:
-        error_msg = f"Missing expected field in response: {e}"
-        logger.error(error_msg)
-        return error_msg
+    print(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
+    response = requests.post(
+        "${OG_COMPUTE_BASE_URL}/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 100}
+    )
+    print(f"0G Router response status: {response.status_code}")
+    print(f"0G Router response: {json.dumps(response.json(), indent=2)}")
+    return response.json()["choices"][0]["message"]["content"]
 
 if __name__ == "__main__":
-    logger.info("Starting ${spaceName} Gradio chatbot on port ${appPort}")
-    logger.info("Chat with AI on 0G")
+    print("Starting Gradio chatbot on port ${appPort}")
     ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Chat with AI on 0G")
     ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False, enable_queue=True)
+`,
+        'requirements.txt': 'gradio==6.19.0\nrequests\n',
+        '.env.example': envExampleContent
+      }
     },
     fastapi: {
       blank: {
