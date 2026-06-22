@@ -1,31 +1,17 @@
-/**
- * Space Creation API - Simplified for 0G
- * 
- * Fast workflow:
- * 1. Creates Git repository (simple, not bare)
- * 2. Generates README.md with 0G integration
- * 3. Scaffolds template files with 0G Compute calls
- * 4. Tests 0G Compute connection
- * 5. Returns immediately with Git repo info
- * 
- * Optimized for 0G: No on-chain registration, no Docker builds
- */
-
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { addSpace, getSpaceById, getSpacesByOwner, getAllSpaces } from '@/lib/spacesStore';
 
-// Environment configuration
 const OG_COMPUTE_API_KEY = process.env.OG_COMPUTE_API_KEY;
 const OG_COMPUTE_BASE_URL = process.env.NEXT_PUBLIC_COMPUTE_ROUTER || 'https://router-api.0g.ai/v1';
 const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './storage/repos';
 const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'localhost';
 
-/**
- * Scaffold template files with 0G Compute integration
- */
+const envExampleContent = `OG_COMPUTE_API_KEY=your_api_key_here
+# Get your API key from: https://pc.0g.ai`;
+
 function scaffoldTemplate(repoPath: string, sdk: string, template: string, spaceName: string, appPort: number) {
   const templates: Record<string, Record<string, Record<string, string>>> = {
     gradio: {
@@ -35,25 +21,22 @@ import requests
 import os
 
 def chat(message, history):
-    try:
-        # Get API key from environment variable - YOU MUST SET THIS
-        api_key = os.getenv('OG_COMPUTE_API_KEY')
-        if not api_key:
-            raise ValueError("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai")
-        
-        response = requests.post(
-            "${OG_COMPUTE_BASE_URL}/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50}
-        )
-        return response.json()["choices"][0]["message"]["content"]
-    except Exception as e:
-        return f"Error: {str(e)}"
+    api_key = os.getenv('OG_COMPUTE_API_KEY')
+    if not api_key:
+        raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
+    
+    response = requests.post(
+        "${OG_COMPUTE_BASE_URL}/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50}
+    )
+    return response.json()["choices"][0]["message"]["content"]
 
 ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Powered by 0G Compute")
 ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
 `,
-        'requirements.txt': 'gradio==4.31.0\nrequests\n'
+        'requirements.txt': 'gradio==4.31.0\nrequests\n',
+        '.env.example': envExampleContent
       },
       chatbot: {
         'app.py': `import gradio as gr
@@ -61,25 +44,22 @@ import requests
 import os
 
 def chat(message, history):
-    try:
-        # Get API key from environment variable - YOU MUST SET THIS
-        api_key = os.getenv('OG_COMPUTE_API_KEY')
-        if not api_key:
-            raise ValueError("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai")
-        
-        response = requests.post(
-            "${OG_COMPUTE_BASE_URL}/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 100}
-        )
-        return response.json()["choices"][0]["message"]["content"]
-    except Exception as e:
-        return f"Error: {str(e)}"
+    api_key = os.getenv('OG_COMPUTE_API_KEY')
+    if not api_key:
+        raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
+    
+    response = requests.post(
+        "${OG_COMPUTE_BASE_URL}/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 100}
+    )
+    return response.json()["choices"][0]["message"]["content"]
 
 ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Chat with AI on 0G")
 ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
 `,
-        'requirements.txt': 'gradio==4.31.0\nrequests\n'
+        'requirements.txt': 'gradio==4.31.0\nrequests\n',
+        '.env.example': envExampleContent
       }
     },
     fastapi: {
@@ -90,10 +70,9 @@ import os
 import uvicorn
 
 app = FastAPI(title="${spaceName}")
-# Get API key from environment variable - YOU MUST SET THIS
 OG_API_KEY = os.getenv('OG_COMPUTE_API_KEY')
 if not OG_API_KEY:
-    raise ValueError("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai")
+    raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
 OG_URL = "${OG_COMPUTE_BASE_URL}"
 
 @app.get("/")
@@ -106,16 +85,14 @@ def health():
 
 @app.post("/chat")
 def chat(message: str):
-    try:
-        response = requests.post(f"{OG_URL}/chat/completions", headers={"Authorization": f"Bearer {OG_API_KEY}", "Content-Type": "application/json"}, json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50})
-        return response.json()
-    except Exception as e:
-        return {"error": str(e)}
+    response = requests.post(f"{OG_URL}/chat/completions", headers={"Authorization": f"Bearer {OG_API_KEY}", "Content-Type": "application/json"}, json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50})
+    return response.json()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=${appPort})
 `,
-        'requirements.txt': 'fastapi==0.109.0\nuvicorn==0.27.0\nrequests\n'
+        'requirements.txt': 'fastapi==0.109.0\nuvicorn==0.27.0\nrequests\n',
+        '.env.example': envExampleContent
       }
     },
     express: {
@@ -138,16 +115,15 @@ app.get('/health', (req, res) => {
 app.post('/chat', async (req, res) => {
   try {
     const message = req.body.message;
-    // Get API key from environment variable - YOU MUST SET THIS
     const apiKey = process.env.OG_COMPUTE_API_KEY;
     if (!apiKey) {
-      throw new Error("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai");
+      throw new Error("OG_COMPUTE_API_KEY environment variable not set");
     }
     const response = await axios.post('${OG_COMPUTE_BASE_URL}/chat/completions', {
       model: 'zai-org/GLM-4-Flash',
       messages: [{ role: 'user', content: message }],
       max_tokens: 50
-    }, { headers: { 'Authorization': \`Bearer \${apiKey}\`, 'Content-Type': 'application/json' } });
+    }, { headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' } });
     res.json(response.data);
   } catch (error) {
     res.json({ error: error.message });
@@ -155,7 +131,7 @@ app.post('/chat', async (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(\`${spaceName} running at http://localhost:\${port}\`);
+  console.log(${spaceName} + ' running at http://localhost:' + port);
 });
 `,
         'package.json': `{
@@ -164,7 +140,8 @@ app.listen(port, '0.0.0.0', () => {
   "main": "index.js",
   "scripts": { "start": "node index.js" },
   "dependencies": { "express": "^4.18.2", "axios": "^1.6.2" }
-}`
+}`,
+        '.env.example': envExampleContent
       }
     },
     static: {
@@ -175,17 +152,15 @@ app.listen(port, '0.0.0.0', () => {
 <style>body{font-family:Arial,sans-serif;text-align:center;padding:40px}h1{color:#333}</style>
 </head><body>
 <h1>${spaceName}</h1><p>Powered by 0G Compute</p>
-<p style="color:red;font-size:14px;">SET OG_COMPUTE_API_KEY in environment before using!</p>
+<p style="color:red;font-size:14px;">Set OG_COMPUTE_API_KEY in .env file</p>
 <div><input type="text" id="message" placeholder="Type a message..." />
 <button onclick="sendMessage()">Send</button><div id="response"></div></div>
 <script>
-// YOU MUST SET OG_COMPUTE_API_KEY as an environment variable
-// Get your API key from: https://pc.0g.ai
 async function sendMessage(){
   const msg=document.getElementById('message').value;
   document.getElementById('response').innerHTML='Thinking...';
   try{
-    const apiKey = prompt('Enter your OG_COMPUTE_API_KEY (get from https://pc.0g.ai):');
+    const apiKey = prompt('Enter your OG_COMPUTE_API_KEY:');
     if(!apiKey) throw new Error('API key required');
     const r=await axios.post('${OG_COMPUTE_BASE_URL}/chat/completions',{
       model:'zai-org/GLM-4-Flash',messages:[{role:'user',content:msg}],max_tokens:50
@@ -194,14 +169,26 @@ async function sendMessage(){
   }catch(e){document.getElementById('response').innerHTML='Error: '+e.message}
 }
 </script>
-</body></html>`
+</body></html>`,
+        '.env.example': envExampleContent
       }
     },
     docker: {
       blank: {
-        'Dockerfile': `FROM python:3.10-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .\nEXPOSE ${appPort}\nCMD ["python", "app.py"]`,
+        'Dockerfile': `FROM python:3.10-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE ${appPort}
+CMD ["python", "app.py"]`,
         'requirements.txt': '# Add your dependencies\n',
-        'app.py': '# Your app here\nimport os\n# Get API key from environment variable - YOU MUST SET THIS\nAPI_KEY=os.getenv("OG_COMPUTE_API_KEY")\nif not API_KEY:\n    raise ValueError("OG_COMPUTE_API_KEY environment variable not set. Get your API key from https://pc.0g.ai")\nENDPOINT="${OG_COMPUTE_BASE_URL}/chat/completions"'
+        'app.py': `import os
+API_KEY=os.getenv("OG_COMPUTE_API_KEY")
+if not API_KEY:
+    raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
+ENDPOINT="${OG_COMPUTE_BASE_URL}/chat/completions"`,
+        '.env.example': envExampleContent
       }
     }
   };
@@ -219,9 +206,6 @@ async function sendMessage(){
   });
 }
 
-/**
- * POST /api/spaces/create
- */
 export async function POST(request: Request) {
   try {
     const { name, description = '', sdk = 'gradio', template = 'blank', owner, slug } = await request.json();
@@ -235,17 +219,14 @@ export async function POST(request: Request) {
     const reposRoot = path.join(process.cwd(), REPO_STORAGE_PATH);
     const repoPath = path.join(reposRoot, owner, spaceSlug);
 
-    // Create directories
     fs.mkdirSync(repoPath, { recursive: true });
 
-    // Initialize Git repo
     execSync('git init', { cwd: repoPath, stdio: 'pipe' });
     execSync('git checkout -b main', { cwd: repoPath, stdio: 'pipe' });
     execSync('git config user.email "coreed@0g.ai"', { cwd: repoPath, stdio: 'pipe' });
     execSync('git config user.name "Coreed Platform"', { cwd: repoPath, stdio: 'pipe' });
 
-    // Generate README.md
-    const readmeContent = `--- 
+    const readmeContent = `---
 title: ${name}
 owner: ${owner}
 sdk: ${sdk}
@@ -274,33 +255,25 @@ Your app uses 0G Compute Router for AI inference:
 
     fs.writeFileSync(path.join(repoPath, 'README.md'), readmeContent);
 
-    // Scaffold template files
     scaffoldTemplate(repoPath, sdk, template, name, appPort);
 
-    // Initial commit
     execSync('git add .', { cwd: repoPath, stdio: 'pipe' });
     execSync('git commit -m "Initial space scaffold - 0G Powered"', { cwd: repoPath, stdio: 'pipe' });
 
-    // Store the space in memory so it can be listed
-    // Dynamic domain detection for provisioned URLs
     const headers = request.headers;
     const host = headers.get('host') || headers.get('x-forwarded-host') || 'localhost';
     const protocol = headers.get('x-forwarded-proto') || 'https';
-    
-    // Determine the base domain for provisioned URLs
+
     let baseDomain = APP_DOMAIN;
-    
-    // If running locally, use coreed.app as the base
+
     if (host === 'localhost' || host === '127.0.0.1' || host.includes('localhost:')) {
       baseDomain = 'coreed.app';
     }
-    
-    // Generate provisioned URL: {owner-short}.{space-slug}.{base-domain}
-    const ownerShort = owner.slice(2, 10); // Use first 8 chars of address (without 0x)
+
+    const ownerShort = owner.slice(2, 10);
     const coreedEndpointUrl = `${protocol}://${ownerShort}.${spaceSlug}.${baseDomain}`;
     const localEndpointUrl = `http://localhost:${appPort}`;
-    
-    // Store space info
+
     addSpace({
       spaceId: spaceSlug,
       name,
@@ -319,7 +292,6 @@ Your app uses 0G Compute Router for AI inference:
       status: 'created'
     });
 
-    // Test 0G Compute connection
     interface ComputeInfo {
       connected: boolean;
       baseUrl: string;
@@ -327,7 +299,7 @@ Your app uses 0G Compute Router for AI inference:
       models: any[];
       error: string | null;
     }
-    
+
     let computeInfo: ComputeInfo = { connected: false, baseUrl: OG_COMPUTE_BASE_URL, requiresApiKey: !OG_COMPUTE_API_KEY, models: [], error: null };
     let deployment: { id?: string; model?: string; endpoint?: string; status?: string } = {};
 
@@ -339,8 +311,8 @@ Your app uses 0G Compute Router for AI inference:
         if (modelsResponse.ok) {
           const modelsData = await modelsResponse.json();
           computeInfo = { ...computeInfo, connected: true, models: modelsData.data?.slice(0, 10) || [] };
-          deployment = { 
-            id: `coreed-${spaceSlug}-${Date.now()}`, 
+          deployment = {
+            id: `coreed-${spaceSlug}-${Date.now()}`,
             model: modelsData.data?.[0]?.id || 'zai-org/GLM-4-Flash',
             endpoint: `${OG_COMPUTE_BASE_URL}/chat/completions`,
             status: 'ready'
@@ -390,24 +362,18 @@ Your app uses 0G Compute Router for AI inference:
   }
 }
 
-/**
- * GET /api/spaces/create
- * Returns configuration and can list spaces
- */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const owner = searchParams.get('owner');
-  
+
   if (owner) {
-    // Return spaces for a specific owner
     const ownerSpaces = getSpacesByOwner(owner);
     return NextResponse.json({
       spaces: ownerSpaces,
       count: ownerSpaces.length
     });
   }
-  
-  // Return all spaces
+
   const allSpaces = getAllSpaces();
   return NextResponse.json({
     configuration: {

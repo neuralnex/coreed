@@ -1,8 +1,3 @@
-/**
- * In-memory store for spaces (temporary until database is added)
- * This stores spaces created through the API so they can be listed
- */
-
 interface StoredSpace {
   spaceId: string;
   name: string;
@@ -23,7 +18,6 @@ interface StoredSpace {
 
 const spaces = new Map<string, StoredSpace>();
 
-// Also store by owner for filtering
 export const getSpacesByOwner = (owner: string): StoredSpace[] => {
   const result: StoredSpace[] = [];
   spaces.forEach((space) => {

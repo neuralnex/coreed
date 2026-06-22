@@ -17,7 +17,7 @@ import type { JsonRpcSigner, TransactionResponse } from "ethers";
 export default function SpaceDetailPage() {
   const params = useParams();
   const spaceId = params.id as string;
-  
+
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [space, setSpace] = useState<AgentSpace | null>(null);
@@ -28,12 +28,12 @@ export default function SpaceDetailPage() {
   const [updatingHealth, setUpdatingHealth] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
 
-  const { 
-    getSpace, 
-    checkHealth, 
+  const {
+    getSpace,
+    checkHealth,
     updateHealthStatus,
     deactivateSpace,
-    error: spaceError 
+    error: spaceError
   } = useAgentSpaceRegistry();
   const { getModel } = useModelRegistry();
   const { launchAgent } = useAgentRegistry();
@@ -41,20 +41,19 @@ export default function SpaceDetailPage() {
   const refreshSpace = async () => {
     try {
       setLoading(true);
-      
-      // First, try to get data from sessionStorage (for newly created spaces)
+
       const sessionData = sessionStorage.getItem('lastSpaceInfo');
       if (sessionData) {
         const storedInfo = JSON.parse(sessionData);
         if (storedInfo.spaceId === spaceId) {
-          // Use the sessionStorage data as fallback
           const spaceFromSession: AgentSpace = {
             spaceId: storedInfo.spaceId,
-            name: storedInfo.spaceId,
+            name: storedInfo.space?.name || storedInfo.spaceId,
             description: storedInfo.space?.description || '',
             version: '1.0.0',
             modelId: '0',
-            endpointUrl: storedInfo.space?.endpointUrl || `http://localhost:7860`,
+            endpointUrl: storedInfo.space?.endpointUrl || storedInfo.space?.localEndpointUrl || `http://localhost:7860`,
+            localEndpointUrl: storedInfo.space?.localEndpointUrl,
             deployedAt: Date.now() / 1000,
             lastHealthCheck: 0,
             lastActivity: 0,
@@ -67,8 +66,7 @@ export default function SpaceDetailPage() {
             template: storedInfo.space?.template || 'blank'
           };
           setSpace(spaceFromSession);
-          
-          // Check if current user is owner
+
           if (address && spaceFromSession.owner.toLowerCase() === address.toLowerCase()) {
             setIsOwner(true);
           }
@@ -78,18 +76,15 @@ export default function SpaceDetailPage() {
           return;
         }
       }
-      
-      // Try on-chain lookup (will work for existing numeric space IDs)
+
       try {
         const spaceData = await getSpace(spaceId);
         setSpace(spaceData);
-        
-        // Check if current user is owner
+
         if (address && spaceData.owner.toLowerCase() === address.toLowerCase()) {
           setIsOwner(true);
         }
-        
-        // Get model data
+
         try {
           const model = await getModel(spaceData.modelId);
           setModelName(model.name);
@@ -99,17 +94,17 @@ export default function SpaceDetailPage() {
           setModelStorageHash("");
         }
       } catch (chainErr) {
-        console.log("On-chain lookup failed (expected for new spaces):", chainErr);
-        // If on-chain fails and we have session data, use it
+        console.log("On-chain lookup failed:", chainErr);
         if (sessionData) {
           const storedInfo = JSON.parse(sessionData);
           const spaceFromSession: AgentSpace = {
             spaceId: storedInfo.spaceId,
-            name: storedInfo.spaceId,
+            name: storedInfo.space?.name || storedInfo.spaceId,
             description: storedInfo.space?.description || '',
             version: '1.0.0',
             modelId: '0',
-            endpointUrl: storedInfo.space?.endpointUrl || `http://localhost:7860`,
+            endpointUrl: storedInfo.space?.endpointUrl || storedInfo.space?.localEndpointUrl || `http://localhost:7860`,
+            localEndpointUrl: storedInfo.space?.localEndpointUrl,
             deployedAt: Date.now() / 1000,
             lastHealthCheck: 0,
             lastActivity: 0,
@@ -126,7 +121,7 @@ export default function SpaceDetailPage() {
           setModelStorageHash("");
         }
       }
-      
+
     } catch (err) {
       console.error("Failed to fetch space:", err);
     } finally {
@@ -138,8 +133,7 @@ export default function SpaceDetailPage() {
     if (!space) return;
     setHealthLoading(true);
     try {
-      const health = await checkHealth(space.spaceId);
-      // Space data has health info, but we need to refresh it
+      await checkHealth(space.spaceId);
       await refreshSpace();
     } catch (err) {
       console.error("Failed to check health:", err);
@@ -164,7 +158,7 @@ export default function SpaceDetailPage() {
   const handleDeactivate = async () => {
     if (!signer || !space || !isOwner) return;
     if (!confirm("Are you sure you want to deactivate this space?")) return;
-    
+
     try {
       await deactivateSpace(signer, space.spaceId);
       await refreshSpace();
@@ -175,7 +169,7 @@ export default function SpaceDetailPage() {
 
   const handleLaunchAgent = async () => {
     if (!signer || !space || !modelStorageHash) return;
-    
+
     try {
       const result = await launchAgent(signer, modelName || `Space ${space.spaceId}`, modelStorageHash);
       alert(`Agent launched with ID: ${result.agentId}`);
@@ -227,7 +221,7 @@ export default function SpaceDetailPage() {
               href="/spaces"
               className="inline-block mt-6 rounded border border-coreed-line px-4 py-2 font-mono text-xs text-coreed-sage hover:border-coreed-moss"
             >
-              ← Back to Spaces
+              Back to Spaces
             </Link>
           </div>
         </main>
@@ -261,7 +255,7 @@ export default function SpaceDetailPage() {
                 href="/spaces"
                 className="font-mono text-xs text-coreed-sage hover:text-coreed-bone"
               >
-                ← all spaces
+                all spaces
               </Link>
             </div>
           </div>
@@ -283,7 +277,7 @@ export default function SpaceDetailPage() {
               disabled={healthLoading}
               className="font-mono text-xs text-coreed-sage hover:text-coreed-bone disabled:opacity-50"
             >
-              ⋮
+              Refresh
             </button>
           </div>
           <span className="font-mono text-xs text-coreed-sage">
@@ -310,15 +304,14 @@ export default function SpaceDetailPage() {
               rel="noopener noreferrer"
               className="font-mono text-xs text-coreed-moss-bright hover:text-coreed-bone mt-2 inline-block"
             >
-              visit →
+              visit
             </a>
-            
-            {/* Show local endpoint too if different */}
-            {(space as any).localEndpointUrl && (space as any).localEndpointUrl !== space.endpointUrl && (
+
+            {space.localEndpointUrl && space.localEndpointUrl !== space.endpointUrl && (
               <>
                 <p className="font-mono text-xs text-coreed-sage/70 mb-1 mt-3">Local Dev URL</p>
                 <p className="font-mono text-sm text-coreed-sage break-all">
-                  {(space as any).localEndpointUrl}
+                  {space.localEndpointUrl}
                 </p>
               </>
             )}
@@ -328,7 +321,7 @@ export default function SpaceDetailPage() {
               Owner
             </h3>
             <p className="font-mono text-sm text-coreed-bone">
-              {space.owner.slice(0, 10)}…{space.owner.slice(-8)}
+              {space.owner.slice(0, 10)}...{space.owner.slice(-8)}
             </p>
           </div>
           <div className="rounded border border-coreed-line bg-coreed-panel p-5">
@@ -350,7 +343,6 @@ export default function SpaceDetailPage() {
           </p>
         </div>
 
-        {/* Git Repository Info - Show prominently for new spaces */}
         {(() => {
           const sessionData = sessionStorage.getItem('lastSpaceInfo');
           if (sessionData) {
@@ -393,15 +385,14 @@ export default function SpaceDetailPage() {
           return null;
         })()}
 
-        {/* File Browser Section - Show repository files */}
         {(() => {
           const sessionData = sessionStorage.getItem('lastSpaceInfo');
           if (sessionData) {
             const storedInfo = JSON.parse(sessionData);
             if (storedInfo.spaceId === spaceId && storedInfo.repo) {
               return (
-                <FileBrowser 
-                  repoPath={storedInfo.repo.repoPath} 
+                <FileBrowser
+                  repoPath={storedInfo.repo.repoPath}
                   cloneUrl={storedInfo.repo.cloneUrl}
                 />
               );
@@ -410,7 +401,6 @@ export default function SpaceDetailPage() {
           return null;
         })()}
 
-        {/* 0G Compute Status Section */}
         <ComputeStatus spaceId={spaceId} />
 
         <div className="rounded border border-coreed-line bg-coreed-panel p-5 mb-8">
@@ -435,7 +425,7 @@ export default function SpaceDetailPage() {
             <div>
               <p className="font-mono text-xs text-coreed-sage/70 mb-1">Last Health Check</p>
               <p className="font-mono text-sm text-coreed-bone">
-                {space.lastHealthCheck > 0 
+                {space.lastHealthCheck > 0
                   ? new Date(space.lastHealthCheck * 1000).toLocaleString()
                   : "Never"}
               </p>
@@ -451,7 +441,7 @@ export default function SpaceDetailPage() {
           >
             {healthLoading ? "Refreshing..." : "Refresh Health"}
           </button>
-          
+
           <button
             onClick={handleLaunchAgent}
             disabled={!signer}
@@ -459,7 +449,7 @@ export default function SpaceDetailPage() {
           >
             Launch Agent
           </button>
-          
+
           {isOwner && (
             <>
               <button

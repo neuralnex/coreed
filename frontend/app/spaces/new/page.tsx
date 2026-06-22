@@ -11,13 +11,12 @@ export default function NewSpacePage() {
   const router = useRouter();
   const { address, isConnected, signer } = useWalletContext();
   const { deploySpace } = useAgentSpaceRegistry();
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSdkDropdown, setShowSdkDropdown] = useState(false);
   const [showVisibilityDropdown, setShowVisibilityDropdown] = useState(false);
-  
-  // Form state
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -26,14 +25,12 @@ export default function NewSpacePage() {
     license: "mit",
   });
 
-  // SDK options
   const sdkOptions = [
     { value: "gradio", label: "Gradio", icon: Code },
     { value: "docker", label: "Docker", icon: Container },
     { value: "static", label: "Static", icon: FileText },
   ];
 
-  // Visibility options
   const visibilityOptions = [
     { value: "public", label: "Public", description: "Anyone can see this Space", icon: Globe, pro: false },
     { value: "protected", label: "Protected", description: "App is public, code is private", icon: Lock, pro: true },
@@ -57,7 +54,7 @@ export default function NewSpacePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isConnected || !address) {
       setError("Please connect your wallet first");
       return;
@@ -73,10 +70,7 @@ export default function NewSpacePage() {
 
     try {
       const slug = formData.name.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-      
-      // ========================================================================
-      // STEP 1: Create Git repo + 0G Compute setup (fast, main workflow)
-      // ========================================================================
+
       const computeResponse = await fetch('/api/spaces/create', {
         method: 'POST',
         headers: {
@@ -95,24 +89,20 @@ export default function NewSpacePage() {
 
       const computeData = await computeResponse.json();
       setLoading(false);
-      
-      // Check if space creation was successful
+
       if (!computeResponse.ok || !computeData.success) {
         setError(computeData.error || 'Space creation failed');
         return;
       }
 
-      // Store complete info in session storage to show on space page
       sessionStorage.setItem('lastSpaceInfo', JSON.stringify({
         spaceId: slug,
         compute: computeData.compute,
         deployment: computeData.deployment,
-        repo: computeData.space?.gitRepo
+        repo: computeData.space?.gitRepo,
+        space: computeData.space
       }));
-      
-      // ========================================================================
-      // STEP 2: Try on-chain registration in background (non-blocking)
-      // ========================================================================
+
       if (signer) {
         deploySpace(signer, {
           name: formData.name,
@@ -120,12 +110,11 @@ export default function NewSpacePage() {
           version: "1.0.0",
           modelId: 0,
           endpointUrl: `https://${slug}.coreed.app`
-        }).catch(err => console.log('On-chain registration failed (optional):', err));
+        }).catch(err => console.log('On-chain registration failed:', err));
       }
-      
-      // Redirect to the new space with success
+
       router.push(`/spaces/${slug}`);
-      
+
     } catch (err) {
       setLoading(false);
       setError(err instanceof Error ? err.message : String(err));
@@ -136,28 +125,25 @@ export default function NewSpacePage() {
 
   return (
     <main className="mx-auto flex max-w-2xl flex-1 flex-col px-6 py-12">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Create a new Space</h1>
         <p className="text-gray-400 text-sm">
           Spaces are Git repositories that host application code for Machine Learning demos.
         </p>
         <p className="text-gray-400 text-sm mt-1">
-          Enter a name below and we&apos;ll create a Git repository on the platform automatically.
+          Enter a name below and we will create a Git repository on the platform automatically.
         </p>
         <p className="text-gray-400 text-sm mt-1">
           You can build Spaces with Python libraries like Gradio, or using Docker images.
         </p>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-lg">
           <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
 
-      {/* Owner Section */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-white mb-4">Owner</h2>
         <div className="flex items-center gap-3">
@@ -176,10 +162,8 @@ export default function NewSpacePage() {
         )}
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        
-        {/* Space Name */}
+
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             Space name *
@@ -201,7 +185,6 @@ export default function NewSpacePage() {
           </p>
         </div>
 
-        {/* Short Description */}
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             Short description
@@ -219,7 +202,6 @@ export default function NewSpacePage() {
           </p>
         </div>
 
-        {/* License */}
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             License
@@ -238,7 +220,6 @@ export default function NewSpacePage() {
           </select>
         </div>
 
-        {/* Select SDK */}
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             Select the Space SDK
@@ -246,7 +227,7 @@ export default function NewSpacePage() {
           <p className="text-gray-500 text-sm mb-3">
             You can choose between Gradio, Docker, or Static to host your Space.
           </p>
-          
+
           <div className="space-y-3">
             {sdkOptions.map((option) => (
               <button
@@ -276,7 +257,6 @@ export default function NewSpacePage() {
           </div>
         </div>
 
-        {/* Choose Template (for Gradio) */}
         {formData.sdk === "gradio" && (
           <div>
             <label className="block text-sm font-medium text-white mb-2">
@@ -301,7 +281,6 @@ export default function NewSpacePage() {
           </div>
         )}
 
-        {/* Visibility */}
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             Visibility
@@ -309,7 +288,7 @@ export default function NewSpacePage() {
           <p className="text-gray-500 text-sm mb-3">
             Choose who can see and access your Space.
           </p>
-          
+
           <div className="space-y-3">
             {visibilityOptions.map((option) => (
               <button
@@ -337,13 +316,12 @@ export default function NewSpacePage() {
               </button>
             ))}
           </div>
-          
+
           <p className="text-gray-500 text-xs mt-2">
             Tip: Install the official Coreed CLI so your AI agents can manage Spaces directly.
           </p>
         </div>
 
-        {/* Submit */}
         <div className="pt-6">
           <button
             type="submit"
@@ -352,7 +330,7 @@ export default function NewSpacePage() {
           >
             {loading ? "Creating Space..." : "Create Space"}
           </button>
-          
+
           <div className="mt-4 text-center">
             <Link
               href="/spaces"

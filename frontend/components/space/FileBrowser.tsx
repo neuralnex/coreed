@@ -17,7 +17,6 @@ interface FileBrowserProps {
   cloneUrl: string;
 }
 
-// File type icons mapping
 const fileIcons: Record<string, React.ElementType> = {
   py: Code,
   js: Code,
@@ -38,7 +37,7 @@ const fileIcons: Record<string, React.ElementType> = {
   pdf: FileText,
   html: FileText,
   css: FileText,
-  req: FileText, // requirements.txt
+  req: FileText,
   Dockerfile: Type,
 };
 
@@ -46,7 +45,7 @@ const FileIcon: React.FC<{ type: 'file' | 'directory'; extension?: string }> = (
   if (type === 'directory') {
     return <Folder className="w-4 h-4 text-yellow-500" />;
   }
-  
+
   const ext = extension?.toLowerCase() || '';
   const Icon = fileIcons[ext] || File;
   return <Icon className="w-4 h-4 text-blue-400" />;
@@ -63,19 +62,18 @@ export function FileBrowser({ repoPath, cloneUrl }: FileBrowserProps) {
       try {
         setLoading(true);
         setError(null);
-        
-        // Fetch files from the API
+
         const response = await fetch(`/api/spaces/files?repoPath=${encodeURIComponent(repoPath)}`);
-        
+
         if (response.ok) {
           const data = await response.json();
           setFiles(data.files || []);
         } else {
-          // Fallback to default structure if API fails
           setFiles([
             { name: 'README.md', path: `${repoPath}/README.md`, type: 'file', extension: 'md' },
             { name: 'app.py', path: `${repoPath}/app.py`, type: 'file', extension: 'py' },
             { name: 'requirements.txt', path: `${repoPath}/requirements.txt`, type: 'file', extension: 'txt' },
+            { name: '.env.example', path: `${repoPath}/.env.example`, type: 'file', extension: '' },
           ]);
         }
       } catch (err) {
@@ -85,7 +83,7 @@ export function FileBrowser({ repoPath, cloneUrl }: FileBrowserProps) {
         setLoading(false);
       }
     };
-    
+
     fetchFiles();
   }, [repoPath]);
 
@@ -100,7 +98,6 @@ export function FileBrowser({ repoPath, cloneUrl }: FileBrowserProps) {
   };
 
   const getFileType = (name: string): 'file' | 'directory' => {
-    // Simple heuristic: if it has an extension, it's a file
     if (name.includes('.')) return 'file';
     return 'directory';
   };
@@ -111,10 +108,10 @@ export function FileBrowser({ repoPath, cloneUrl }: FileBrowserProps) {
       const isExpanded = expanded.has(item.path);
       const fileType = item.type || getFileType(item.name);
       const ext = item.name.split('.').pop();
-      
+
       return (
         <div key={item.path} className={`ml-${depth * 4}`}>
-          <div 
+          <div
             className="flex items-center gap-2 py-1 hover:bg-coreed-panel-raised rounded px-2 cursor-pointer"
             onClick={() => hasChildren && toggleExpand(item.path)}
           >
@@ -127,8 +124,7 @@ export function FileBrowser({ repoPath, cloneUrl }: FileBrowserProps) {
               <FileIcon type={fileType} extension={ext} />
               <span className="font-mono text-sm text-coreed-bone">{item.name}</span>
             </div>
-            
-            {/* File actions */}
+
             {fileType === 'file' && (
               <a
                 href={`file://${item.path}`}
@@ -141,8 +137,7 @@ export function FileBrowser({ repoPath, cloneUrl }: FileBrowserProps) {
               </a>
             )}
           </div>
-          
-          {/* Render children if expanded */}
+
           {hasChildren && isExpanded && (
             <div className="mt-1">
               {renderFileTree(item.children || [], depth + 1)}
@@ -193,7 +188,7 @@ export function FileBrowser({ repoPath, cloneUrl }: FileBrowserProps) {
           clone
         </a>
       </div>
-      
+
       {files.length > 0 ? (
         <div className="space-y-1">
           {renderFileTree(files)}
@@ -203,7 +198,7 @@ export function FileBrowser({ repoPath, cloneUrl }: FileBrowserProps) {
           No files found
         </p>
       )}
-      
+
       <div className="mt-4 pt-4 border-t border-coreed-line">
         <p className="font-mono text-[10px] text-coreed-sage/50">
           Path: {repoPath}
