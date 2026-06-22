@@ -21,8 +21,50 @@ export default function SpacesPage() {
     const fetchSpaces = async () => {
       try {
         setLoading(true);
-        const allSpaces = await getAllSpaces();
-        const active = await getActiveSpaces();
+        
+        // Try on-chain first
+        let allSpaces: AgentSpace[] = [];
+        let active: AgentSpace[] = [];
+        
+        try {
+          allSpaces = await getAllSpaces();
+          active = await getActiveSpaces();
+        } catch (chainErr) {
+          console.log("On-chain fetch failed, trying API:", chainErr);
+        }
+        
+        // Also fetch from API (in-memory store)
+        try {
+          const apiResponse = await fetch('/api/spaces');
+          if (apiResponse.ok) {
+            const apiData = await apiResponse.json();
+            const apiSpaces = apiData.spaces.map((s: any) => ({
+              spaceId: s.spaceId,
+              name: s.name,
+              description: s.description || '',
+              version: '1.0.0',
+              modelId: '0',
+              endpointUrl: s.endpointUrl,
+              deployedAt: s.createdAt ? Math.floor(s.createdAt / 1000) : Math.floor(Date.now() / 1000),
+              lastHealthCheck: 0,
+              lastActivity: 0,
+              isActive: s.status === 'created' || s.status === 'deployed',
+              isAsleep: false,
+              sleepTimeout: 0,
+              owner: s.owner,
+              requestCount: 0,
+              sdk: s.sdk,
+              template: s.template
+            }));
+            
+            // Merge with on-chain spaces (apiSpaces first, then on-chain)
+            allSpaces = [...apiSpaces, ...allSpaces.filter((a: AgentSpace) => !apiSpaces.some((api: any) => api.spaceId === a.spaceId))];
+            active = allSpaces.filter((s: AgentSpace) => s.isActive && !s.isAsleep);
+          }
+        } catch (apiErr) {
+          console.log("API fetch failed:", apiErr);
+        }
+        
         setSpaces(allSpaces);
         setActiveSpaces(active);
       } catch (err) {

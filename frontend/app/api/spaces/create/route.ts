@@ -15,11 +15,13 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { addSpace, getSpaceById, getSpacesByOwner, getAllSpaces } from '@/lib/spacesStore';
 
 // Environment configuration
 const OG_COMPUTE_API_KEY = process.env.OG_COMPUTE_API_KEY;
 const OG_COMPUTE_BASE_URL = process.env.NEXT_PUBLIC_COMPUTE_ROUTER || 'https://router-api.0g.ai/v1';
 const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './storage/repos';
+const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'localhost';
 
 /**
  * Scaffold template files with 0G Compute integration
@@ -259,6 +261,28 @@ Your app uses 0G Compute Router for AI inference:
     execSync('git add .', { cwd: repoPath, stdio: 'pipe' });
     execSync('git commit -m "Initial space scaffold - 0G Powered"', { cwd: repoPath, stdio: 'pipe' });
 
+    // Store the space in memory so it can be listed
+    const coreedEndpointUrl = `https://${owner.slice(2)}.${spaceSlug}.${APP_DOMAIN === 'localhost' ? 'coreed.app' : APP_DOMAIN}`;
+    const localEndpointUrl = `http://localhost:${appPort}`;
+    
+    // Store space info
+    addSpace({
+      spaceId: spaceSlug,
+      name,
+      slug: spaceSlug,
+      description,
+      sdk,
+      template,
+      owner,
+      endpointUrl: coreedEndpointUrl,
+      gitRepo: {
+        cloneUrl: `file://${repoPath}`,
+        repoPath: repoPath
+      },
+      createdAt: Date.now(),
+      status: 'created'
+    });
+
     // Test 0G Compute connection
     interface ComputeInfo {
       connected: boolean;
@@ -303,7 +327,8 @@ Your app uses 0G Compute Router for AI inference:
         template,
         owner,
         spaceId: spaceSlug,
-        endpointUrl: `http://localhost:${appPort}`,
+        endpointUrl: coreedEndpointUrl,
+        localEndpointUrl: localEndpointUrl,
         gitRepo: {
           cloneUrl: `file://${repoPath}`,
           repoPath: repoPath
@@ -316,7 +341,7 @@ Your app uses 0G Compute Router for AI inference:
         `cd ${spaceSlug}`,
         `${sdk === 'gradio' || sdk === 'fastapi' ? 'pip install -r requirements.txt' : 'npm install'}`,
         `${sdk === 'gradio' ? 'python app.py' : sdk === 'fastapi' ? 'uvicorn main:app --host 0.0.0.0 --port ' + appPort : 'node index.js'}`,
-        `Access at: http://localhost:${appPort}`
+        `Access at: ${coreedEndpointUrl}`
       ] : [
         `Space created! Git repo: file:///${repoPath}`,
         `To enable AI: Add OG_COMPUTE_API_KEY to .env`,
@@ -331,14 +356,31 @@ Your app uses 0G Compute Router for AI inference:
 
 /**
  * GET /api/spaces/create
+ * Returns configuration and can list spaces
  */
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const owner = searchParams.get('owner');
+  
+  if (owner) {
+    // Return spaces for a specific owner
+    const ownerSpaces = getSpacesByOwner(owner);
+    return NextResponse.json({
+      spaces: ownerSpaces,
+      count: ownerSpaces.length
+    });
+  }
+  
+  // Return all spaces
+  const allSpaces = getAllSpaces();
   return NextResponse.json({
     configuration: {
       rpcUrl: process.env.NEXT_PUBLIC_RPC_URL || 'https://evmrpc-testnet.0g.ai',
       compute: { baseUrl: OG_COMPUTE_BASE_URL, hasApiKey: !!OG_COMPUTE_API_KEY },
       storage: { reposPath: REPO_STORAGE_PATH }
     },
+    spaces: allSpaces,
+    count: allSpaces.length,
     message: 'Coreed Space creation API ready for 0G'
   });
 }

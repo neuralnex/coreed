@@ -6,10 +6,11 @@ import { useParams } from "next/navigation";
 import { StatusStrip } from "@/components/StatusStrip";
 import { HealthBadge } from "@/components/space/HealthBadge";
 import { ComputeStatus } from "@/components/space/ComputeStatus";
+import { FileBrowser } from "@/components/space/FileBrowser";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentRegistry } from "@/lib/useAgentRegistry";
-import { GitBranch } from "lucide-react";
+import { GitBranch, Globe } from "lucide-react";
 import type { AgentSpace, SpaceDeployment } from "@/types/space";
 import type { JsonRpcSigner, TransactionResponse } from "ethers";
 
@@ -295,9 +296,11 @@ export default function SpaceDetailPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="rounded border border-coreed-line bg-coreed-panel p-5">
-            <h3 className="font-mono text-xs text-coreed-sage mb-3">
+            <h3 className="font-mono text-xs text-coreed-sage mb-3 flex items-center gap-2">
+              <Globe className="w-4 h-4" />
               Endpoint
             </h3>
+            <p className="font-mono text-xs text-coreed-sage/70 mb-1">Coreed URL</p>
             <p className="font-mono text-sm text-coreed-bone break-all">
               {space.endpointUrl}
             </p>
@@ -309,6 +312,16 @@ export default function SpaceDetailPage() {
             >
               visit →
             </a>
+            
+            {/* Show local endpoint too if different */}
+            {(space as any).localEndpointUrl && (space as any).localEndpointUrl !== space.endpointUrl && (
+              <>
+                <p className="font-mono text-xs text-coreed-sage/70 mb-1 mt-3">Local Dev URL</p>
+                <p className="font-mono text-sm text-coreed-sage break-all">
+                  {(space as any).localEndpointUrl}
+                </p>
+              </>
+            )}
           </div>
           <div className="rounded border border-coreed-line bg-coreed-panel p-5">
             <h3 className="font-mono text-xs text-coreed-sage mb-3">
@@ -374,6 +387,23 @@ export default function SpaceDetailPage() {
                     </button>
                   </div>
                 </div>
+              );
+            }
+          }
+          return null;
+        })()}
+
+        {/* File Browser Section - Show repository files */}
+        {(() => {
+          const sessionData = sessionStorage.getItem('lastSpaceInfo');
+          if (sessionData) {
+            const storedInfo = JSON.parse(sessionData);
+            if (storedInfo.spaceId === spaceId && storedInfo.repo) {
+              return (
+                <FileBrowser 
+                  repoPath={storedInfo.repo.repoPath} 
+                  cloneUrl={storedInfo.repo.cloneUrl}
+                />
               );
             }
           }

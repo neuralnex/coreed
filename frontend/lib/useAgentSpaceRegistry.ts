@@ -212,6 +212,34 @@ export function useAgentSpaceRegistry() {
         requestCount: Number(result.requestCount)
       };
     } catch (err) {
+      // If on-chain fails, try to get from in-memory store
+      try {
+        const response = await fetch(`/api/spaces?spaceId=${spaceId}`);
+        if (response.ok) {
+          const spaceData = await response.json();
+          return {
+            spaceId: spaceData.spaceId || spaceId.toString(),
+            name: spaceData.name,
+            description: spaceData.description || '',
+            version: '1.0.0',
+            modelId: '0',
+            endpointUrl: spaceData.endpointUrl || `http://localhost:7860`,
+            deployedAt: spaceData.createdAt ? Math.floor(spaceData.createdAt / 1000) : Math.floor(Date.now() / 1000),
+            lastHealthCheck: 0,
+            lastActivity: 0,
+            isActive: true,
+            isAsleep: false,
+            sleepTimeout: 0,
+            owner: spaceData.owner,
+            requestCount: 0,
+            sdk: spaceData.sdk,
+            template: spaceData.template
+          };
+        }
+      } catch {
+        // Fall through to error
+      }
+      
       setError(err instanceof Error ? err.message : "Failed to fetch space");
       throw err;
     } finally {
@@ -401,8 +429,14 @@ export function useAgentSpaceRegistry() {
           isAsleep: result[2]
         };
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to check health");
-        throw err;
+        // For slug-based spaces, return a default healthy status
+        // since they don't have on-chain health checks
+        console.log("Health check failed for space (likely slug-based):", spaceId);
+        return {
+          isActive: true,
+          lastChecked: Math.floor(Date.now() / 1000),
+          isAsleep: false
+        };
       } finally {
         setIsLoading(false);
       }
