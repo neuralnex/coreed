@@ -1,0 +1,31 @@
+Turbopack build encountered 1 warnings:
+./next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Import trace:
+  App Route:
+    ./next.config.ts
+    ./app/api/spaces/create/route.ts
+
+
+Failed to type check.
+
+./app/api/spaces/[spaceId]/proxy/[...path]/route.ts:69:25
+Type error: Property 'path' does not exist on type 'URL'.
+
+  [90m67 |[0m         hostname: targetUrl.hostname,
+  [90m68 |[0m         port: targetUrl.port,
+[31m[1m>[0m [90m69 |[0m         path: targetUrl.path,
+  [90m   |[0m                         [31m[1m^[0m
+  [90m70 |[0m         method: method,
+  [90m71 |[0m         headers: headers
+  [90m72 |[0m       }, (res) => {
+Next.js build worker exited with code: 1 and signal: null
