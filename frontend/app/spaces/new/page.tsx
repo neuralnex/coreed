@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useWalletContext } from "@/lib/contexts/WalletContext";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
-import { Check, ChevronDown, Code, Cube, FileText, GitBranch, Globe, Lock, Users } from "lucide-react";
+import { Check, ChevronDown, Code, Container, FileText, GitBranch, Globe, Lock, Users } from "lucide-react";
 
 export default function NewSpacePage() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function NewSpacePage() {
   // SDK options
   const sdkOptions = [
     { value: "gradio", label: "Gradio", icon: Code },
-    { value: "docker", label: "Docker", icon: Cube },
+    { value: "docker", label: "Docker", icon: Container },
     { value: "static", label: "Static", icon: FileText },
   ];
 
