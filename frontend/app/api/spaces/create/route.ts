@@ -20,48 +20,58 @@ function scaffoldTemplate(repoPath: string, sdk: string, template: string, space
         'app.py': `import gradio as gr
 import requests
 import os
+import json
 
 def chat(message, history):
     api_key = os.getenv('OG_COMPUTE_API_KEY')
     if not api_key:
         raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
     
+    print(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
     response = requests.post(
         "${OG_COMPUTE_BASE_URL}/chat/completions",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50}
     )
+    print(f"0G Router response status: {response.status_code}")
+    print(f"0G Router response: {json.dumps(response.json(), indent=2)}")
     return response.json()["choices"][0]["message"]["content"]
 
 if __name__ == "__main__":
+    print("Starting Gradio app on port ${appPort}")
     ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Powered by 0G Compute")
     ui.launch(server_name="0.0.0.0", server_port=${appPort})
 `,
-        'requirements.txt': 'gradio==4.31.0\nrequests\n',
+        'requirements.txt': 'gradio==6.19.0\nrequests\n',
         '.env.example': envExampleContent
       },
       chatbot: {
         'app.py': `import gradio as gr
 import requests
 import os
+import json
 
 def chat(message, history):
     api_key = os.getenv('OG_COMPUTE_API_KEY')
     if not api_key:
         raise ValueError("OG_COMPUTE_API_KEY environment variable not set")
     
+    print(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
     response = requests.post(
         "${OG_COMPUTE_BASE_URL}/chat/completions",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 100}
     )
+    print(f"0G Router response status: {response.status_code}")
+    print(f"0G Router response: {json.dumps(response.json(), indent=2)}")
     return response.json()["choices"][0]["message"]["content"]
 
 if __name__ == "__main__":
+    print("Starting Gradio chatbot on port ${appPort}")
     ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Chat with AI on 0G")
     ui.launch(server_name="0.0.0.0", server_port=${appPort})
 `,
-        'requirements.txt': 'gradio==4.31.0\nrequests\n',
+        'requirements.txt': 'gradio==6.19.0\nrequests\n',
         '.env.example': envExampleContent
       }
     },
@@ -71,6 +81,7 @@ if __name__ == "__main__":
 import requests
 import os
 import uvicorn
+import json
 
 app = FastAPI(title="${spaceName}")
 OG_API_KEY = os.getenv('OG_COMPUTE_API_KEY')
@@ -88,10 +99,14 @@ def health():
 
 @app.post("/chat")
 def chat(message: str):
+    print(f"Sending request to 0G Router: model=zai-org/GLM-4-Flash, message={message[:50]}...")
     response = requests.post(f"{OG_URL}/chat/completions", headers={"Authorization": f"Bearer {OG_API_KEY}", "Content-Type": "application/json"}, json={"model": "zai-org/GLM-4-Flash", "messages": [{"role": "user", "content": message}], "max_tokens": 50})
+    print(f"0G Router response status: {response.status_code}")
+    print(f"0G Router response: {json.dumps(response.json(), indent=2)}")
     return response.json()
 
 if __name__ == "__main__":
+    print(f"Starting FastAPI app on port ${appPort}")
     uvicorn.run(app, host="0.0.0.0", port=${appPort})
 `,
         'requirements.txt': 'fastapi==0.109.0\nuvicorn==0.27.0\nrequests\n',
@@ -122,11 +137,14 @@ app.post('/chat', async (req, res) => {
     if (!apiKey) {
       throw new Error("OG_COMPUTE_API_KEY environment variable not set");
     }
+    console.log('Sending request to 0G Router: model=zai-org/GLM-4-Flash, message=' + message.substring(0, 50) + '...');
     const response = await axios.post('${OG_COMPUTE_BASE_URL}/chat/completions', {
       model: 'zai-org/GLM-4-Flash',
       messages: [{ role: 'user', content: message }],
       max_tokens: 50
     }, { headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' } });
+    console.log('0G Router response status: ' + response.status);
+    console.log('0G Router response: ' + JSON.stringify(response.data, null, 2));
     res.json(response.data);
   } catch (error) {
     res.json({ error: error.message });
