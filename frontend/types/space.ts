@@ -5,16 +5,17 @@ export interface AgentSpace {
   version: string;
   modelId: string;
   endpointUrl: string;
+  localEndpointUrl?: string;
   deployedAt: number;
   lastHealthCheck: number;
   lastActivity: number;
   isActive: boolean;
   isAsleep: boolean;
-  sleepTimeout: number; // in seconds
+  sleepTimeout: number;
   owner: string;
   requestCount: number;
-  sdk?: string; // SDK used for the space (gradio, fastapi, express, docker, static)
-  template?: string; // Template used (blank, chatbot, etc.)
+  sdk?: string;
+  template?: string;
 }
 
 export interface SleepConfig {
