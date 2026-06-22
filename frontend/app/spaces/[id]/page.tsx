@@ -9,6 +9,7 @@ import { ComputeStatus } from "@/components/space/ComputeStatus";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentRegistry } from "@/lib/useAgentRegistry";
+import { GitBranch } from "lucide-react";
 import type { AgentSpace, SpaceDeployment } from "@/types/space";
 import type { JsonRpcSigner, TransactionResponse } from "ethers";
 
@@ -39,22 +40,90 @@ export default function SpaceDetailPage() {
   const refreshSpace = async () => {
     try {
       setLoading(true);
-      const spaceData = await getSpace(spaceId);
-      setSpace(spaceData);
       
-      // Check if current user is owner
-      if (address && spaceData.owner.toLowerCase() === address.toLowerCase()) {
-        setIsOwner(true);
+      // First, try to get data from sessionStorage (for newly created spaces)
+      const sessionData = sessionStorage.getItem('lastSpaceInfo');
+      if (sessionData) {
+        const storedInfo = JSON.parse(sessionData);
+        if (storedInfo.spaceId === spaceId) {
+          // Use the sessionStorage data as fallback
+          const spaceFromSession: AgentSpace = {
+            spaceId: storedInfo.spaceId,
+            name: storedInfo.spaceId,
+            description: storedInfo.space?.description || '',
+            version: '1.0.0',
+            modelId: '0',
+            endpointUrl: storedInfo.space?.endpointUrl || `http://localhost:7860`,
+            deployedAt: Date.now() / 1000,
+            lastHealthCheck: 0,
+            lastActivity: 0,
+            isActive: true,
+            isAsleep: false,
+            sleepTimeout: 0,
+            owner: storedInfo.space?.owner || '',
+            requestCount: 0,
+            sdk: storedInfo.space?.sdk || 'gradio',
+            template: storedInfo.space?.template || 'blank'
+          };
+          setSpace(spaceFromSession);
+          
+          // Check if current user is owner
+          if (address && spaceFromSession.owner.toLowerCase() === address.toLowerCase()) {
+            setIsOwner(true);
+          }
+          setModelName("0G Compute Router");
+          setModelStorageHash("");
+          setLoading(false);
+          return;
+        }
       }
       
-      // Get model data
+      // Try on-chain lookup (will work for existing numeric space IDs)
       try {
-        const model = await getModel(spaceData.modelId);
-        setModelName(model.name);
-        setModelStorageHash(model.storageRootHash);
-      } catch {
-        setModelName("Unknown Model");
-        setModelStorageHash("");
+        const spaceData = await getSpace(spaceId);
+        setSpace(spaceData);
+        
+        // Check if current user is owner
+        if (address && spaceData.owner.toLowerCase() === address.toLowerCase()) {
+          setIsOwner(true);
+        }
+        
+        // Get model data
+        try {
+          const model = await getModel(spaceData.modelId);
+          setModelName(model.name);
+          setModelStorageHash(model.storageRootHash);
+        } catch {
+          setModelName("Unknown Model");
+          setModelStorageHash("");
+        }
+      } catch (chainErr) {
+        console.log("On-chain lookup failed (expected for new spaces):", chainErr);
+        // If on-chain fails and we have session data, use it
+        if (sessionData) {
+          const storedInfo = JSON.parse(sessionData);
+          const spaceFromSession: AgentSpace = {
+            spaceId: storedInfo.spaceId,
+            name: storedInfo.spaceId,
+            description: storedInfo.space?.description || '',
+            version: '1.0.0',
+            modelId: '0',
+            endpointUrl: storedInfo.space?.endpointUrl || `http://localhost:7860`,
+            deployedAt: Date.now() / 1000,
+            lastHealthCheck: 0,
+            lastActivity: 0,
+            isActive: true,
+            isAsleep: false,
+            sleepTimeout: 0,
+            owner: storedInfo.space?.owner || '',
+            requestCount: 0,
+            sdk: storedInfo.space?.sdk || 'gradio',
+            template: storedInfo.space?.template || 'blank'
+          };
+          setSpace(spaceFromSession);
+          setModelName("0G Compute Router");
+          setModelStorageHash("");
+        }
       }
       
     } catch (err) {
@@ -267,6 +336,49 @@ export default function SpaceDetailPage() {
             {space.description || "No description provided"}
           </p>
         </div>
+
+        {/* Git Repository Info - Show prominently for new spaces */}
+        {(() => {
+          const sessionData = sessionStorage.getItem('lastSpaceInfo');
+          if (sessionData) {
+            const storedInfo = JSON.parse(sessionData);
+            if (storedInfo.spaceId === spaceId && storedInfo.repo) {
+              return (
+                <div className="rounded border border-coreed-line bg-coreed-panel p-5 mb-8">
+                  <h3 className="font-mono text-xs text-coreed-sage mb-3 flex items-center gap-2">
+                    <GitBranch className="w-4 h-4" />
+                    Git Repository
+                  </h3>
+                  <div className="mb-4">
+                    <p className="font-mono text-xs text-coreed-sage/70 mb-1">Clone URL</p>
+                    <p className="font-mono text-sm text-coreed-bone break-all">
+                      {storedInfo.repo.cloneUrl}
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <p className="font-mono text-xs text-coreed-sage/70 mb-1">Local Path</p>
+                    <p className="font-mono text-sm text-coreed-sage break-all">
+                      {storedInfo.repo.repoPath}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => {
+                        const text = `git clone ${storedInfo.repo.cloneUrl}\ncd ${spaceId}\n${space.sdk === 'gradio' || space.sdk === 'fastapi' ? 'pip install -r requirements.txt' : 'npm install'}\n${space.sdk === 'gradio' ? 'python app.py' : space.sdk === 'fastapi' ? 'uvicorn main:app' : 'node index.js'}`;
+                        navigator.clipboard.writeText(text);
+                        alert('Commands copied to clipboard!');
+                      }}
+                      className="rounded border border-coreed-moss px-3 py-1 font-mono text-xs text-coreed-bone hover:border-coreed-moss-bright"
+                    >
+                      Copy Setup Commands
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+          }
+          return null;
+        })()}
 
         {/* 0G Compute Status Section */}
         <ComputeStatus spaceId={spaceId} />

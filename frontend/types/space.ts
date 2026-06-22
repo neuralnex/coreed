@@ -13,6 +13,8 @@ export interface AgentSpace {
   sleepTimeout: number; // in seconds
   owner: string;
   requestCount: number;
+  sdk?: string; // SDK used for the space (gradio, fastapi, express, docker, static)
+  template?: string; // Template used (blank, chatbot, etc.)
 }
 
 export interface SleepConfig {
