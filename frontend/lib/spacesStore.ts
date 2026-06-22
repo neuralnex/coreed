@@ -7,13 +7,16 @@ interface StoredSpace {
   template: string;
   owner: string;
   endpointUrl: string;
+  platformUrl?: string;
   localEndpointUrl?: string;
   gitRepo: {
     cloneUrl: string;
     repoPath: string;
   };
   createdAt: number;
-  status: 'created' | 'deployed' | 'error';
+  status: 'created' | 'deployed' | 'error' | 'running';
+  port?: number;
+  processId?: string;
 }
 
 const spaces = new Map<string, StoredSpace>();

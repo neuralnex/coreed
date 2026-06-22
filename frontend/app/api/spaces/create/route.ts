@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import { addSpace, getSpaceById, getSpacesByOwner, getAllSpaces } from '@/lib/spacesStore';
+import { addSpace, getSpaceById, getSpacesByOwner, getAllSpaces, updateSpaceStatus } from '@/lib/spacesStore';
+import { startSpace, installDependencies } from '@/lib/spaceRunner';
 
 const OG_COMPUTE_API_KEY = process.env.OG_COMPUTE_API_KEY;
 const OG_COMPUTE_BASE_URL = process.env.NEXT_PUBLIC_COMPUTE_ROUTER || 'https://router-api.0g.ai/v1';
@@ -274,8 +275,11 @@ Your app uses 0G Compute Router for AI inference:
     }
 
     const ownerShort = owner.slice(2, 10);
+    const platformDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || host || 'localhost';
+    const platformPort = process.env.PORT || (host?.includes('localhost:') ? host.split(':')[2] : '3000');
     const coreedEndpointUrl = `${protocol}://${ownerShort}.${spaceSlug}.${baseDomain}`;
     const localEndpointUrl = `http://localhost:${appPort}`;
+    const platformUrl = `http://${platformDomain}:${platformPort}/spaces/${spaceSlug}`;
 
     addSpace({
       spaceId: spaceSlug,
@@ -286,6 +290,7 @@ Your app uses 0G Compute Router for AI inference:
       template,
       owner,
       endpointUrl: coreedEndpointUrl,
+      platformUrl: platformUrl,
       localEndpointUrl: localEndpointUrl,
       gitRepo: {
         cloneUrl: `file://${repoPath}`,
@@ -328,6 +333,15 @@ Your app uses 0G Compute Router for AI inference:
       computeInfo = { ...computeInfo, error: '0G Compute API key not configured' };
     }
 
+    // Auto-start the space in background
+    startSpace(spaceSlug, repoPath, sdk).then((startResult) => {
+      if (startResult.success) {
+        updateSpaceStatus(spaceSlug, 'running');
+      }
+    }).catch(() => {
+      // Silently fail - space can be started manually
+    });
+
     return NextResponse.json({
       success: true,
       space: {
@@ -339,6 +353,7 @@ Your app uses 0G Compute Router for AI inference:
         owner,
         spaceId: spaceSlug,
         endpointUrl: coreedEndpointUrl,
+        platformUrl: platformUrl,
         localEndpointUrl: localEndpointUrl,
         gitRepo: {
           cloneUrl: `file://${repoPath}`,
@@ -347,16 +362,11 @@ Your app uses 0G Compute Router for AI inference:
       },
       compute: computeInfo,
       deployment,
-      nextSteps: computeInfo.connected ? [
+      nextSteps: [
         `git clone file:///${repoPath}`,
         `cd ${spaceSlug}`,
-        `${sdk === 'gradio' || sdk === 'fastapi' ? 'pip install -r requirements.txt' : 'npm install'}`,
-        `${sdk === 'gradio' ? 'python app.py' : sdk === 'fastapi' ? 'uvicorn main:app --host 0.0.0.0 --port ' + appPort : 'node index.js'}`,
-        `Access at: ${coreedEndpointUrl}`
-      ] : [
-        `Space created! Git repo: file:///${repoPath}`,
-        `To enable AI: Add OG_COMPUTE_API_KEY to .env`,
-        `Then run: cd ${spaceSlug} && ${sdk === 'gradio' ? 'pip install -r requirements.txt && python app.py' : 'npm install && node index.js'}`
+        `Space will auto-install dependencies and start on platform`,
+        `Access at: ${platformUrl}`
       ]
     });
 

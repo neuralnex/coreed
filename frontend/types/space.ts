@@ -5,6 +5,7 @@ export interface AgentSpace {
   version: string;
   modelId: string;
   endpointUrl: string;
+  platformUrl?: string;
   localEndpointUrl?: string;
   deployedAt: number;
   lastHealthCheck: number;
@@ -16,6 +17,8 @@ export interface AgentSpace {
   requestCount: number;
   sdk?: string;
   template?: string;
+  status?: 'created' | 'deployed' | 'error' | 'running';
+  port?: number;
 }
 
 export interface SleepConfig {
