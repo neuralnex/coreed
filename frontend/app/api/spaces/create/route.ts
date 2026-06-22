@@ -40,7 +40,7 @@ def chat(message, history):
 if __name__ == "__main__":
     print("Starting Gradio app on port ${appPort}")
     ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Powered by 0G Compute")
-    ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False, enable_queue=True)
+    ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
 `,
         'requirements.txt': 'gradio==6.19.0\nrequests\n',
         '.env.example': envExampleContent
@@ -69,7 +69,7 @@ def chat(message, history):
 if __name__ == "__main__":
     print("Starting Gradio chatbot on port ${appPort}")
     ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Chat with AI on 0G")
-    ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False, enable_queue=True)
+    ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
 `,
         'requirements.txt': 'gradio==6.19.0\nrequests\n',
         '.env.example': envExampleContent
