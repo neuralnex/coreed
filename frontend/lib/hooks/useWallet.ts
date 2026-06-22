@@ -16,6 +16,32 @@ interface WalletState {
 
 const WALLET_STORAGE_KEY = "coreed_wallet_connected";
 
+interface EIP6963ProviderInfo {
+  uuid: string;
+  name: string;
+  icon: string;
+  rdns: string;
+}
+
+interface EIP6963ProviderDetail {
+  info: EIP6963ProviderInfo;
+  provider: ExtendedEip1193Provider;
+}
+
+// Global store of discovered providers to avoid multiple listeners or missing early events
+let globalAnnouncedProviders: EIP6963ProviderDetail[] = [];
+if (typeof window !== "undefined") {
+  const handleAnnounce = (event: any) => {
+    if (event.detail && event.detail.info && event.detail.provider) {
+      if (!globalAnnouncedProviders.some(p => p.info.uuid === event.detail.info.uuid)) {
+        globalAnnouncedProviders.push(event.detail);
+      }
+    }
+  };
+  window.addEventListener("eip6963:announceProvider", handleAnnounce as EventListener);
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+}
+
 /**
  * Gets the appropriate wallet provider, handling both desktop and mobile wallets
  * Mobile wallets may inject their provider in different ways
@@ -34,55 +60,84 @@ async function getWalletProvider(walletId?: string): Promise<ExtendedEip1193Prov
 
   const ethereum = safeGet<ExtendedEip1193Provider>("ethereum");
 
+  // Force dispatch another request just in case some wallets loaded late
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+  // Wait a tiny amount (e.g. 10ms) to allow late wallets to announce
+  await new Promise(resolve => setTimeout(resolve, 10));
+
   if (walletId) {
     switch (walletId) {
-      case "metamask":
+      case "metamask": {
+        const match = globalAnnouncedProviders.find(p => p.info.rdns === "io.metamask" || p.info.rdns.startsWith("io.metamask"));
+        if (match) return match.provider;
         if (ethereum && (ethereum as any).isMetaMask)
           return ethereum;
         return null;
-      case "okx":
+      }
+      case "okx": {
+        const match = globalAnnouncedProviders.find(p => p.info.rdns === "com.okex.wallet" || p.info.name.toLowerCase().includes("okx"));
+        if (match) return match.provider;
         if (safeGet<any>("okxwallet")) return safeGet<any>("okxwallet") as ExtendedEip1193Provider;
         if (ethereum && ((ethereum as any).isOkxWallet || (ethereum as any).isOKX))
           return ethereum;
         return null;
-      case "trust":
+      }
+      case "trust": {
+        const match = globalAnnouncedProviders.find(p => p.info.rdns === "com.trustwallet.app" || p.info.name.toLowerCase().includes("trust"));
+        if (match) return match.provider;
         if (safeGet<any>("Trust")) return safeGet<any>("Trust") as ExtendedEip1193Provider;
         if (safeGet<any>("trustwallet")) return safeGet<any>("trustwallet") as ExtendedEip1193Provider;
         if (ethereum && ((ethereum as any).isTrust || (ethereum as any).isTrustWallet))
           return ethereum;
         return null;
-      case "walletconnect":
-        if (safeGet<any>("WalletConnect")) return safeGet<any>("WalletConnect") as ExtendedEip1193Provider;
-        if (ethereum) return ethereum;
-        return null;
-      case "coinbase":
+      }
+      case "coinbase": {
+        const match = globalAnnouncedProviders.find(p => p.info.rdns === "com.coinbase.wallet" || p.info.name.toLowerCase().includes("coinbase"));
+        if (match) return match.provider;
         if (ethereum && (ethereum as any).isCoinbaseWallet)
           return ethereum;
         return null;
-      case "rabby":
+      }
+      case "rabby": {
+        const match = globalAnnouncedProviders.find(p => p.info.rdns === "io.rabby" || p.info.name.toLowerCase().includes("rabby"));
+        if (match) return match.provider;
         if (ethereum && (ethereum as any).isRabby)
           return ethereum;
         return null;
-      case "ledger":
+      }
+      case "ledger": {
+        const match = globalAnnouncedProviders.find(p => p.info.name.toLowerCase().includes("ledger"));
+        if (match) return match.provider;
         if (ethereum && (ethereum as any).isLedgerLive)
           return ethereum;
         return null;
-      case "imtoken":
+      }
+      case "imtoken": {
+        const match = globalAnnouncedProviders.find(p => p.info.name.toLowerCase().includes("imtoken"));
+        if (match) return match.provider;
         if (ethereum && (ethereum as any).isImToken)
           return ethereum;
         return null;
-      case "brave":
+      }
+      case "brave": {
+        const match = globalAnnouncedProviders.find(p => p.info.rdns === "com.brave.wallet" || p.info.name.toLowerCase().includes("brave"));
+        if (match) return match.provider;
         if (ethereum && (ethereum as any).isBraveWallet)
           return ethereum;
         return null;
-      default:
-        // "any-evm" or unknown — use whatever is injected
+      }
+      default: {
+        if (globalAnnouncedProviders.length > 0) return globalAnnouncedProviders[0].provider;
         if (ethereum) return ethereum;
         return null;
+      }
     }
   }
   
   // No wallet selected — try providers in priority order
+  if (globalAnnouncedProviders.length > 0) {
+    return globalAnnouncedProviders[0].provider;
+  }
   if (ethereum) {
     return ethereum;
   }
@@ -108,14 +163,6 @@ export function useWallet() {
     error: null,
   });
 
-  // Check localStorage for previous connection on mount
-  useEffect(() => {
-    const wasConnected = localStorage.getItem(WALLET_STORAGE_KEY) === "true";
-    if (wasConnected && typeof window !== "undefined" && checkWalletAvailable()) {
-      handleReconnect();
-    }
-  }, []);
-
   // Enhanced wallet detection for mobile and desktop
   const checkWalletAvailable = useCallback(() => {
     if (typeof window === "undefined") return false;
@@ -131,24 +178,22 @@ export function useWallet() {
 
     const ethereum = safeGet<ExtendedEip1193Provider>("ethereum");
     
+    // EIP-6963 check
+    if (globalAnnouncedProviders.length > 0) return true;
+    
     // Standard EIP-1193 check
     if (ethereum) return true;
     
     // Mobile-specific checks
-    // OKX Wallet Mobile - checks both the global and the injected provider
     if (safeGet<any>("okxwallet") || (ethereum as any)?.isOkxWallet || (ethereum as any)?.isOKX) return true;
-    
-    // WalletConnect mobile (injected by WalletConnect SDK)
     if (safeGet<any>("WalletConnect")) return true;
-    
-    // Trust Wallet Mobile - checks both global and injected provider
     if (safeGet<any>("Trust") || safeGet<any>("trustwallet") || (ethereum as any)?.isTrust || (ethereum as any)?.isTrustWallet) return true;
     
     return false;
   }, []);
 
-  const handleReconnect = useCallback(async () => {
-    const providerInstance = await getWalletProvider();
+  const handleReconnect = useCallback(async (walletId?: string) => {
+    const providerInstance = await getWalletProvider(walletId);
     if (!providerInstance) {
       localStorage.removeItem(WALLET_STORAGE_KEY);
       setState(prev => ({ ...prev, isConnecting: false, error: null }));
@@ -166,7 +211,7 @@ export function useWallet() {
         const address = await signer.getAddress();
         
         // Verify we're on the correct network
-        await ensureGalileoNetwork();
+        await ensureGalileoNetwork(providerInstance);
         
         setState({
           address,
@@ -184,6 +229,14 @@ export function useWallet() {
     }
   }, []);
 
+  // Check localStorage for previous connection on mount
+  useEffect(() => {
+    const connectedWallet = localStorage.getItem(WALLET_STORAGE_KEY);
+    if (connectedWallet && typeof window !== "undefined" && checkWalletAvailable()) {
+      handleReconnect(connectedWallet === "true" ? undefined : connectedWallet);
+    }
+  }, [checkWalletAvailable, handleReconnect]);
+
   const connect = useCallback(async (walletId?: string) => {
     if (typeof window === "undefined") {
       setState(prev => ({
@@ -200,6 +253,15 @@ export function useWallet() {
       // Get the provider, respecting wallet selection if provided
       const provider = await getWalletProvider(walletId);
       if (!provider) {
+        if (walletId === "okx") {
+          throw new Error("OKX Wallet extension not detected. Please install OKX Wallet or choose another option.");
+        } else if (walletId === "metamask") {
+          throw new Error("MetaMask extension not detected. Please install MetaMask or choose another option.");
+        } else if (walletId === "trust") {
+          throw new Error("Trust Wallet extension not detected. Please install Trust Wallet or choose another option.");
+        } else if (walletId === "coinbase") {
+          throw new Error("Coinbase Wallet extension not detected. Please install Coinbase Wallet or choose another option.");
+        }
         throw new Error("No Ethereum wallet detected");
       }
       
@@ -213,10 +275,24 @@ export function useWallet() {
         const address = await signer.getAddress();
         
         // Ensure we're on 0G network
-        await ensureGalileoNetwork();
+        await ensureGalileoNetwork(provider);
         
+        // Resolve walletId to store
+        let resolvedWalletId = walletId || "any-evm";
+        if (resolvedWalletId === "any-evm" || !resolvedWalletId) {
+          if (provider === (window as any).okxwallet || (provider as any)?.isOkxWallet || (provider as any)?.isOKX) {
+            resolvedWalletId = "okx";
+          } else if ((provider as any)?.isMetaMask) {
+            resolvedWalletId = "metamask";
+          } else if ((provider as any)?.isTrust || (provider as any)?.isTrustWallet || provider === (window as any).Trust || provider === (window as any).trustwallet) {
+            resolvedWalletId = "trust";
+          } else if ((provider as any)?.isCoinbaseWallet) {
+            resolvedWalletId = "coinbase";
+          }
+        }
+
         // Save connection state to localStorage
-        localStorage.setItem(WALLET_STORAGE_KEY, "true");
+        localStorage.setItem(WALLET_STORAGE_KEY, resolvedWalletId);
         
         setState({
           address,
@@ -255,38 +331,43 @@ export function useWallet() {
     });
   }, []);
 
-  // Listen for account changes
+  // Listen for account changes on the active wallet provider
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !state.isConnected) return;
 
-    // Get the current provider instance to listen to
-    const providerInstance = window.ethereum as ExtendedEip1193Provider | undefined;
-    if (!providerInstance) return;
+    const activeWalletId = localStorage.getItem(WALLET_STORAGE_KEY) || undefined;
+    let providerInstance: ExtendedEip1193Provider | null = null;
+    let isSubscribed = true;
 
     const handleAccountsChanged = (...args: unknown[]) => {
       const accounts = args[0] as unknown[];
       if (!accounts || accounts.length === 0) {
         disconnect();
       } else {
-        handleReconnect();
+        handleReconnect(activeWalletId);
       }
     };
 
     const handleChainChanged = (...args: unknown[]) => {
-      // When chain changes, we should reconnect to ensure we're on Galileo
       disconnect();
     };
 
-    providerInstance.on("accountsChanged", handleAccountsChanged);
-    providerInstance.on("chainChanged", handleChainChanged);
+    getWalletProvider(activeWalletId).then(prov => {
+      if (!prov || !isSubscribed) return;
+      providerInstance = prov;
+
+      providerInstance.on("accountsChanged", handleAccountsChanged);
+      providerInstance.on("chainChanged", handleChainChanged);
+    });
 
     return () => {
+      isSubscribed = false;
       if (providerInstance) {
         providerInstance.removeListener("accountsChanged", handleAccountsChanged);
         providerInstance.removeListener("chainChanged", handleChainChanged);
       }
     };
-  }, [disconnect, handleReconnect]);
+  }, [disconnect, handleReconnect, state.isConnected]);
 
   return {
     ...state,

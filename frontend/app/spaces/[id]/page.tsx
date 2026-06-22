@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { StatusStrip } from "@/components/StatusStrip";
+import { useWalletContext } from "@/lib/contexts/WalletContext";
 import { FileBrowser } from "@/components/space/FileBrowser";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 import { useModelRegistry } from "@/lib/useModelRegistry";
@@ -32,8 +33,7 @@ export default function SpaceDetailPage() {
   const params = useParams();
   const spaceId = params.id as string;
 
-  const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [address, setAddress] = useState<string | null>(null);
+  const { signer, address } = useWalletContext();
   const [space, setSpace] = useState<AgentSpace | null>(null);
   const [modelName, setModelName] = useState<string>("");
   const [modelStorageHash, setModelStorageHash] = useState<string>("");
@@ -370,13 +370,7 @@ export default function SpaceDetailPage() {
   if (loading) {
     return (
       <>
-        <StatusStrip
-          address={address}
-          onConnect={(s, addr) => {
-            setSigner(s);
-            setAddress(addr);
-          }}
-        />
+        <StatusStrip />
         <main className="mx-auto flex max-w-5xl flex-1 flex-col px-6 py-12">
           <p className="font-mono text-modal-green animate-pulse text-sm">Loading Space Details...</p>
         </main>
@@ -387,13 +381,7 @@ export default function SpaceDetailPage() {
   if (!space) {
     return (
       <>
-        <StatusStrip
-          address={address}
-          onConnect={(s, addr) => {
-            setSigner(s);
-            setAddress(addr);
-          }}
-        />
+        <StatusStrip />
         <main className="mx-auto flex max-w-5xl flex-1 flex-col px-6 py-12 text-center">
           <h1 className="text-xl font-semibold mb-4 text-white">Space Not Found</h1>
           <p className="text-white/50 text-sm mb-6">Space with ID "{spaceId}" does not exist.</p>
@@ -409,13 +397,7 @@ export default function SpaceDetailPage() {
 
   return (
     <>
-      <StatusStrip
-        address={address}
-        onConnect={(s, addr) => {
-          setSigner(s);
-          setAddress(addr);
-        }}
-      />
+      <StatusStrip />
 
       <main className="w-full flex-grow bg-[#080809] min-h-screen text-white pt-24 pb-16">
         <div className="max-w-6xl mx-auto px-6">

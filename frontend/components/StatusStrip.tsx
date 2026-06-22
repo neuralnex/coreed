@@ -1,35 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { connectWallet, hasInjectedWallet, DEFAULT_CHAIN_ID } from "@/lib/wallet";
-import type { JsonRpcSigner } from "ethers";
+import { useWalletContext } from "@/lib/contexts/WalletContext";
+import { DEFAULT_CHAIN_ID } from "@/lib/wallet";
 
-interface StatusStripProps {
-  onConnect: (signer: JsonRpcSigner, address: string) => void;
-  address: string | null;
-}
-
-export function StatusStrip({ onConnect, address }: StatusStripProps) {
-  const [connecting, setConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [walletAvailable, setWalletAvailable] = useState(true);
-
-  useEffect(() => {
-    setWalletAvailable(hasInjectedWallet());
-  }, []);
-
-  async function handleConnect() {
-    setConnecting(true);
-    setError(null);
-    try {
-      const { signer, address } = await connectWallet();
-      onConnect(signer, address);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Connection failed");
-    } finally {
-      setConnecting(false);
-    }
-  }
+export function StatusStrip() {
+  const { address, isConnected, isConnecting, setShowWalletModal, error } = useWalletContext();
 
   return (
     <header className="border-b border-coreed-line">
@@ -48,24 +23,20 @@ export function StatusStrip({ onConnect, address }: StatusStripProps) {
         <div className="flex items-center gap-3">
           {error && (
             <span className="font-mono text-xs text-coreed-clay" role="alert">
-              {error}
+              {error.message}
             </span>
           )}
-          {address ? (
-            <span className="font-mono text-xs text-coreed-moss-bright">
+          {isConnected && address ? (
+            <span className="font-mono text-xs text-coreed-moss-bright font-mono">
               {address.slice(0, 6)}…{address.slice(-4)}
             </span>
           ) : (
             <button
-              onClick={handleConnect}
-              disabled={connecting || !walletAvailable}
-              className="rounded border border-coreed-line bg-coreed-panel-raised px-3 py-1.5 font-mono text-xs text-coreed-bone transition-colors hover:border-coreed-moss disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => setShowWalletModal(true)}
+              disabled={isConnecting}
+              className="rounded border border-coreed-line bg-coreed-panel-raised px-3 py-1.5 font-mono text-xs text-coreed-bone transition-colors hover:border-coreed-moss disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
-              {!walletAvailable
-                ? "no wallet found"
-                : connecting
-                ? "connecting…"
-                : "connect wallet"}
+              {isConnecting ? "connecting…" : "connect wallet"}
             </button>
           )}
         </div>

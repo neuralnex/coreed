@@ -92,8 +92,15 @@ export async function ensureGalileoNetwork(provider?: ExtendedEip1193Provider): 
       params: [{ chainId: GALILEO_CHAIN_ID_HEX }],
     });
   } catch (switchError: unknown) {
-    const err = switchError as { code?: number };
-    if (err?.code === 4902) {
+    const err = switchError as { code?: number; message?: string };
+    
+    // Standard user rejection code
+    if (err?.code === 4001) {
+      throw switchError;
+    }
+    
+    // For other errors, attempt to add the network
+    try {
       await ethereum.request({
         method: "wallet_addEthereumChain",
         params: [
@@ -106,7 +113,7 @@ export async function ensureGalileoNetwork(provider?: ExtendedEip1193Provider): 
           },
         ],
       });
-    } else {
+    } catch (addError: unknown) {
       throw switchError;
     }
   }

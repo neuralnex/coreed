@@ -14,8 +14,7 @@ const NAV_LINKS = [
 ];
 
 export function Navbar() {
-  const { address, isConnected, isConnecting, connect, disconnect } = useWalletContext();
-  const [showWalletModal, setShowWalletModal] = useState(false);
+  const { address, isConnected, isConnecting, connect, disconnect, showWalletModal, setShowWalletModal } = useWalletContext();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [privyEmail, setPrivyEmail] = useState<string | null>(null);
 

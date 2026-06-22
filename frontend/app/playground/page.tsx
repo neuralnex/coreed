@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import type { JsonRpcSigner } from "ethers";
 import Link from "next/link";
 import { Library } from "lucide-react";
 import { StatusStrip } from "@/components/StatusStrip";
 import { ResolvingHash } from "@/components/ResolvingHash";
 import { useAgentRegistry, type AgentMeta } from "@/lib/useAgentRegistry";
 import { GALILEO_EXPLORER_URL } from "@/lib/wallet";
+import { useWalletContext } from "@/lib/contexts/WalletContext";
 
 export default function Playground() {
-  const [, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [address, setAddress] = useState<string | null>(null);
+  const { address } = useWalletContext();
   const [query, setQuery] = useState("");
   const [agent, setAgent] = useState<AgentMeta | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,13 +44,7 @@ export default function Playground() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <StatusStrip
-        address={address}
-        onConnect={(s, addr) => {
-          setSigner(s);
-          setAddress(addr);
-        }}
-      />
+      <StatusStrip />
 
       <main className="flex-1 flex-col">
         {/* Hero Section */}
