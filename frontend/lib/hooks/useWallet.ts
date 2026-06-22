@@ -136,13 +136,13 @@ export function useWallet() {
     
     // Mobile-specific checks
     // OKX Wallet Mobile - checks both the global and the injected provider
-    if (safeGet<any>("okxwallet") || ethereum?.isOkxWallet || ethereum?.isOKX) return true;
+    if (safeGet<any>("okxwallet") || (ethereum as any)?.isOkxWallet || (ethereum as any)?.isOKX) return true;
     
     // WalletConnect mobile (injected by WalletConnect SDK)
     if (safeGet<any>("WalletConnect")) return true;
     
     // Trust Wallet Mobile - checks both global and injected provider
-    if (safeGet<any>("Trust") || safeGet<any>("trustwallet") || ethereum?.isTrust || ethereum?.isTrustWallet) return true;
+    if (safeGet<any>("Trust") || safeGet<any>("trustwallet") || (ethereum as any)?.isTrust || (ethereum as any)?.isTrustWallet) return true;
     
     return false;
   }, []);
