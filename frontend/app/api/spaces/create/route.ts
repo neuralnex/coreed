@@ -16,7 +16,7 @@ function scaffoldTemplate(repoPath: string, sdk: string, template: string, space
   const templates: Record<string, Record<string, Record<string, string>>> = {
     gradio: {
       blank: {
-        'app.py': `import gradio as gr
+import gradio as gr
 import requests
 import os
 
@@ -32,9 +32,10 @@ def chat(message, history):
     )
     return response.json()["choices"][0]["message"]["content"]
 
-ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Powered by 0G Compute")
-ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
-`,
+if __name__ == "__main__":
+    ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Powered by 0G Compute")
+    ui.launch(server_name="0.0.0.0", server_port=${appPort})
+,
         'requirements.txt': 'gradio==4.31.0\nrequests\n',
         '.env.example': envExampleContent
       },
@@ -55,8 +56,9 @@ def chat(message, history):
     )
     return response.json()["choices"][0]["message"]["content"]
 
-ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Chat with AI on 0G")
-ui.launch(server_name="0.0.0.0", server_port=${appPort}, share=False)
+if __name__ == "__main__":
+    ui = gr.ChatInterface(fn=chat, title="${spaceName}", description="Chat with AI on 0G")
+    ui.launch(server_name="0.0.0.0", server_port=${appPort})
 `,
         'requirements.txt': 'gradio==4.31.0\nrequests\n',
         '.env.example': envExampleContent
