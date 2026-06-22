@@ -31,8 +31,8 @@ declare global {
 }
 
 // 0G Network Configurations
-export const GALILEO_CHAIN_ID = 16602;
-export const ARISTOTLE_CHAIN_ID = 16661;
+export const GALILEO_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? 16602);
+export const ARISTOTLE_CHAIN_ID = Number(process.env.NEXT_PUBLIC_MAINNET_CHAIN_ID ?? 16661);
 
 export type { ExtendedEip1193Provider };
 
@@ -40,12 +40,12 @@ export const GALILEO_CHAIN_ID_HEX = "0x" + GALILEO_CHAIN_ID.toString(16);
 export const ARISTOTLE_CHAIN_ID_HEX = "0x" + ARISTOTLE_CHAIN_ID.toString(16);
 
 // Testnet (Galileo)
-export const GALILEO_RPC_URL = "https://evmrpc-testnet.0g.ai";
-export const GALILEO_EXPLORER_URL = "https://chainscan-galileo.0g.ai";
+export const GALILEO_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL ?? "https://evmrpc-testnet.0g.ai";
+export const GALILEO_EXPLORER_URL = process.env.NEXT_PUBLIC_EXPLORER_URL ?? "https://chainscan-galileo.0g.ai";
 
 // Mainnet (Aristotle)
-export const ARISTOTLE_RPC_URL = "https://evmrpc.0g.ai";
-export const ARISTOTLE_EXPLORER_URL = "https://chainscan.0g.ai";
+export const ARISTOTLE_RPC_URL = process.env.NEXT_PUBLIC_MAINNET_RPC_URL ?? "https://evmrpc.0g.ai";
+export const ARISTOTLE_EXPLORER_URL = process.env.NEXT_PUBLIC_MAINNET_EXPLORER_URL ?? "https://chainscan.0g.ai";
 
 // Default to testnet for development
 export const DEFAULT_CHAIN_ID = GALILEO_CHAIN_ID;
@@ -66,33 +66,35 @@ export function hasInjectedWallet(): boolean {
   return typeof window !== "undefined" && Boolean(window.ethereum);
 }
 
-export async function connectWallet(): Promise<{ signer: JsonRpcSigner; address: string }> {
-  if (!hasInjectedWallet()) {
+export async function connectWallet(providerInstance?: ExtendedEip1193Provider): Promise<{ signer: JsonRpcSigner; address: string }> {
+  const ethereum = providerInstance || window.ethereum;
+  if (!ethereum) {
     throw new WalletNotFoundError();
   }
 
-  const provider = new BrowserProvider(window.ethereum!);
+  const provider = new BrowserProvider(ethereum);
   await provider.send("eth_requestAccounts", []);
 
-  await ensureGalileoNetwork();
+  await ensureGalileoNetwork(ethereum);
 
   const signer = await provider.getSigner();
   const address = await signer.getAddress();
   return { signer, address };
 }
 
-export async function ensureGalileoNetwork(): Promise<void> {
-  if (!window.ethereum) return;
+export async function ensureGalileoNetwork(provider?: ExtendedEip1193Provider): Promise<void> {
+  const ethereum = provider || window.ethereum;
+  if (!ethereum) return;
 
   try {
-    await window.ethereum.request({
+    await ethereum.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: GALILEO_CHAIN_ID_HEX }],
     });
   } catch (switchError: unknown) {
     const err = switchError as { code?: number };
     if (err?.code === 4902) {
-      await window.ethereum.request({
+      await ethereum.request({
         method: "wallet_addEthereumChain",
         params: [
           {

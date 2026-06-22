@@ -23,66 +23,77 @@ const WALLET_STORAGE_KEY = "coreed_wallet_connected";
 async function getWalletProvider(walletId?: string): Promise<ExtendedEip1193Provider | null> {
   if (typeof window === "undefined") return null;
 
+  // Safe access to window properties to avoid redefinition errors from wallet extensions
+  const safeGet = <T,>(key: string): T | null => {
+    try {
+      return (window as unknown as Record<string, T>)[key] ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const ethereum = safeGet<ExtendedEip1193Provider>("ethereum");
+
   if (walletId) {
     switch (walletId) {
       case "metamask":
-        if (window.ethereum && (window.ethereum as any).isMetaMask)
-          return window.ethereum as ExtendedEip1193Provider;
+        if (ethereum && (ethereum as any).isMetaMask)
+          return ethereum;
         return null;
       case "okx":
-        if (window.okxwallet) return window.okxwallet as unknown as ExtendedEip1193Provider;
-        if (window.ethereum && ((window.ethereum as any).isOkxWallet || (window.ethereum as any).isOKX))
-          return window.ethereum as ExtendedEip1193Provider;
+        if (safeGet<any>("okxwallet")) return safeGet<any>("okxwallet") as ExtendedEip1193Provider;
+        if (ethereum && ((ethereum as any).isOkxWallet || (ethereum as any).isOKX))
+          return ethereum;
         return null;
       case "trust":
-        if (window.Trust) return window.Trust as unknown as ExtendedEip1193Provider;
-        if (window.trustwallet) return window.trustwallet as unknown as ExtendedEip1193Provider;
-        if (window.ethereum && ((window.ethereum as any).isTrust || (window.ethereum as any).isTrustWallet))
-          return window.ethereum as ExtendedEip1193Provider;
+        if (safeGet<any>("Trust")) return safeGet<any>("Trust") as ExtendedEip1193Provider;
+        if (safeGet<any>("trustwallet")) return safeGet<any>("trustwallet") as ExtendedEip1193Provider;
+        if (ethereum && ((ethereum as any).isTrust || (ethereum as any).isTrustWallet))
+          return ethereum;
         return null;
       case "walletconnect":
-        if (window.WalletConnect) return window.WalletConnect as unknown as ExtendedEip1193Provider;
-        if (window.ethereum) return window.ethereum as ExtendedEip1193Provider;
+        if (safeGet<any>("WalletConnect")) return safeGet<any>("WalletConnect") as ExtendedEip1193Provider;
+        if (ethereum) return ethereum;
         return null;
       case "coinbase":
-        if (window.ethereum && (window.ethereum as any).isCoinbaseWallet)
-          return window.ethereum as ExtendedEip1193Provider;
+        if (ethereum && (ethereum as any).isCoinbaseWallet)
+          return ethereum;
         return null;
       case "rabby":
-        if (window.ethereum && (window.ethereum as any).isRabby)
-          return window.ethereum as ExtendedEip1193Provider;
+        if (ethereum && (ethereum as any).isRabby)
+          return ethereum;
         return null;
       case "ledger":
-        if (window.ethereum && (window.ethereum as any).isLedgerLive)
-          return window.ethereum as ExtendedEip1193Provider;
+        if (ethereum && (ethereum as any).isLedgerLive)
+          return ethereum;
         return null;
       case "imtoken":
-        if (window.ethereum && (window.ethereum as any).isImToken)
-          return window.ethereum as ExtendedEip1193Provider;
+        if (ethereum && (ethereum as any).isImToken)
+          return ethereum;
         return null;
       case "brave":
-        if (window.ethereum && (window.ethereum as any).isBraveWallet)
-          return window.ethereum as ExtendedEip1193Provider;
+        if (ethereum && (ethereum as any).isBraveWallet)
+          return ethereum;
         return null;
       default:
         // "any-evm" or unknown — use whatever is injected
-        if (window.ethereum) return window.ethereum as ExtendedEip1193Provider;
+        if (ethereum) return ethereum;
         return null;
     }
   }
   
   // No wallet selected — try providers in priority order
-  if (window.ethereum) {
-    return window.ethereum as ExtendedEip1193Provider;
+  if (ethereum) {
+    return ethereum;
   }
-  if (window.okxwallet) {
-    return window.okxwallet as unknown as ExtendedEip1193Provider;
+  if (safeGet<any>("okxwallet")) {
+    return safeGet<any>("okxwallet") as ExtendedEip1193Provider;
   }
-  if (window.Trust) {
-    return window.Trust as unknown as ExtendedEip1193Provider;
+  if (safeGet<any>("Trust")) {
+    return safeGet<any>("Trust") as ExtendedEip1193Provider;
   }
-  if (window.trustwallet) {
-    return window.trustwallet as unknown as ExtendedEip1193Provider;
+  if (safeGet<any>("trustwallet")) {
+    return safeGet<any>("trustwallet") as ExtendedEip1193Provider;
   }
   return null;
 }
@@ -109,18 +120,29 @@ export function useWallet() {
   const checkWalletAvailable = useCallback(() => {
     if (typeof window === "undefined") return false;
     
+    // Safe access to window properties
+    const safeGet = <T,>(key: string): T | null => {
+      try {
+        return (window as unknown as Record<string, T>)[key] ?? null;
+      } catch {
+        return null;
+      }
+    };
+
+    const ethereum = safeGet<ExtendedEip1193Provider>("ethereum");
+    
     // Standard EIP-1193 check
-    if (window.ethereum) return true;
+    if (ethereum) return true;
     
     // Mobile-specific checks
     // OKX Wallet Mobile - checks both the global and the injected provider
-    if (window.okxwallet || (window.ethereum as unknown as ExtendedEip1193Provider)?.isOkxWallet || (window.ethereum as unknown as ExtendedEip1193Provider)?.isOKX) return true;
+    if (safeGet<any>("okxwallet") || ethereum?.isOkxWallet || ethereum?.isOKX) return true;
     
     // WalletConnect mobile (injected by WalletConnect SDK)
-    if (window.WalletConnect) return true;
+    if (safeGet<any>("WalletConnect")) return true;
     
     // Trust Wallet Mobile - checks both global and injected provider
-    if (window.Trust || window.trustwallet || (window.ethereum as unknown as ExtendedEip1193Provider)?.isTrust || (window.ethereum as unknown as ExtendedEip1193Provider)?.isTrustWallet) return true;
+    if (safeGet<any>("Trust") || safeGet<any>("trustwallet") || ethereum?.isTrust || ethereum?.isTrustWallet) return true;
     
     return false;
   }, []);

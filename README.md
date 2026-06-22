@@ -1,104 +1,146 @@
-# Coreed v3.0 
+# Coreed - AI Agent Spaces on 0G Chain
 
-**AI Deployment Platform for 0G Chain** 
+**Decentralized Hugging Face Spaces Alternative on 0G Infrastructure**
 
-Coreed is a complete Web3 AI agent launchpad built on the **0G Modular Infrastructure Stack**. It provides a seamless experience for deploying, managing, and discovering AI models and live agent spaces, all powered by decentralized infrastructure.
+Coreed is a Spaces-first platform for deploying and managing AI agent applications on the 0G Chain. Inspired by Hugging Face Spaces but built for Web3, Coreed enables users to deploy live applications without requiring model registration. Users can load open-source models from anywhere (transformers, Hugging Face Hub, or any external source) at runtime.
 
-**✅ Properly Integrated with 0G SDK** - Coreed leverages the official 0G TypeScript SDKs for storage and compute, ensuring full compatibility with the 0G ecosystem on Galileo Testnet.
+**✅ Key Philosophy**: No model registration required. Load models from code, dependencies, or external sources. Focus on deploying live agent spaces with minimal infrastructure overhead.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        COREED ECOSYSTEM                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
-│  │  ModelRegistry  │    │  AgentRegistry  │    │ 0G Storage  │ │
-│  │  (v2)           │    │  (v1)           │    │             │ │
-│  └────────┬────────┘    └────────┬────────┘    └──────┬──────┘ │
-│           │                 │                     │           │
-│           ▼                 ▼                     ▼           │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │                    push_to_coreed                            │ │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐    │ │
-│  │  │ Git Workflow │  │ Docker Build│  │ 0G Compute      │    │ │
-│  │  │ Integration  │  │             │  │ Deployment      │    │ │
-│  │  └─────────────┘  └─────────────┘  └─────────────────┘    │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │                    AGENT SPACES                               │ │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐     │ │
-│  │  │  Gradio     │  │  FastAPI    │  │   Express       │     │ │
-│  │  │             │  │  Template   │  │                 │     │ │
-│  │  │             │  │             │  │                 │     │ │
-│  │  └─────────────┘  └─────────────┘  └─────────────────┘     │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+## 🎯 Core Vision: Spaces-First Architecture
+
+Unlike traditional platforms that require model registration first, Coreed prioritizes **Agent Spaces** as the primary deployment unit. This approach:
+
+- **Eliminates infrastructure costs** by not storing heavy model weights on-chain
+- **Enables flexibility** - users can load any open-source model at runtime
+- **Simplifies deployment** - focus on the application, not the model registry
+- **Git-native workflow** - every Space is a Git repository, just like Hugging Face
+
+### The Coreed Difference
+
+| Feature | Hugging Face Spaces | Coreed Spaces |
+|---------|---------------------|---------------|
+| Model Registration | Required | **Optional** |
+| Model Loading | From Hub | **From Anywhere** |
+| Infrastructure | Centralized | **Decentralized (0G)** |
+| Git Workflow | ✅ | ✅ |
+| Blockchain | ❌ | **✅ 0G Chain** |
+| Cost | Centralized | **User-controlled** |
 
 ---
 
-## Features
+## 🚀 Quick Start
 
-| Feature | Coreed Implementation |
-|---------|----------------------|
-| **Model Registry** | ModelRegistry contract (on-chain) |
-| **Space Deployment** | AgentSpaceRegistry contract (on-chain) |
-| **CLI Tool** | `push-to-coreed` command |
-| **Git Integration** | Auto-commit and push workflow |
-| **Docker Support** | Multi-stage builds for all templates |
-| **Web UI Templates** | Gradio, FastAPI, Express, Docker |
-| **API Endpoints** | REST API support via FastAPI |
-| **Health Monitoring** | Automatic health checks and status updates |
-| **Decentralized Storage** | ✅ 0G Storage TS SDK (`@0gfoundation/0g-storage-ts-sdk`) |
-| **Decentralized Compute** | ✅ 0G Compute TS SDK (`@0gfoundation/0g-compute-ts-sdk`) |
-| **On-Chain Registry** | All registries on 0G Chain |
-| **Pause/Sleep Spaces** | Manual and auto-sleep for inactive spaces |
-
----
-
-## Quick Start
-
-### Without Cloning (Recommended)
+### 1. Deploy a Space Without Model Registration
 
 ```bash
-# Install CLI
+# Install the Coreed CLI
 pip install coreed-cli
 
-# Deploy your model and space in one command
-push-to-coreed --model-path models/my-model.gguf --space-name "My Chatbot"
+# Deploy a space that loads models at runtime
+push-to-coreed \\
+  --space-name "My AI Chatbot" \\
+  --endpoint-url "https://my-gradio-app.example.com" \\
+  --template gradio \\
+  --description "A chatbot using open-source models"
 ```
 
-### With Repository Clone
+**What this does:**
+- Registers your space on the AgentSpaceRegistry smart contract
+- Your app can load any model from Hugging Face Hub, transformers, or custom sources
+- No model needs to be registered on Coreed
+
+### 2. Deploy with Git Integration
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/coreed/coreed.git
-cd coreed
+# Clone or create your space repository
+git clone https://huggingface.co/spaces/your-username/your-space-name
+cd your-space-name
 
-# 2. Install CLI
-cd cli
-pip install -e .
-cd ..
+# Initialize your space with Coreed configuration
+# Add a README.md with YAML frontmatter (see below)
 
-# 3. Set up environment (create .env file)
-# See .env.example for required variables
-
-# 4. Get testnet tokens
-open https://faucet.0g.ai
-
-# 5. Deploy
-push-to-coreed --model-path models/my-model.gguf --space-name "My Chatbot"
+# Deploy via Coreed CLI
+push-to-coreed \\
+  --space-name "My Space" \\
+  --git-repo "https://huggingface.co/spaces/your-username/your-space-name" \\
+  --template gradio
 ```
 
-This single command will:
-1. Upload your model to **0G Storage**
-2. Register it on **ModelRegistry** (on-chain)
-3. Build a Docker image from the **Gradio** template
-4. Deploy to **0G Compute** (decentralized GPUs)
-5. Register your space on **AgentSpaceRegistry** (on-chain)
-6. Optionally commit and push to git
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **No Model Registration** | Load models from anywhere at runtime |
+| **Space Deployment** | AgentSpaceRegistry contract (on-chain) |
+| **CLI Tool** | `push-to-coreed` command |
+| **Git Integration** | Git-native workflow like Hugging Face |
+| **Web UI Templates** | Gradio, FastAPI, Express, Custom |
+| **Health Monitoring** | Automatic health checks and status |
+| **Decentralized Storage** | ✅ 0G Storage TS SDK |
+| **On-Chain Registry** | All spaces registered on 0G Chain |
+| **Pause/Sleep Spaces** | Cost optimization for inactive spaces |
+
+---
+
+## 📁 Space Configuration: Git-Based (Like Hugging Face)
+
+Every Coreed Space is configured through Git, exactly like Hugging Face Spaces. The configuration is defined in the **README.md** file with YAML frontmatter.
+
+### Example README.md for a Coreed Space
+
+```yaml
+---
+# Coreed Space Configuration
+title: My AI Agent
+description: A conversational AI using open-source LLMs
+emoji: 🤖
+colorFrom: blue
+colorTo: green
+sdk: gradio
+sdk_version: 4.19.0
+app_file: app.py
+pinned: false
+license: mit
+# Coreed-specific
+template: gradio
+runtime: python
+port: 7860
+healthEndpoint: /health
+autoSleep: true
+sleepTimeout: 3600
+---
+
+# My AI Agent
+
+This space runs a Gradio interface for an AI chatbot. 
+The model is loaded directly from Hugging Face Hub at runtime.
+
+## Features
+- Uses `transformers` library
+- Loads `mistralai/Mistral-7B-Instruct-v0.2` on demand
+- No model weights stored on Coreed
+```
+
+### Required Files for a Coreed Space
+
+```
+my-space/
+├── README.md          # Configuration with YAML frontmatter
+├── app.py             # Your main application (Gradio, FastAPI, Express)
+├── requirements.txt   # Python dependencies
+└── .gitignore         # Standard git ignore
+```
+
+### Space Templates Available
+
+| Template | Runtime | Port | Health Endpoint | Use Case |
+|----------|---------|------|-----------------|----------|
+| **Gradio** | Python | 7860 | `/health` | Interactive UIs, chatbots |
+| **FastAPI** | Python | 8000 | `/health` | REST APIs, backend services |
+| **Express** | Node.js | 3000 | `/health` | Node.js applications |
+| **Custom** | Any | Custom | Custom | Bring your own runtime |
 
 ---
 
@@ -115,47 +157,94 @@ This single command will:
 
 ---
 
-## Usage Examples
+## 🔗 Git Deployment Workflow
 
-### Deploy with Gradio UI
+Coreed follows the same Git-based deployment pattern as Hugging Face Spaces:
+
+### Step 1: Create Your Space Repository
 
 ```bash
-push-to-coreed \
-  --model-path models/qwen-7b.gguf \
-  --model-name "Qwen 7B" \
-  --space-name "Qwen Chatbot" \
+# Create a new git repository for your space
+mkdir my-ai-space
+cd my-ai-space
+git init
+
+# Add your space files
+# - README.md with configuration
+# - app.py (or your main file)
+# - requirements.txt
+
+git add .
+git commit -m "Initial space setup"
+```
+
+### Step 2: Configure for Coreed
+
+Create a **README.md** with the YAML frontmatter configuration (see above).
+
+### Step 3: Deploy to Coreed
+
+```bash
+# Register your space on-chain
+push-to-coreed \\
+  --space-name "My AI Space" \\
+  --git-repo "https://github.com/your-username/my-ai-space" \\
+  --endpoint-url "https://my-ai-space.example.com" \\
   --template gradio
 ```
 
-### Register Model Only
+**Behind the scenes:**
+1. Coreed reads your README.md configuration
+2. Validates the space settings
+3. Registers the space on the AgentSpaceRegistry contract
+4. Your space is now live and discoverable
+
+### Step 4: Update Your Space
 
 ```bash
-push-to-coreed \
-  --model-path models/my-model.gguf \
-  --model-name "My LLM" \
-  --architecture "Qwen2.5" \
-  --parameters 7000000000 \
-  --license "Apache-2.0" \
-  --register-only
+# Make changes to your space
+git add .
+git commit -m "Updated model configuration"
+git push origin main
+
+# Coreed detects the push and updates the space
+# (Webhook integration coming soon)
 ```
 
-### Deploy Existing Model
+---
+
+## 📝 Usage Examples
+
+### Deploy a Space with Any Model
 
 ```bash
-push-to-coreed \
-  --model-id 1 \
-  --space-name "My Chatbot" \
-  --template gradio
+push-to-coreed \\
+  --space-name "Mistral Chatbot" \\
+  --endpoint-url "https://my-gradio-app.example.com" \\
+  --template gradio \\
+  --description "Chatbot using Mistral-7B from Hugging Face Hub"
 ```
 
 ### Deploy with Auto-Sleep
 
 ```bash
-push-to-coreed \
-  --model-path models/my-model.gguf \
-  --space-name "My Chatbot" \
-  --auto-sleep true \
+push-to-coreed \\
+  --space-name "My AI Assistant" \\
+  --endpoint-url "https://my-app.example.com" \\
+  --auto-sleep true \\
   --sleep-timeout 3600  # Sleep after 1 hour of inactivity
+```
+
+### Deploy with Custom Configuration
+
+```bash
+push-to-coreed \\
+  --space-name "API Server" \\
+  --endpoint-url "https://api.example.com" \\
+  --template fastapi \\
+  --port 8000 \\
+  --health-endpoint "/health" \\
+  --description "REST API for AI inference"
 ```
 
 ### Python API
@@ -163,10 +252,10 @@ push-to-coreed \
 ```python
 from coreed_cli import push_to_coreed, CoreedConfig, pause_space, resume_space
 
-# Deploy space
+# Deploy a space (no model registration needed)
 config = CoreedConfig(
-    model_path="models/my-model.gguf",
     space_name="My Chatbot",
+    endpoint_url="https://my-gradio-app.example.com",
     template="gradio",
     auto_sleep=True,
     sleep_timeout=3600  # 1 hour
@@ -174,7 +263,6 @@ config = CoreedConfig(
 
 result = push_to_coreed(config=config)
 print(f"Success: {result.success}")
-print(f"Model ID: {result.model_id}")
 print(f"Space ID: {result.space_id}")
 
 # Pause a space
@@ -195,10 +283,10 @@ const client = new CoreedClient({
   chainId: 16602,
 });
 
-// Deploy space with auto-sleep
+// Deploy space with auto-sleep (no model ID required)
 await client.deploySpace({
   name: 'My Chatbot',
-  modelId: 1,
+  endpointUrl: 'https://my-gradio-app.example.com',
   template: 'gradio',
   autoSleep: true,
   sleepTimeout: 3600
@@ -213,36 +301,39 @@ await client.resumeSpace(1);
 
 ---
 
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 coreed/
 ├── cli/                      # CLI Package
 │   ├── __init__.py           # Package exports
 │   ├── coreed_cli.py        # Main implementation
-│   ├── setup.py             # Package configuration
 │   └── requirements.txt     # Dependencies
 │
-├── contracts/               # Smart Contracts
-│   ├── contracts/
-│   │   ├── AgentRegistry.sol
-│   │   ├── ModelRegistry.sol
-│   │   └── AgentSpaceRegistry.sol
-│   ├── hardhat.config.js
+├── contracts/               # Smart Contracts (0G Chain)
+│   ├── AgentSpaceRegistry.sol  # Primary: Space registry
+│   ├── ModelRegistry.sol      # Legacy: Model registry
+│   ├── AgentRegistry.sol      # Legacy: Agent registry
 │   └── scripts/
 │       └── deploy-all.js
 │
 ├── frontend/                # Next.js Web Application
 │   ├── app/
-│   ├── lib/
+│   │   ├── spaces/          # Spaces browsing and management
+│   │   │   ├── page.tsx    # List all spaces
+│   │   │   └── new/        # Create new space
+│   │   └── layout.tsx      # Main layout
 │   ├── components/
-│   └── public/
+│   │   └── space/          # Space-related components
+│   └── lib/
+│       ├── hooks/          # React hooks
+│       │   └── useWallet.ts # Wallet connection
+│       └── contexts/        # Context providers
 │
-├── templates/               # Agent Space Templates
-│   ├── gradio/              # Interactive (RECOMMENDED)
+├── templates/               # Space Templates
+│   ├── gradio/
 │   │   ├── app.py
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
+│   │   └── Dockerfile
 │   ├── fastapi/
 │   │   ├── main.py
 │   │   └── Dockerfile
@@ -253,29 +344,79 @@ coreed/
 │       └── Dockerfile
 │
 └── docs/                    # Documentation
-    ├── DEPLOYMENT_GUIDE.md
-    ├── USER_GUIDE.md
-    └── COREED_USER_GUIDE.md
+    ├── SPACES_GUIDE.md      # Spaces documentation
+    └── GIT_INTEGRATION.md   # Git workflow details
 ```
 
 ---
 
-## Templates
+## 💡 Use Cases
 
-| Template | Language | Port | Health Endpoint | Best For |
-|----------|----------|------|-----------------|----------|
-| [Gradio](templates/gradio/) | Python | 7860 | `/health` | Interactive UIs, chatbots |
-| [FastAPI](templates/fastapi/) | Python | 8000 | `/health` | REST APIs |
-| [Express](templates/express/) | Node.js | 3000 | `/health` | Node.js apps |
-| [Docker](templates/docker/) | Custom | 8080 | `/health` | Custom runtimes |
+### 1. Deploy a Chatbot with Any Model
+
+```python
+# app.py - Load model from Hugging Face Hub
+from transformers import pipeline
+import gradio as gr
+
+# Load model at runtime (not stored on Coreed)
+pipe = pipeline("text-generation", model="mistralai/Mistral-7B-Instruct-v0.2")
+
+def generate(text):
+    return pipe(text, max_new_tokens=200)[0]["generated_text"]
+
+iface = gr.Interface(fn=generate, inputs="text", outputs="text")
+iface.launch()
+```
+
+### 2. Deploy a REST API
+
+```python
+# main.py - FastAPI with model loading
+from fastapi import FastAPI
+from transformers import pipeline
+
+app = FastAPI()
+model = pipeline("text-classification", model="distilbert-base-uncased-finetuned-sst-2-english")
+
+@app.post("/predict")
+def predict(text: str):
+    return model(text)
+```
+
+### 3. Deploy with Custom Docker
+
+```dockerfile
+# Dockerfile - Custom runtime
+FROM python:3.9-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+
+CMD ["python", "app.py"]
+```
 
 ---
 
-## Documentation
+## 📊 Templates
 
-- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) - How to deploy Coreed for public access
-- [User Guide](docs/COREED_USER_GUIDE.md) - Comprehensive usage guide
-- [Quick Start](docs/QUICKSTART.md) - Quick start tutorial
+| Template | Language | Port | Health Endpoint | Use Case |
+|----------|---------|------|-----------------|----------|
+| **Gradio** | Python | 7860 | `/health` | Interactive UIs, chatbots |
+| **FastAPI** | Python | 8000 | `/health` | REST APIs, backend services |
+| **Express** | Node.js | 3000 | `/health` | Node.js applications |
+| **Custom** | Any | Custom | Custom | Bring your own runtime |
+
+---
+
+## 📚 Documentation
+
+- [Spaces Guide](docs/SPACES_GUIDE.md) - Complete guide to deploying spaces
+- [Git Integration](docs/GIT_INTEGRATION.md) - Git workflow details
+- [Templates Guide](docs/TEMPLATES_GUIDE.md) - Available templates and customization
+- [CLI Reference](docs/CLI_REFERENCE.md) - All CLI commands
 
 ---
 
@@ -305,56 +446,80 @@ AgentSpaceRegistry: 0xedF4958de1e22979EaE3dec3ECb84C4D63cA510A
 
 ---
 
-## Space Management Features
+## 🎛️ Space Management Features
 
-### Pause/Resume Spaces
+### Auto-Sleep for Cost Optimization
 
-Coreed now supports pausing and resuming spaces to save resources:
+Spaces can automatically sleep after a period of inactivity to save resources:
 
 ```bash
-# Pause a space (stops the deployment)
+# Deploy with auto-sleep enabled
+push-to-coreed \\
+  --space-name "My Chatbot" \\
+  --endpoint-url "https://my-app.example.com" \\
+  --auto-sleep true \\
+  --sleep-timeout 3600  # Sleep after 1 hour of inactivity
+```
+
+### Manual Pause/Resume
+
+```bash
+# Pause a space (stops serving requests)
 push-to-coreed --space-id 1 --pause
 
 # Resume a paused space
 push-to-coreed --space-id 1 --resume
 ```
 
-### Auto-Sleep for Inactive Spaces
-
-Spaces can automatically go to sleep after a period of inactivity:
+### Update Space Settings
 
 ```bash
-# Deploy with auto-sleep enabled
-push-to-coreed \
-  --model-path models/my-model.gguf \
-  --space-name "My Chatbot" \
-  --auto-sleep true \
-  --sleep-timeout 3600  # Sleep after 1 hour
+# Update endpoint URL
+push-to-coreed --space-id 1 --update-endpoint "https://new-url.example.com"
 
-# Update auto-sleep settings for existing space
-push-to-coreed \
-  --space-id 1 \
-  --set-auto-sleep true \
-  --sleep-timeout 7200  # Change to 2 hours
-
-# Disable auto-sleep
-push-to-coreed \
-  --space-id 1 \
-  --set-auto-sleep false
+# Update sleep settings
+push-to-coreed --space-id 1 --set-auto-sleep true --sleep-timeout 7200
 ```
 
 ---
 
-## License
+## 🌐 Web Interface Features
+
+The Coreed frontend provides:
+
+- **Browse Spaces**: Discover all deployed agent spaces
+- **Create Spaces**: Deploy new spaces with Git integration
+- **Space Management**: Pause, resume, configure auto-sleep
+- **Health Monitoring**: View status and uptime
+- **Wallet Integration**: Connect any EIP-1193 compatible wallet
+
+### Supported Wallets
+
+✅ MetaMask, OKX Wallet, Trust Wallet, WalletConnect, Coinbase Wallet, Rabby, Ledger Live, imToken, Brave Wallet, and all EIP-1193 compatible wallets.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
+
+## 📜 License
 
 MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
-**Coreed v3.0: AI Deployment Platform for 0G Chain** 
+**Coreed: AI Agent Spaces on 0G Chain**
 
-*✅ Properly Built on 0G Chain using Official SDKs*
-
-*🏗️ Currently on 0G Galileo Testnet*
+*🎯 Spaces-First Architecture*
+*🚀 No Model Registration Required*
+*🔗 Git-Based Deployment*
+*✅ Built on 0G Galileo Testnet*
 
 *Last updated: June 2026*
