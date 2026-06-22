@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { StatusStrip } from "@/components/StatusStrip";
 import { HealthBadge } from "@/components/space/HealthBadge";
+import { ComputeStatus } from "@/components/space/ComputeStatus";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentRegistry } from "@/lib/useAgentRegistry";
@@ -266,6 +267,9 @@ export default function SpaceDetailPage() {
             {space.description || "No description provided"}
           </p>
         </div>
+
+        {/* 0G Compute Status Section */}
+        <ComputeStatus spaceId={spaceId} />
 
         <div className="rounded border border-coreed-line bg-coreed-panel p-5 mb-8">
           <h3 className="font-mono text-xs text-coreed-sage mb-3">

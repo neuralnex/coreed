@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useWalletContext } from "@/lib/contexts/WalletContext";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
-import { Check, ChevronDown, Code, Container, FileText, GitBranch, Globe, Lock, Users } from "lucide-react";
+import { Check, Code, Container, FileText, GitBranch, Globe, Lock, Users } from "lucide-react";
 
 export default function NewSpacePage() {
   const router = useRouter();
@@ -14,9 +14,7 @@ export default function NewSpacePage() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [gitRepoUrl, setGitRepoUrl] = useState("");
   const [showSdkDropdown, setShowSdkDropdown] = useState(false);
-  const [showHardwareDropdown, setShowHardwareDropdown] = useState(false);
   const [showVisibilityDropdown, setShowVisibilityDropdown] = useState(false);
   
   // Form state
@@ -24,7 +22,6 @@ export default function NewSpacePage() {
     name: "",
     description: "",
     sdk: "gradio",
-    hardware: "cpu",
     visibility: "public",
     license: "mit",
   });
@@ -36,20 +33,12 @@ export default function NewSpacePage() {
     { value: "static", label: "Static", icon: FileText },
   ];
 
-  // Hardware options
-  const hardwareOptions = [
-    { value: "cpu", label: "CPU (Free)", description: "Basic CPU instance" },
-    { value: "gpu", label: "GPU", description: "GPU instance for heavy models", disabled: true },
-    { value: "t4", label: "T4 GPU", description: "T4 GPU for moderate workloads", disabled: true },
-    { value: "a100", label: "A100 GPU", description: "High-end A100 GPU", disabled: true },
-  ];
-
   // Visibility options
   const visibilityOptions = [
-    { value: "public", label: "Public", description: "Anyone can see this Space", icon: Globe },
+    { value: "public", label: "Public", description: "Anyone can see this Space", icon: Globe, pro: false },
     { value: "protected", label: "Protected", description: "App is public, code is private", icon: Lock, pro: true },
     { value: "private", label: "Private", description: "Only you can see and access", icon: Users, pro: true },
-  ];
+  ] as const;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -61,11 +50,6 @@ export default function NewSpacePage() {
     setShowSdkDropdown(false);
   };
 
-  const handleHardwareSelect = (hardware: string) => {
-    setFormData(prev => ({ ...prev, hardware: hardware }));
-    setShowHardwareDropdown(false);
-  };
-
   const handleVisibilitySelect = (visibility: string) => {
     setFormData(prev => ({ ...prev, visibility: visibility }));
     setShowVisibilityDropdown(false);
@@ -74,7 +58,7 @@ export default function NewSpacePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isConnected || !signer) {
+    if (!isConnected || !signer || !address) {
       setError("Please connect your wallet first");
       return;
     }
@@ -88,19 +72,72 @@ export default function NewSpacePage() {
     setError(null);
 
     try {
-      // Deploy the space
-      const result = await deploySpace(signer, {
-        name: formData.name,
-        description: formData.description,
-        version: "1.0.0",
-        modelId: "0", // No model registration needed
-        endpointUrl: gitRepoUrl || `https://${formData.name.toLowerCase().replace(/\s+/g, '-')}.coreed.ai`
+      const slug = formData.name.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+      const endpointUrl = `https://coreed.app/${slug}`;
+
+      let onChainResult = null;
+      
+      // ========================================================================
+      // STEP 1: Try on-chain registration (optional for spaces-first approach)
+      // ========================================================================
+      try {
+        onChainResult = await deploySpace(signer, {
+          name: formData.name,
+          description: formData.description,
+          version: "1.0.0",
+          modelId: 0, // No model registration needed - pass as number for uint256
+          endpointUrl
+        });
+      } catch (onChainError: any) {
+        console.log('On-chain registration skipped (spaces-first mode):', onChainError.message);
+        // Continue without on-chain registration - spaces-first allows this
+      }
+
+      // ========================================================================
+      // STEP 2: Create Git repo and deploy to 0G Compute (main workflow)
+      // ========================================================================
+      const computeResponse = await fetch('/api/spaces/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          sdk: formData.sdk,
+          template: formData.sdk === 'gradio' ? 'blank' : undefined,
+          owner: address,
+          spaceId: onChainResult?.spaceId, // Optional - might be undefined
+          spaceNameForUrl: slug
+        })
       });
+
+      const computeData = await computeResponse.json();
 
       setLoading(false);
       
-      // Redirect to the new space
-      router.push(`/spaces/${result.spaceId}`);
+      // Check if space creation was successful
+      if (!computeResponse.ok || !computeData.success) {
+        // Git/Compute failed
+        setError(computeData.error || 'Space creation failed');
+        sessionStorage.setItem('lastComputeError', JSON.stringify(computeData));
+        // Still redirect to spaces list, but user can retry
+        router.push('/spaces');
+        return;
+      }
+
+      // Store complete info in session storage to show on space page
+      const spaceId = onChainResult?.spaceId || slug; // Use slug as spaceId if no on-chain registration
+      sessionStorage.setItem('lastSpaceInfo', JSON.stringify({
+        spaceId: spaceId,
+        compute: computeData.compute,
+        deployment: computeData.deployment,
+        repo: computeData.space?.gitRepo,
+        onChainRegistered: !!onChainResult
+      }));
+      
+      // Redirect to the new space with success
+      router.push(`/spaces/${spaceId}`);
       
     } catch (err) {
       setLoading(false);
@@ -108,7 +145,7 @@ export default function NewSpacePage() {
     }
   };
 
-  const isFormValid = formData.name && gitRepoUrl;
+  const isFormValid = formData.name && address;
 
   return (
     <main className="mx-auto flex max-w-2xl flex-1 flex-col px-6 py-12">
@@ -117,6 +154,9 @@ export default function NewSpacePage() {
         <h1 className="text-3xl font-bold text-white mb-2">Create a new Space</h1>
         <p className="text-gray-400 text-sm">
           Spaces are Git repositories that host application code for Machine Learning demos.
+        </p>
+        <p className="text-gray-400 text-sm mt-1">
+          Enter a name below and we&apos;ll create a Git repository on the platform automatically.
         </p>
         <p className="text-gray-400 text-sm mt-1">
           You can build Spaces with Python libraries like Gradio, or using Docker images.
@@ -273,83 +313,6 @@ export default function NewSpacePage() {
             </div>
           </div>
         )}
-
-        {/* Git Repository */}
-        <div>
-          <label className="block text-sm font-medium text-white mb-2">
-            Git Repository *
-          </label>
-          <div className="relative">
-            <Code className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input
-              type="url"
-              value={gitRepoUrl}
-              onChange={(e) => setGitRepoUrl(e.target.value)}
-              placeholder="https://github.com/your-username/your-space-name"
-              required
-              className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <p className="text-gray-500 text-xs mt-1">
-            Your Space will be deployed from this Git repository. 
-            Push changes to update your Space automatically.
-          </p>
-        </div>
-
-        {/* Space Hardware */}
-        <div>
-          <label className="block text-sm font-medium text-white mb-2">
-            Space hardware
-          </label>
-          <p className="text-gray-500 text-sm mb-3">
-            You can switch to a different hardware at any time in your Space settings.
-          </p>
-          
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowHardwareDropdown(!showHardwareDropdown)}
-              className="w-full flex items-center justify-between p-4 bg-gray-900 border border-gray-700 rounded-lg hover:border-gray-600 transition-colors text-left"
-            >
-              <div>
-                <div className="font-medium text-white">
-                  {hardwareOptions.find(h => h.value === formData.hardware)?.label || formData.hardware}
-                </div>
-                <div className="text-gray-500 text-sm">
-                  {hardwareOptions.find(h => h.value === formData.hardware)?.description}
-                </div>
-              </div>
-              <ChevronDown className="w-5 h-5 text-gray-500" />
-            </button>
-            
-            {showHardwareDropdown && (
-              <div className="absolute z-10 mt-1 w-full bg-gray-900 border border-gray-700 rounded-lg shadow-lg">
-                {hardwareOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleHardwareSelect(option.value)}
-                    disabled={option.disabled}
-                    className={`w-full flex items-center gap-4 p-4 text-left hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed ${
-                      formData.hardware === option.value ? "bg-blue-900/20" : ""
-                    }`}
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium text-white">{option.label}</div>
-                      <div className="text-gray-500 text-sm">{option.description}</div>
-                    </div>
-                    {formData.hardware === option.value && (
-                      <Check className="w-5 h-5 text-blue-500" />
-                    )}
-                    {option.pro && (
-                      <span className="px-2 py-1 bg-yellow-500/20 text-yellow-500 text-xs rounded">PRO</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Visibility */}
         <div>
