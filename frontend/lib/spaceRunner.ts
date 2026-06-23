@@ -69,66 +69,79 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
 
     const port = SDK_PORTS[sdk] || 8080;
 
-    // Install dependencies first
-    installDependencies(repoPath, sdk).then(() => {
-      const mainFile = sdk === 'gradio' ? 'app.py' :
-                       sdk === 'fastapi' ? 'main.py' :
-                       sdk === 'express' ? 'index.js' :
-                       'index.html';
-
-      const mainPath = path.join(repoPath, mainFile);
-
-      if (!fs.existsSync(mainPath)) {
-        resolve({ success: false, port, error: `Main file ${mainFile} not found` });
-        return;
-      }
-
-      // Load space-specific .env file if it exists
-      const spaceEnv: Record<string, string> = {};
-      const envPath = path.join(repoPath, '.env');
-      if (fs.existsSync(envPath)) {
-        try {
-          const envContent = fs.readFileSync(envPath, 'utf8');
-          envContent.split(/\r?\n/).forEach((line) => {
-            const trimmed = line.trim();
-            if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-              const eqIdx = trimmed.indexOf('=');
-              const key = trimmed.substring(0, eqIdx).trim();
-              const value = trimmed.substring(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
-              if (key) {
-                spaceEnv[key] = value;
-              }
+      // Install dependencies first
+      installDependencies(repoPath, sdk).then(() => {
+        // Stop any other running spaces right before spawning to free up ports and resources
+        for (const [id, spaceProc] of runningSpaces.entries()) {
+          if (id !== spaceId) {
+            console.log(`Stopping running space ${id} to free up port/resources for ${spaceId}`);
+            try {
+              spaceProc.process.kill('SIGTERM');
+            } catch (e) {
+              console.error(`Error killing process for space ${id}:`, e);
             }
-          });
-        } catch (err) {
-          console.error(`Error reading space .env file at ${envPath}:`, err);
+            runningSpaces.delete(id);
+          }
         }
-      }
 
-      const command = sdk === 'gradio' || sdk === 'fastapi' ? 'python' : 'node';
-      const script = mainFile;
+        const mainFile = sdk === 'gradio' ? 'app.py' :
+                         sdk === 'fastapi' ? 'main.py' :
+                         sdk === 'express' ? 'index.js' :
+                         'index.html';
 
-      console.log(`Starting space ${spaceId} with ${command} ${script} on port ${port}`);
+        const mainPath = path.join(repoPath, mainFile);
 
-      const spaceProcess = spawn(command, [script], {
-        cwd: repoPath,
-        stdio: ['ignore', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          PYTHONUNBUFFERED: '1',
-          ...spaceEnv,
-          OG_COMPUTE_API_KEY: spaceEnv.OG_COMPUTE_API_KEY || process.env.OG_COMPUTE_API_KEY || '',
-          PATH: process.env.PATH || ''
+        if (!fs.existsSync(mainPath)) {
+          resolve({ success: false, port, error: `Main file ${mainFile} not found` });
+          return;
         }
-      });
 
-      let started = false;
-      const timeout = setTimeout(() => {
-        if (!started) {
-          spaceProcess.kill();
-          resolve({ success: false, port, error: 'Space failed to start within timeout' });
+        // Load space-specific .env file if it exists
+        const spaceEnv: Record<string, string> = {};
+        const envPath = path.join(repoPath, '.env');
+        if (fs.existsSync(envPath)) {
+          try {
+            const envContent = fs.readFileSync(envPath, 'utf8');
+            envContent.split(/\r?\n/).forEach((line) => {
+              const trimmed = line.trim();
+              if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+                const eqIdx = trimmed.indexOf('=');
+                const key = trimmed.substring(0, eqIdx).trim();
+                const value = trimmed.substring(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+                if (key) {
+                  spaceEnv[key] = value;
+                }
+              }
+            });
+          } catch (err) {
+            console.error(`Error reading space .env file at ${envPath}:`, err);
+          }
         }
-      }, 10000);
+
+        const command = sdk === 'gradio' || sdk === 'fastapi' ? 'python' : 'node';
+        const script = mainFile;
+
+        console.log(`Starting space ${spaceId} with ${command} ${script} on port ${port}`);
+
+        const spaceProcess = spawn(command, [script], {
+          cwd: repoPath,
+          stdio: ['ignore', 'pipe', 'pipe'],
+          env: {
+            ...process.env,
+            PYTHONUNBUFFERED: '1',
+            ...spaceEnv,
+            OG_COMPUTE_API_KEY: spaceEnv.OG_COMPUTE_API_KEY || process.env.OG_COMPUTE_API_KEY || '',
+            PATH: process.env.PATH || ''
+          }
+        });
+
+        let started = false;
+        const timeout = setTimeout(() => {
+          if (!started) {
+            spaceProcess.kill();
+            resolve({ success: false, port, error: 'Space failed to start within timeout' });
+          }
+        }, 35000);
 
       spaceProcess.stdout?.on('data', (data) => {
         const output = data.toString();
