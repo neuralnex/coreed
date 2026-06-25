@@ -211,6 +211,13 @@ import { execSync } from 'child_process';
 
 export const startSpace = (spaceId: string, repoPath: string, sdk: string): Promise<{ success: boolean; port: number; error?: string }> => {
   return new Promise(async (resolve) => {
+    const isServerless = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.NETLIFY;
+    if (isServerless) {
+      console.log(`[Serverless Fallback] Bypassing space runner startup for space: ${spaceId} (running in serverless runtime)`);
+      resolve({ success: true, port: SDK_PORTS[sdk] || 8080 });
+      return;
+    }
+
     if (runningSpaces.has(spaceId)) {
       const existing = runningSpaces.get(spaceId);
       if (existing) {
