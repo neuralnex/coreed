@@ -24,9 +24,9 @@ jest.mock('child_process', () => ({
 
 jest.mock('@/lib/zeroGSpaceManager', () => ({
   zeroGSpaceManager: {
-    downloadAndUnpack: jest.fn().mockResolvedValue(true),
-    downloadDependencyCache: jest.fn().mockResolvedValue(true),
-    uploadDependencyCache: jest.fn().mockResolvedValue({ rootHash: '0xmockroot' })
+    downloadAndUnpack: jest.fn(() => Promise.resolve()) as any,
+    downloadDependencyCache: jest.fn(() => Promise.resolve(true)) as any,
+    uploadDependencyCache: jest.fn(() => Promise.resolve({ rootHash: '0xmockroot', txHash: '0xmocktx' })) as any
   }
 }));
 
