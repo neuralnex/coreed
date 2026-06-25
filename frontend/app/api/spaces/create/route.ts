@@ -262,16 +262,23 @@ export async function POST(request: Request) {
 
     const spaceSlug = slug || name.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const appPort = sdk === 'gradio' ? 7860 : sdk === 'fastapi' ? 8000 : sdk === 'express' ? 3000 : 8080;
-    const reposRoot = path.join(process.cwd(), REPO_STORAGE_PATH);
+    const isServerless = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.NETLIFY;
+    const reposRoot = isServerless 
+      ? path.join('/tmp', 'coreed', 'repos')
+      : path.join(process.cwd(), REPO_STORAGE_PATH);
     const repoPath = path.join(reposRoot, owner, spaceSlug);
 
     fs.mkdirSync(repoPath, { recursive: true });
 
-    execSync('git init', { cwd: repoPath, stdio: 'pipe' });
-    execSync('git config receive.denyCurrentBranch ignore', { cwd: repoPath, stdio: 'pipe' });
-    execSync('git checkout -b main', { cwd: repoPath, stdio: 'pipe' });
-    execSync('git config user.email "coreed@0g.ai"', { cwd: repoPath, stdio: 'pipe' });
-    execSync('git config user.name "Coreed Platform"', { cwd: repoPath, stdio: 'pipe' });
+    try {
+      execSync('git init', { cwd: repoPath, stdio: 'pipe' });
+      execSync('git config receive.denyCurrentBranch ignore', { cwd: repoPath, stdio: 'pipe' });
+      execSync('git checkout -b main', { cwd: repoPath, stdio: 'pipe' });
+      execSync('git config user.email "coreed@0g.ai"', { cwd: repoPath, stdio: 'pipe' });
+      execSync('git config user.name "Coreed Platform"', { cwd: repoPath, stdio: 'pipe' });
+    } catch (gitErr: any) {
+      console.warn('[Git Fallback] Git initialization bypassed (running in serverless or git is not installed):', gitErr.message);
+    }
 
     const readmeContent = `---
 title: ${name}
@@ -304,8 +311,12 @@ Your app uses 0G Compute Router for AI inference:
 
     scaffoldTemplate(repoPath, sdk, template, name, appPort);
 
-    execSync('git add .', { cwd: repoPath, stdio: 'pipe' });
-    execSync('git commit -m "Initial space scaffold - 0G Powered"', { cwd: repoPath, stdio: 'pipe' });
+    try {
+      execSync('git add .', { cwd: repoPath, stdio: 'pipe' });
+      execSync('git commit -m "Initial space scaffold - 0G Powered"', { cwd: repoPath, stdio: 'pipe' });
+    } catch (gitErr: any) {
+      console.warn('[Git Fallback] Git commit bypassed (running in serverless or git is not installed):', gitErr.message);
+    }
 
     const headers = request.headers;
     const host = headers.get('host') || headers.get('x-forwarded-host') || 'localhost';
