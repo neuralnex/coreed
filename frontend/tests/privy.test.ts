@@ -4,6 +4,32 @@ import agentSpaceRegistryAbi from '@/lib/agentSpaceRegistryAbi.json';
 
 const originalConsoleError = console.error;
 
+// Mock child_process and 0G Space Manager to isolate tests
+jest.mock('child_process', () => ({
+  exec: jest.fn().mockImplementation((cmd: any, options: any, cb: any) => {
+    const callback = typeof options === 'function' ? options : cb;
+    if (callback) callback(null, 'mock stdout', '');
+    return { stdout: { on: jest.fn() }, stderr: { on: jest.fn() }, on: jest.fn(), kill: jest.fn() };
+  }),
+  spawn: jest.fn().mockImplementation(() => {
+    return {
+      stdout: { on: jest.fn() },
+      stderr: { on: jest.fn() },
+      on: jest.fn(),
+      kill: jest.fn()
+    };
+  }),
+  execSync: jest.fn().mockReturnValue('mock stdout')
+}));
+
+jest.mock('@/lib/zeroGSpaceManager', () => ({
+  zeroGSpaceManager: {
+    downloadAndUnpack: jest.fn().mockResolvedValue(true),
+    downloadDependencyCache: jest.fn().mockResolvedValue(true),
+    uploadDependencyCache: jest.fn().mockResolvedValue({ rootHash: '0xmockroot' })
+  }
+}));
+
 // Mock database helper
 jest.mock('@/lib/db', () => {
   const actual = jest.requireActual('@/lib/db') as any;
@@ -408,5 +434,84 @@ describe('On-Chain deploy-onchain Relay Endpoint Tests', () => {
     expect(body.spaceId).toBe('123');
     expect(body.txHash).toBe('0xmockedsandboxtxhash');
     expect(mockWalletSendTransaction).toHaveBeenCalled();
+  });
+});
+
+describe('Spaces Sleep & Wake-on-Demand Manager Tests', () => {
+  let spaceRunner: any;
+  let dbQuery: any;
+
+  beforeAll(() => {
+    (global as any).mockPoolState = {};
+    jest.resetModules();
+    spaceRunner = require('@/lib/spaceRunner');
+    dbQuery = require('@/lib/db').query;
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should track and update space activity successfully', async () => {
+    dbQuery.mockResolvedValue({ rowCount: 1 });
+    
+    await spaceRunner.updateLastActivity('test-space');
+    
+    expect(dbQuery).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE spaces SET last_activity'),
+      [expect.any(Number), 'test-space']
+    );
+  });
+
+  it('should stop running space and update sleep state', async () => {
+    dbQuery.mockResolvedValue({ rowCount: 1 });
+    
+    const result = spaceRunner.stopSpace('test-space');
+    expect(result).toBe(false); // because it was not in active runningSpaces Map
+    
+    expect(dbQuery).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE spaces SET is_asleep = $1, status = $2'),
+      [true, 'deployed', 'test-space']
+    );
+  });
+
+  it('should get running spaces maps and start checks', () => {
+    expect(spaceRunner.getRunningSpaces).toBeDefined();
+    expect(spaceRunner.startIdleCheckInterval).toBeDefined();
+  });
+
+  it('should trigger startSpace when proxy is requested and space is stopped', async () => {
+    // 1. Mock getSpaceById to return a valid space
+    dbQuery.mockResolvedValue({
+      rows: [{
+        space_id: 'test-space',
+        name: 'Test Space',
+        slug: 'test-space',
+        sdk: 'gradio',
+        owner: '0x123',
+        git_repo_path: '/tmp/test-space'
+      }]
+    });
+
+    // 2. Mock startSpace spy
+    jest.spyOn(spaceRunner, 'startSpace').mockResolvedValue({ success: true, port: 7860 });
+    jest.spyOn(spaceRunner, 'getSpacePort').mockReturnValue(undefined);
+
+    const proxyRoute = require('@/app/api/spaces/[spaceId]/proxy/[[...path]]/route');
+    const request = new Request('http://localhost/api/spaces/test-space/proxy', {
+      method: 'GET'
+    });
+
+    const context = {
+      params: Promise.resolve({ spaceId: 'test-space' })
+    };
+
+    try {
+      await proxyRoute.GET(request, context);
+    } catch (e) {
+      // catch connection errors if it tries to dial the un-listened local port
+    }
+
+    expect(spaceRunner.startSpace).toHaveBeenCalledWith('test-space', '/tmp/test-space', 'gradio');
   });
 });

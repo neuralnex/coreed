@@ -1,48 +1,56 @@
 import { NextResponse } from 'next/server';
 import { getSpaceById } from '@/lib/spacesStore';
-import { getSpacePort } from '@/lib/spaceRunner';
+import { getSpacePort, startSpace, updateLastActivity } from '@/lib/spaceRunner';
 import http from 'http';
 import https from 'https';
 
-export async function GET(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+export async function GET(request: Request, context: { params: Promise<{ spaceId: string, path?: string[] }> }) {
   return handleProxyRequest(request, context);
 }
 
-export async function POST(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+export async function POST(request: Request, context: { params: Promise<{ spaceId: string, path?: string[] }> }) {
   return handleProxyRequest(request, context);
 }
 
-export async function PUT(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+export async function PUT(request: Request, context: { params: Promise<{ spaceId: string, path?: string[] }> }) {
   return handleProxyRequest(request, context);
 }
 
-export async function DELETE(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+export async function DELETE(request: Request, context: { params: Promise<{ spaceId: string, path?: string[] }> }) {
   return handleProxyRequest(request, context);
 }
 
-export async function PATCH(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }) {
+export async function PATCH(request: Request, context: { params: Promise<{ spaceId: string, path?: string[] }> }) {
   return handleProxyRequest(request, context);
 }
 
-async function handleProxyRequest(request: Request, context: { params: Promise<{ spaceId: string, path: string[] }> }): Promise<NextResponse> {
+async function handleProxyRequest(request: Request, context: { params: Promise<{ spaceId: string, path?: string[] }> }): Promise<NextResponse> {
   try {
     const { spaceId, path: pathParts } = await context.params;
     
-    const proxyPath = '/' + pathParts.join('/');
+    const proxyPath = pathParts ? '/' + pathParts.join('/') : '/';
 
     const storedSpace = await getSpaceById(spaceId);
     if (!storedSpace) {
       return NextResponse.json({ error: 'Space not found' }, { status: 404 });
     }
 
-    const port = getSpacePort(spaceId);
+    let port = getSpacePort(spaceId);
     if (!port) {
-      return NextResponse.json({ 
-        error: 'Space is not running',
-        message: 'Start the space first',
-        sdk: storedSpace.sdk
-      }, { status: 503 });
+      console.log(`[Proxy] Space ${spaceId} is not running. Waking up space on-demand...`);
+      const startResult = await startSpace(spaceId, storedSpace.gitRepo.repoPath, storedSpace.sdk);
+      if (startResult.success) {
+        port = startResult.port;
+      } else {
+        return NextResponse.json({ 
+          error: 'Failed to wake up space',
+          message: startResult.error || 'Failed to start space'
+        }, { status: 503 });
+      }
     }
+
+    // Update last activity
+    updateLastActivity(spaceId);
 
     const targetUrl = new URL(`http://localhost:${port}${proxyPath}`);
     targetUrl.search = new URL(request.url).search;

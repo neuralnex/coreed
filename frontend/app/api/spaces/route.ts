@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getAllSpaces, getSpaceById, getSpacesByOwner } from '@/lib/spacesStore';
+import { getAllSpaces, getSpaceById, getSpacesByOwner, deleteSpace } from '@/lib/spacesStore';
+import { stopSpace, clearSpaceLogs } from '@/lib/spaceRunner';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * GET /api/spaces
@@ -42,12 +45,27 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'spaceId parameter is required' }, { status: 400 });
   }
   
-  // Note: Actual file deletion would need to be implemented
-  // For now, just remove from in-memory store
-  // In production, this should delete the Git repo files too
+  // 1. Stop running child processes
+  stopSpace(spaceId);
+  
+  // 2. Clear log buffers from memory
+  clearSpaceLogs(spaceId);
+  
+  // 3. Clean up directory files
+  const computeNodePath = path.join(process.cwd(), 'storage', 'compute-nodes', spaceId);
+  if (fs.existsSync(computeNodePath)) {
+    try {
+      fs.rmSync(computeNodePath, { recursive: true, force: true });
+    } catch (err: any) {
+      console.error(`Failed to delete compute node path ${computeNodePath}:`, err.message);
+    }
+  }
+  
+  // 4. Remove from PostgreSQL/In-memory stores
+  const deleted = await deleteSpace(spaceId);
   
   return NextResponse.json({
-    success: true,
-    message: 'Space deletion would remove from in-memory store. Implement file cleanup for production.'
+    success: deleted,
+    message: deleted ? 'Space and associated compute resources successfully cleaned up.' : 'Space not found in local registries.'
   });
 }

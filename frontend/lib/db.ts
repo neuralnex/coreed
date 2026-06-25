@@ -60,8 +60,18 @@ export async function initDb() {
           port INTEGER,
           process_id VARCHAR(64),
           storage_root_hash VARCHAR(255),
-          storage_tx_hash VARCHAR(255)
+          storage_tx_hash VARCHAR(255),
+          is_asleep BOOLEAN DEFAULT FALSE,
+          sleep_timeout INTEGER DEFAULT 300,
+          last_activity BIGINT DEFAULT 0
         );
+      `);
+
+      // Ensure columns exist on already created tables
+      await client.query(`
+        ALTER TABLE spaces ADD COLUMN IF NOT EXISTS is_asleep BOOLEAN DEFAULT FALSE;
+        ALTER TABLE spaces ADD COLUMN IF NOT EXISTS sleep_timeout INTEGER DEFAULT 300;
+        ALTER TABLE spaces ADD COLUMN IF NOT EXISTS last_activity BIGINT DEFAULT 0;
       `);
 
       console.log('[Postgres] Schema tables verified & migrated.');

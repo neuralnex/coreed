@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { StatusStrip } from "@/components/StatusStrip";
 import { useWalletContext } from "@/lib/contexts/WalletContext";
 import { FileBrowser } from "@/components/space/FileBrowser";
+import { SleepControls } from "@/components/space";
 import { useAgentSpaceRegistry } from "@/lib/useAgentSpaceRegistry";
 import { useModelRegistry } from "@/lib/useModelRegistry";
 import { useAgentRegistry } from "@/lib/useAgentRegistry";
@@ -452,7 +453,7 @@ export default function SpaceDetailPage() {
               </button>
 
               <a 
-                href={spaceRunning ? `http://localhost:${spacePort || 7860}` : space.endpointUrl} 
+                href={spaceRunning ? `/api/spaces/${spaceId}/proxy/` : space.endpointUrl} 
                 target="_blank" 
                 rel="noreferrer"
                 className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold font-mono text-white/80 transition-all"
@@ -524,7 +525,7 @@ export default function SpaceDetailPage() {
                 {spaceRunning ? (
                   <div className="border border-white/10 rounded-2xl overflow-hidden bg-white h-[650px] shadow-2xl relative">
                     <iframe
-                      src={`http://localhost:${spacePort || 7860}`}
+                      src={`/api/spaces/${spaceId}/proxy/`}
                       className="w-full h-full border-none"
                       title={space.name}
                     />
@@ -713,6 +714,22 @@ export default function SpaceDetailPage() {
                         <span>{spaceActionLoading === 'install-deps' ? 'Installing...' : 'Synchronize Deps'}</span>
                       </button>
                     </div>
+                  </div>
+
+                  <div className="bg-[#0c0c0d] border border-white/10 rounded-2xl p-5">
+                    <h3 className="text-sm font-semibold mb-4 text-white">Sleep & Inactivity Settings</h3>
+                    <p className="text-xs text-white/50 mb-5 leading-relaxed">
+                      Configure the inactivity sleep parameters. The space registry automatically puts the container to sleep after the specified duration of inactivity to save compute resources.
+                    </p>
+                    <SleepControls
+                      spaceId={spaceId}
+                      signer={signer}
+                      isAsleep={space.isAsleep ?? false}
+                      isPaused={!space.isActive}
+                      onActionComplete={() => {
+                        refreshSpace();
+                      }}
+                    />
                   </div>
 
                   <div className="bg-[#0c0c0d] border border-white/10 rounded-2xl p-5">

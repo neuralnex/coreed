@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { zeroGSpaceManager } from './zeroGSpaceManager';
-import { getSpaceById } from './spacesStore';
+import { getSpaceById, updateSpaceActivity, updateSpaceSleepStatus, updateSpaceStatus } from './spacesStore';
 
 export interface LogEntry {
   timestamp: string;
@@ -20,6 +20,8 @@ interface SpaceProcess {
 
 const runningSpaces = new Map<string, SpaceProcess>();
 const spaceLogs = new Map<string, LogEntry[]>();
+const lastSpaceActivity = new Map<string, number>();
+const startingSpaces = new Map<string, Promise<{ success: boolean; port: number; error?: string }>>();
 
 const SDK_PORTS: Record<string, number> = {
   gradio: 7860,
@@ -210,19 +212,20 @@ export const installDependencies = (repoPath: string, sdk: string, spaceId?: str
 import { execSync } from 'child_process';
 
 export const startSpace = (spaceId: string, repoPath: string, sdk: string): Promise<{ success: boolean; port: number; error?: string }> => {
-  return new Promise(async (resolve) => {
+  if (runningSpaces.has(spaceId)) {
+    const existing = runningSpaces.get(spaceId);
+    return Promise.resolve({ success: true, port: existing!.port });
+  }
+
+  if (startingSpaces.has(spaceId)) {
+    return startingSpaces.get(spaceId)!;
+  }
+
+  const startPromise = new Promise<{ success: boolean; port: number; error?: string }>(async (resolve) => {
     const isServerless = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.NETLIFY;
     if (isServerless) {
       console.log(`[Serverless Fallback] Bypassing space runner startup for space: ${spaceId} (running in serverless runtime)`);
       resolve({ success: true, port: SDK_PORTS[sdk] || 8080 });
-      return;
-    }
-
-    if (runningSpaces.has(spaceId)) {
-      const existing = runningSpaces.get(spaceId);
-      if (existing) {
-        resolve({ success: true, port: existing.port });
-      }
       return;
     }
 
@@ -323,10 +326,14 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
     for (const [id, spaceProc] of runningSpaces.entries()) {
       if (id !== spaceId) {
         addSpaceLog(spaceId, 'system', `[System] Stopping space ${id} to free up port/resources for ${spaceId}`);
-        try {
-          spaceProc.process.kill('SIGTERM');
-        } catch (e) {
-          console.error(`Error killing process for space ${id}:`, e);
+        if (spaceProc.process.pid) {
+          killProcessTree(spaceProc.process.pid);
+        } else {
+          try {
+            spaceProc.process.kill('SIGTERM');
+          } catch (e) {
+            console.error(`Error killing process for space ${id}:`, e);
+          }
         }
         runningSpaces.delete(id);
       }
@@ -395,6 +402,9 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
         started = true;
         clearTimeout(timeout);
         runningSpaces.set(spaceId, { process: spaceProcess, repoPath: computeNodePath, port, sdk });
+        lastSpaceActivity.set(spaceId, Date.now());
+        updateSpaceSleepStatus(spaceId, false).catch(() => {});
+        updateSpaceActivity(spaceId, Date.now()).catch(() => {});
         resolve({ success: true, port });
       }
     });
@@ -407,25 +417,67 @@ export const startSpace = (spaceId: string, repoPath: string, sdk: string): Prom
     spaceProcess.on('close', (code) => {
       clearTimeout(timeout);
       runningSpaces.delete(spaceId);
+      lastSpaceActivity.delete(spaceId);
+      updateSpaceSleepStatus(spaceId, true).catch(() => {});
       addSpaceLog(spaceId, 'system', `[System] Space process closed with exit code ${code}`);
     });
 
     spaceProcess.on('error', (err) => {
       clearTimeout(timeout);
+      runningSpaces.delete(spaceId);
+      lastSpaceActivity.delete(spaceId);
+      updateSpaceSleepStatus(spaceId, true).catch(() => {});
       addSpaceLog(spaceId, 'error', `[Error] Spawn error: ${err.message}`);
       resolve({ success: false, port, error: err.message });
     });
   });
+
+  startingSpaces.set(spaceId, startPromise);
+  startPromise.finally(() => {
+    startingSpaces.delete(spaceId);
+  });
+
+  return startPromise;
+};
+
+const killProcessTree = (pid: number) => {
+  try {
+    if (process.platform === 'win32') {
+      execSync(`taskkill /F /T /PID ${pid}`, { stdio: 'ignore' });
+    } else {
+      try {
+        execSync(`pkill -P ${pid}`, { stdio: 'ignore' });
+      } catch {}
+      try {
+        process.kill(pid, 'SIGKILL');
+      } catch {}
+    }
+  } catch (err: any) {
+    console.error(`Failed to kill process tree for PID ${pid}:`, err.message);
+  }
 };
 
 export const stopSpace = (spaceId: string): boolean => {
   const spaceProcess = runningSpaces.get(spaceId);
   if (spaceProcess) {
     addSpaceLog(spaceId, 'system', `[System] Stopping space process...`);
-    spaceProcess.process.kill();
+    if (spaceProcess.process.pid) {
+      killProcessTree(spaceProcess.process.pid);
+    } else {
+      try {
+        spaceProcess.process.kill('SIGTERM');
+      } catch (e) {
+        console.error(`Error killing process for space ${spaceId}:`, e);
+      }
+    }
     runningSpaces.delete(spaceId);
+    lastSpaceActivity.delete(spaceId);
+    updateSpaceSleepStatus(spaceId, true).catch(err => {
+      console.error(`Failed to update sleep status in DB for space ${spaceId}:`, err);
+    });
     return true;
   }
+  updateSpaceSleepStatus(spaceId, true).catch(() => {});
   return false;
 };
 
@@ -437,3 +489,48 @@ export const getSpacePort = (spaceId: string): number | undefined => {
   const spaceProcess = runningSpaces.get(spaceId);
   return spaceProcess?.port;
 };
+
+export const updateLastActivity = (spaceId: string) => {
+  const now = Date.now();
+  lastSpaceActivity.set(spaceId, now);
+  updateSpaceActivity(spaceId, now).catch(err => {
+    console.error(`Failed to update space ${spaceId} activity in DB:`, err);
+  });
+};
+
+let idleIntervalStarted = false;
+export const startIdleCheckInterval = () => {
+  if (idleIntervalStarted) return;
+  idleIntervalStarted = true;
+
+  setInterval(async () => {
+    const now = Date.now();
+    for (const [spaceId] of runningSpaces.entries()) {
+      const storedSpace = await getSpaceById(spaceId);
+      const timeoutSeconds = storedSpace?.sleepTimeout !== undefined ? storedSpace.sleepTimeout : 300;
+
+      if (timeoutSeconds === 0) {
+        continue;
+      }
+
+      const lastActive = lastSpaceActivity.get(spaceId);
+      if (!lastActive) {
+        continue;
+      }
+
+      const idleTimeMs = now - lastActive;
+      const timeoutMs = timeoutSeconds * 1000;
+
+      if (idleTimeMs > timeoutMs) {
+        console.log(`[Sleep Policy] Space ${spaceId} has been idle for ${Math.round(idleTimeMs / 1000)}s (Timeout: ${timeoutSeconds}s). Stopping process.`);
+        addSpaceLog(spaceId, 'system', `[System] Space has been idle for ${timeoutSeconds}s. Automatically putting to sleep to save compute resources.`);
+        stopSpace(spaceId);
+      }
+    }
+  }, 15000);
+};
+
+// Start the check worker immediately if not running in tests
+if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+  startIdleCheckInterval();
+}
