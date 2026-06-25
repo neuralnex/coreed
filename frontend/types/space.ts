@@ -19,6 +19,8 @@ export interface AgentSpace {
   template?: string;
   status?: 'created' | 'deployed' | 'error' | 'running';
   port?: number;
+  storageRootHash?: string;
+  storageTxHash?: string;
 }
 
 export interface SleepConfig {

@@ -50,8 +50,8 @@ export default function SpaceDetailPage() {
   const [likes, setLikes] = useState(12);
   const [liked, setLiked] = useState(false);
 
-  // Simulated live logs state
-  const [logs, setLogs] = useState<string[]>([]);
+  // Real-time logs state
+  const [logs, setLogs] = useState<{ timestamp: string; phase: 'build' | 'run' | 'system' | 'error'; message: string }[]>([]);
 
   // Secrets editor state
   const [secrets, setSecrets] = useState<{ key: string; value: string }[]>([]);
@@ -320,32 +320,34 @@ export default function SpaceDetailPage() {
 
   const addLog = (msg: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, `[${timestamp}] ${msg}`]);
+    setLogs(prev => [...prev, { timestamp, phase: 'system', message: msg }]);
   };
 
-  // Generate initial simulated logs based on space type
+  // Poll real-time logs from backend when logs tab is active
   useEffect(() => {
-    if (space) {
-      const initialLogs = [
-        `[Coreed] Initializing space workspace: ${space.spaceId}`,
-        `[Coreed] Loaded space template configuration: SDK=${space.sdk}, version=${space.version}`,
-        `[Coreed] Owner identity resolved: ${space.owner}`,
-        `[0G-Storage] Checking repository integrity... verified.`,
-        `[0G-Compute] Initializing environment bindings...`
-      ];
-      
-      if (spaceRunning) {
-        initialLogs.push(
-          `[System] Process running on port ${spacePort || 7860}`,
-          `[System] Service is healthy and accepting socket connections.`
-        );
-      } else {
-        initialLogs.push(`[System] Process state is currently Stopped.`);
-      }
+    if (activeTab !== 'logs' || !spaceId) return;
 
-      setLogs(initialLogs);
-    }
-  }, [space, spaceRunning, spacePort]);
+    let active = true;
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch(`/api/spaces/logs?spaceId=${spaceId}`);
+        if (response.ok && active) {
+          const data = await response.json();
+          setLogs(data.logs || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch space logs:", err);
+      }
+    };
+
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 1500);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [activeTab, spaceId]);
 
   useEffect(() => {
     refreshSpace();
@@ -638,23 +640,24 @@ export default function SpaceDetailPage() {
                     <span className="text-emerald-400 font-semibold text-[10px] uppercase">Logs active</span>
                   </div>
                 </div>
-                <div className="flex-1 p-5 overflow-y-auto space-y-1.5 text-white/80 bg-black leading-relaxed">
+                <div className="flex-1 p-5 overflow-y-auto space-y-1.5 text-white/80 bg-black leading-relaxed font-mono text-[11px]">
                   {logs.length === 0 ? (
                     <p className="text-white/30 italic">No output logs received yet.</p>
                   ) : (
-                    logs.map((log, i) => (
-                      <div key={i} className="whitespace-pre-wrap select-text selection:bg-modal-green/30">
-                        {log.startsWith('[Error]') ? (
-                          <span className="text-red-400 font-medium">{log}</span>
-                        ) : log.startsWith('[System]') ? (
-                          <span className="text-emerald-400 font-medium">{log}</span>
-                        ) : log.startsWith('[0G') ? (
-                          <span className="text-blue-400">{log}</span>
-                        ) : (
-                          <span className="text-white/60">{log}</span>
-                        )}
-                      </div>
-                    ))
+                    logs.map((log, i) => {
+                      let colorClass = "text-white/60";
+                      if (log.phase === 'error') colorClass = "text-red-400 font-medium";
+                      else if (log.phase === 'system') colorClass = "text-emerald-400 font-medium";
+                      else if (log.phase === 'build') colorClass = "text-cyan-400";
+                      
+                      return (
+                        <div key={i} className={`whitespace-pre-wrap select-text selection:bg-modal-green/30 ${colorClass}`}>
+                          <span className="opacity-30 select-none mr-2">[{log.timestamp}]</span>
+                          <span className="opacity-40 select-none mr-2">[{log.phase.toUpperCase()}]</span>
+                          <span>{log.message}</span>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>

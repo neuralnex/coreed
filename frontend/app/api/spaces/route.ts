@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   
   if (spaceId) {
     // Get a specific space by ID
-    const space = getSpaceById(spaceId);
+    const space = await getSpaceById(spaceId);
     if (space) {
       return NextResponse.json(space);
     }
@@ -21,12 +21,12 @@ export async function GET(request: Request) {
   
   if (owner) {
     // Get spaces by owner
-    const spaces = getSpacesByOwner(owner);
+    const spaces = await getSpacesByOwner(owner);
     return NextResponse.json({ spaces, count: spaces.length });
   }
   
   // Get all spaces
-  const spaces = getAllSpaces();
+  const spaces = await getAllSpaces();
   return NextResponse.json({ spaces, count: spaces.length });
 }
 

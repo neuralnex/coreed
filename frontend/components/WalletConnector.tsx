@@ -40,7 +40,7 @@ const Icons = {
 };
 
 export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
-  const { connect } = useWalletContext();
+  const { connect, connectPrivy } = useWalletContext();
   const [email, setEmail] = useState("");
   const [isConnecting, setIsConnecting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,15 +62,33 @@ export function WalletConnector({ onClose, onConnect }: WalletConnectorProps) {
     setIsConnecting(provider);
     setError(null);
     try {
-      // Privy social login UX: simulate account connection by linking their EVM wallet
-      // behind the scenes. This gives us a real signer and makes the demo fully functional!
-      await connect("any-evm");
-      
-      if (typeof window !== "undefined") {
-        const mockEmail = mockValue || `${provider}_demo_user@coreed.app`;
-        sessionStorage.setItem("privy_email", mockEmail);
+      const loginEmail = mockValue || `${provider}_user@coreed.app`;
+
+      const response = await fetch('/api/auth/privy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, provider })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to authenticate via Privy');
       }
-      onConnect("any-evm");
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Privy auth failed');
+      }
+
+      // Connect Privy session details using the real response
+      connectPrivy(data.email, data.address, data.walletId);
+      
+      // Save to sessionStorage for any legacy components reading it
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("privy_email", data.email);
+      }
+
+      onConnect("privy");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Connection failed");
     } finally {

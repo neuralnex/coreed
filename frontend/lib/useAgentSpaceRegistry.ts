@@ -21,6 +21,33 @@ function getContract(signerOrProvider: JsonRpcSigner | JsonRpcProvider): Contrac
   return new Contract(AGENT_SPACE_REGISTRY_ADDRESS, agentSpaceRegistryAbi, signerOrProvider);
 }
 
+function parseDescription(description: string) {
+  let parsedDesc = description;
+  let storageRootHash = "";
+  let storageTxHash = "";
+  let sdk = "gradio";
+  let template = "blank";
+  try {
+    if (description && description.trim().startsWith("{")) {
+      const meta = JSON.parse(description);
+      parsedDesc = meta.description || "";
+      storageRootHash = meta.storageRootHash || "";
+      storageTxHash = meta.storageTxHash || "";
+      sdk = meta.sdk || sdk;
+      template = meta.template || template;
+    }
+  } catch (e) {
+    // Fallback to plain description text
+  }
+  return {
+    description: parsedDesc,
+    storageRootHash,
+    storageTxHash,
+    sdk,
+    template
+  };
+}
+
 export function useAgentSpaceRegistry() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,11 +221,12 @@ export function useAgentSpaceRegistry() {
     try {
       const contract = getContract(getReadProvider());
       const result = await contract.getSpace(spaceId);
+      const parsedMeta = parseDescription(result.description);
 
       return {
         spaceId: spaceId.toString(),
         name: result.name,
-        description: result.description,
+        description: parsedMeta.description,
         version: result.version,
         modelId: result.modelId.toString(),
         endpointUrl: result.endpointUrl,
@@ -209,7 +237,11 @@ export function useAgentSpaceRegistry() {
         isAsleep: result.isAsleep,
         sleepTimeout: Number(result.sleepTimeout),
         owner: result.owner,
-        requestCount: Number(result.requestCount)
+        requestCount: Number(result.requestCount),
+        storageRootHash: parsedMeta.storageRootHash,
+        storageTxHash: parsedMeta.storageTxHash,
+        sdk: parsedMeta.sdk,
+        template: parsedMeta.template
       };
     } catch (err) {
       // If on-chain fails, try to get from in-memory store
@@ -233,7 +265,9 @@ export function useAgentSpaceRegistry() {
             owner: spaceData.owner,
             requestCount: 0,
             sdk: spaceData.sdk,
-            template: spaceData.template
+            template: spaceData.template,
+            storageRootHash: spaceData.storageRootHash,
+            storageTxHash: spaceData.storageTxHash
           };
         }
       } catch {
@@ -258,10 +292,11 @@ export function useAgentSpaceRegistry() {
       const spaces = await Promise.all(
         spaceIds.map(async (id) => {
           const result = await contract.getSpace(id);
+          const parsedMeta = parseDescription(result.description);
           return {
             spaceId: id.toString(),
             name: result.name,
-            description: result.description,
+            description: parsedMeta.description,
             version: result.version,
             modelId: result.modelId.toString(),
             endpointUrl: result.endpointUrl,
@@ -272,7 +307,11 @@ export function useAgentSpaceRegistry() {
             isAsleep: result.isAsleep,
             sleepTimeout: Number(result.sleepTimeout),
             owner: result.owner,
-            requestCount: Number(result.requestCount)
+            requestCount: Number(result.requestCount),
+            storageRootHash: parsedMeta.storageRootHash,
+            storageTxHash: parsedMeta.storageTxHash,
+            sdk: parsedMeta.sdk,
+            template: parsedMeta.template
           };
         })
       );
@@ -297,10 +336,11 @@ export function useAgentSpaceRegistry() {
       const spaces = await Promise.all(
         spaceIds.map(async (id) => {
           const result = await contract.getSpace(id);
+          const parsedMeta = parseDescription(result.description);
           return {
             spaceId: id.toString(),
             name: result.name,
-            description: result.description,
+            description: parsedMeta.description,
             version: result.version,
             modelId: result.modelId.toString(),
             endpointUrl: result.endpointUrl,
@@ -311,7 +351,11 @@ export function useAgentSpaceRegistry() {
             isAsleep: result.isAsleep,
             sleepTimeout: Number(result.sleepTimeout),
             owner: result.owner,
-            requestCount: Number(result.requestCount)
+            requestCount: Number(result.requestCount),
+            storageRootHash: parsedMeta.storageRootHash,
+            storageTxHash: parsedMeta.storageTxHash,
+            sdk: parsedMeta.sdk,
+            template: parsedMeta.template
           };
         })
       );
@@ -343,10 +387,11 @@ export function useAgentSpaceRegistry() {
         spaceIds.map(async (id) => {
           try {
             const result = await contract.getSpace(id);
+            const parsedMeta = parseDescription(result.description);
             return {
               spaceId: id.toString(),
               name: result.name,
-              description: result.description,
+              description: parsedMeta.description,
               version: result.version,
               modelId: result.modelId.toString(),
               endpointUrl: result.endpointUrl,
@@ -357,7 +402,11 @@ export function useAgentSpaceRegistry() {
               isAsleep: result.isAsleep,
               sleepTimeout: Number(result.sleepTimeout),
               owner: result.owner,
-              requestCount: Number(result.requestCount)
+              requestCount: Number(result.requestCount),
+              storageRootHash: parsedMeta.storageRootHash,
+              storageTxHash: parsedMeta.storageTxHash,
+              sdk: parsedMeta.sdk,
+              template: parsedMeta.template
             };
           } catch {
             // Space might not exist (if deleted)
@@ -386,10 +435,11 @@ export function useAgentSpaceRegistry() {
       const spaces = await Promise.all(
         spaceIds.map(async (id) => {
           const result = await contract.getSpace(id);
+          const parsedMeta = parseDescription(result.description);
           return {
             spaceId: id.toString(),
             name: result.name,
-            description: result.description,
+            description: parsedMeta.description,
             version: result.version,
             modelId: result.modelId.toString(),
             endpointUrl: result.endpointUrl,
@@ -400,7 +450,11 @@ export function useAgentSpaceRegistry() {
             isAsleep: result.isAsleep,
             sleepTimeout: Number(result.sleepTimeout),
             owner: result.owner,
-            requestCount: Number(result.requestCount)
+            requestCount: Number(result.requestCount),
+            storageRootHash: parsedMeta.storageRootHash,
+            storageTxHash: parsedMeta.storageTxHash,
+            sdk: parsedMeta.sdk,
+            template: parsedMeta.template
           };
         })
       );

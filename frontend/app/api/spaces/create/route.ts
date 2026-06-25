@@ -4,6 +4,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { addSpace, getSpaceById, getSpacesByOwner, getAllSpaces, updateSpaceStatus } from '@/lib/spacesStore';
 import { startSpace, installDependencies } from '@/lib/spaceRunner';
+import { zeroGSpaceManager } from '@/lib/zeroGSpaceManager';
 
 const OG_COMPUTE_API_KEY = process.env.OG_COMPUTE_API_KEY;
 const OG_COMPUTE_BASE_URL = process.env.NEXT_PUBLIC_COMPUTE_ROUTER || 'https://router-api-testnet.integratenetwork.work/v1';
@@ -323,7 +324,17 @@ Your app uses 0G Compute Router for AI inference:
     const localEndpointUrl = `http://localhost:${appPort}`;
     const platformUrl = `http://${platformDomain}:${platformPort}/spaces/${spaceSlug}`;
 
-    addSpace({
+    let storageRootHash = "";
+    let storageTxHash = "";
+    try {
+      const uploadResult = await zeroGSpaceManager.uploadRepo(repoPath);
+      storageRootHash = uploadResult.rootHash;
+      storageTxHash = uploadResult.txHash;
+    } catch (uploadErr: any) {
+      console.error("Failed to upload space scaffold to 0G Storage:", uploadErr);
+    }
+
+    await addSpace({
       spaceId: spaceSlug,
       name,
       slug: spaceSlug,
@@ -339,7 +350,9 @@ Your app uses 0G Compute Router for AI inference:
         repoPath: repoPath
       },
       createdAt: Date.now(),
-      status: 'created'
+      status: 'created',
+      storageRootHash,
+      storageTxHash
     });
 
     interface ComputeInfo {
@@ -400,7 +413,9 @@ Your app uses 0G Compute Router for AI inference:
         gitRepo: {
           cloneUrl: `file://${repoPath}`,
           repoPath: repoPath
-        }
+        },
+        storageRootHash,
+        storageTxHash
       },
       compute: computeInfo,
       deployment,
@@ -422,14 +437,14 @@ export async function GET(request: Request) {
   const owner = searchParams.get('owner');
 
   if (owner) {
-    const ownerSpaces = getSpacesByOwner(owner);
+    const ownerSpaces = await getSpacesByOwner(owner);
     return NextResponse.json({
       spaces: ownerSpaces,
       count: ownerSpaces.length
     });
   }
 
-  const allSpaces = getAllSpaces();
+  const allSpaces = await getAllSpaces();
   return NextResponse.json({
     configuration: {
       rpcUrl: process.env.NEXT_PUBLIC_RPC_URL || 'https://evmrpc-testnet.0g.ai',

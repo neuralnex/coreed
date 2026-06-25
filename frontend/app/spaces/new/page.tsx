@@ -9,7 +9,7 @@ import { Check, Code, Container, FileText, GitBranch, Globe, Lock, Users } from 
 
 export default function NewSpacePage() {
   const router = useRouter();
-  const { address, isConnected, signer } = useWalletContext();
+  const { address, isConnected, signer, authProvider, email } = useWalletContext();
   const { deploySpace } = useAgentSpaceRegistry();
 
   const [loading, setLoading] = useState(false);
@@ -103,10 +103,43 @@ export default function NewSpacePage() {
         space: computeData.space
       }));
 
-      if (signer) {
+      const packedDescription = JSON.stringify({
+        description: formData.description,
+        storageRootHash: computeData.space?.storageRootHash || "",
+        storageTxHash: computeData.space?.storageTxHash || "",
+        sdk: formData.sdk,
+        template: formData.sdk === 'gradio' ? 'blank' : undefined
+      });
+
+      if (authProvider === "privy" && email) {
+        console.log("[NewSpace] Privy user detected. Relaying on-chain deployment through backend...");
+        fetch('/api/spaces/deploy-onchain', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            spaceMeta: {
+              name: formData.name,
+              description: packedDescription,
+              version: "1.0.0",
+              modelId: 0,
+              endpointUrl: `https://${slug}.coreed.app`
+            }
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            console.log('[NewSpace] Space deployed on-chain via Privy relay:', data.spaceId);
+          } else {
+            console.error('[NewSpace] On-chain deployment via Privy relay failed:', data.error);
+          }
+        })
+        .catch(err => console.error('[NewSpace] Privy relay transaction error:', err));
+      } else if (signer) {
         deploySpace(signer, {
           name: formData.name,
-          description: formData.description,
+          description: packedDescription,
           version: "1.0.0",
           modelId: 0,
           endpointUrl: `https://${slug}.coreed.app`

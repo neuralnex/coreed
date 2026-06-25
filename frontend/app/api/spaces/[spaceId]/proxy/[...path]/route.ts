@@ -30,7 +30,7 @@ async function handleProxyRequest(request: Request, context: { params: Promise<{
     
     const proxyPath = '/' + pathParts.join('/');
 
-    const storedSpace = getSpaceById(spaceId);
+    const storedSpace = await getSpaceById(spaceId);
     if (!storedSpace) {
       return NextResponse.json({ error: 'Space not found' }, { status: 404 });
     }

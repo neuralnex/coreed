@@ -12,6 +12,9 @@ interface WalletState {
   isConnected: boolean;
   isConnecting: boolean;
   error: Error | null;
+  authProvider: 'injected' | 'privy' | null;
+  email: string | null;
+  walletId: string | null;
 }
 
 const WALLET_STORAGE_KEY = "coreed_wallet_connected";
@@ -161,6 +164,9 @@ export function useWallet() {
     isConnected: false,
     isConnecting: false,
     error: null,
+    authProvider: null,
+    email: null,
+    walletId: null,
   });
 
   // Enhanced wallet detection for mobile and desktop
@@ -220,6 +226,9 @@ export function useWallet() {
           isConnected: true,
           isConnecting: false,
           error: null,
+          authProvider: "injected",
+          email: null,
+          walletId: null,
         });
       }
     } catch (error) {
@@ -232,7 +241,24 @@ export function useWallet() {
   // Check localStorage for previous connection on mount
   useEffect(() => {
     const connectedWallet = localStorage.getItem(WALLET_STORAGE_KEY);
-    if (connectedWallet && typeof window !== "undefined" && checkWalletAvailable()) {
+    if (connectedWallet === "privy") {
+      const email = localStorage.getItem("coreed_privy_email");
+      const address = localStorage.getItem("coreed_privy_address");
+      const walletId = localStorage.getItem("coreed_privy_wallet_id");
+      if (email && address && walletId) {
+        setState({
+          address,
+          signer: null,
+          provider: null,
+          isConnected: true,
+          isConnecting: false,
+          error: null,
+          authProvider: "privy",
+          email,
+          walletId,
+        });
+      }
+    } else if (connectedWallet && typeof window !== "undefined" && checkWalletAvailable()) {
       handleReconnect(connectedWallet === "true" ? undefined : connectedWallet);
     }
   }, [checkWalletAvailable, handleReconnect]);
@@ -301,6 +327,9 @@ export function useWallet() {
           isConnected: true,
           isConnecting: false,
           error: null,
+          authProvider: "injected",
+          email: null,
+          walletId: null,
         });
       } else {
         throw new Error("No accounts found");
@@ -315,12 +344,18 @@ export function useWallet() {
         address: null,
         signer: null,
         provider: null,
+        authProvider: null,
+        email: null,
+        walletId: null,
       }));
     }
   }, []);
 
   const disconnect = useCallback(() => {
     localStorage.removeItem(WALLET_STORAGE_KEY);
+    localStorage.removeItem("coreed_privy_email");
+    localStorage.removeItem("coreed_privy_address");
+    localStorage.removeItem("coreed_privy_wallet_id");
     setState({
       address: null,
       signer: null,
@@ -328,6 +363,9 @@ export function useWallet() {
       isConnected: false,
       isConnecting: false,
       error: null,
+      authProvider: null,
+      email: null,
+      walletId: null,
     });
   }, []);
 
@@ -369,11 +407,31 @@ export function useWallet() {
     };
   }, [disconnect, handleReconnect, state.isConnected]);
 
+  const connectPrivy = useCallback((email: string, address: string, walletId: string) => {
+    localStorage.setItem(WALLET_STORAGE_KEY, "privy");
+    localStorage.setItem("coreed_privy_email", email);
+    localStorage.setItem("coreed_privy_address", address);
+    localStorage.setItem("coreed_privy_wallet_id", walletId);
+
+    setState({
+      address,
+      signer: null,
+      provider: null,
+      isConnected: true,
+      isConnecting: false,
+      error: null,
+      authProvider: "privy",
+      email,
+      walletId,
+    });
+  }, []);
+
   return {
     ...state,
     connect,
+    connectPrivy,
     disconnect,
-    hasWallet: typeof window !== "undefined" && checkWalletAvailable(),
+    hasWallet: typeof window !== "undefined" && (checkWalletAvailable() || state.authProvider === "privy"),
   };
 }
 

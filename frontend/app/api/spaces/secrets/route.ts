@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'spaceId parameter is required' }, { status: 400 });
   }
 
-  const space = getSpaceById(spaceId);
+  const space = await getSpaceById(spaceId);
   if (!space) {
     return NextResponse.json({ error: 'Space not found' }, { status: 404 });
   }
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'spaceId and secrets array are required' }, { status: 400 });
     }
 
-    const space = getSpaceById(spaceId);
+    const space = await getSpaceById(spaceId);
     if (!space) {
       return NextResponse.json({ error: 'Space not found' }, { status: 404 });
     }

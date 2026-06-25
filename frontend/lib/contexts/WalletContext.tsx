@@ -5,6 +5,7 @@ import { useWallet, WalletState } from "../hooks/useWallet";
 
 interface WalletContextType extends WalletState {
   connect: (walletId?: string) => Promise<void>;
+  connectPrivy: (email: string, address: string, walletId: string) => void;
   disconnect: () => void;
   hasWallet: boolean;
   showWalletModal: boolean;

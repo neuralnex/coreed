@@ -17,10 +17,12 @@
  */
 
 import { NextResponse } from 'next/server';
-import { buildAndRunSpace, extractSpaceConfig } from '@/lib/docker/buildEngine';
 import { getRepo, repoExists } from '@/lib/git/repoManager';
 import fs from 'fs';
 import path from 'path';
+import { zeroGSpaceManager } from '@/lib/zeroGSpaceManager';
+import { getSpaceById, addSpace, updateSpaceStatus } from '@/lib/spacesStore';
+import { startSpace, stopSpace } from '@/lib/spaceRunner';
 
 /**
  * Build result stored for frontend retrieval
@@ -66,6 +68,10 @@ export async function POST(request: Request) {
     
     const startedAt = Date.now();
     
+    // Stop the currently running space to clear resource/port bindings
+    stopSpace(spaceSlug);
+    await updateSpaceStatus(spaceSlug, 'created');
+
     // Record build start
     buildResults.set(`${owner}-${spaceSlug}`, {
       spaceId: `${owner}-${spaceSlug}`,
@@ -75,13 +81,36 @@ export async function POST(request: Request) {
       startedAt,
       completedAt: 0
     });
-    
-    // Extract space config from README.md
-    const config = extractSpaceConfig(repoPath);
-    
-    // Build and run the space
-    const result = await buildAndRunSpace(repoPath, owner, spaceSlug);
-    
+
+    // 1. Pack and upload updated codebase to 0G Storage
+    let storageRootHash = "";
+    let storageTxHash = "";
+    try {
+      const uploadResult = await zeroGSpaceManager.uploadRepo(repoPath);
+      storageRootHash = uploadResult.rootHash;
+      storageTxHash = uploadResult.txHash;
+    } catch (uploadErr: any) {
+      console.error("Failed to upload updated codebase to 0G Storage:", uploadErr);
+    }
+
+    // 2. Update local space store metadata
+    const storedSpace = await getSpaceById(spaceSlug);
+    if (storedSpace) {
+      if (storageRootHash) storedSpace.storageRootHash = storageRootHash;
+      if (storageTxHash) storedSpace.storageTxHash = storageTxHash;
+      await addSpace(storedSpace);
+    }
+
+    const sdk = storedSpace?.sdk || 'gradio';
+
+    // 3. Spawning the updated space runner
+    const result = await startSpace(spaceSlug, repoPath, sdk);
+    if (result.success) {
+      await updateSpaceStatus(spaceSlug, 'running');
+    } else {
+      await updateSpaceStatus(spaceSlug, 'error');
+    }
+
     const completedAt = Date.now();
     
     // Store build result
@@ -90,9 +119,15 @@ export async function POST(request: Request) {
       owner,
       spaceSlug,
       success: result.success,
-      container: result.container,
+      container: {
+        id: spaceSlug,
+        name: spaceSlug,
+        port: result.port,
+        hostPort: result.port,
+        url: `http://localhost:${result.port}`
+      },
       error: result.error,
-      buildLogs: result.buildLogs,
+      buildLogs: [`[0G Storage] Uploaded updated codebase to 0G. Root Hash: ${storageRootHash}`, `[0G Compute] Spawning application node...`],
       startedAt,
       completedAt
     };
@@ -100,25 +135,19 @@ export async function POST(request: Request) {
     buildResults.set(`${owner}-${spaceSlug}`, buildResult);
     
     // Return appropriate response
-    if (result.success && result.container) {
+    if (result.success) {
       return NextResponse.json({
         success: true,
         spaceId: `${owner}-${spaceSlug}`,
-        container: {
-          id: result.container.containerId,
-          name: result.container.containerName,
-          port: result.container.port,
-          hostPort: result.container.hostPort,
-          url: `http://localhost:${result.container.hostPort}`
-        },
-        message: `Space deployed successfully at port ${result.container.hostPort}`
+        container: buildResult.container,
+        message: `Space deployed successfully at port ${result.port}`
       });
     } else {
       return NextResponse.json({
         success: false,
         spaceId: `${owner}-${spaceSlug}`,
         error: result.error,
-        buildLogs: result.buildLogs,
+        buildLogs: buildResult.buildLogs,
         message: 'Build failed'
       }, { status: 500 });
     }
@@ -176,7 +205,7 @@ export async function GET(request: Request) {
  */
 export async function PUT(request: Request) {
   try {
-    const { owner, spaceSlug, repoPath } = await request.json();
+    const { owner, spaceSlug } = await request.json();
     
     if (!owner || !spaceSlug) {
       return NextResponse.json(
@@ -185,33 +214,32 @@ export async function PUT(request: Request) {
       );
     }
     
-    // Find the repo
-    const repo = repoExists(owner, spaceSlug);
-    if (!repo) {
+    // Find the space
+    const storedSpace = await getSpaceById(spaceSlug);
+    if (!storedSpace) {
       return NextResponse.json(
-        { error: `Repository not found for ${owner}/${spaceSlug}` },
+        { error: `Space not found: ${spaceSlug}` },
         { status: 404 }
       );
     }
     
-    // Trigger rebuild
-    const result = await buildAndRunSpace(
-      path.join(process.cwd(), 'storage', 'repos', owner, spaceSlug),
-      owner,
-      spaceSlug
-    );
-    
+    // Stop and restart
+    stopSpace(spaceSlug);
+    await updateSpaceStatus(spaceSlug, 'created');
+
+    const result = await startSpace(spaceSlug, storedSpace.gitRepo.repoPath, storedSpace.sdk);
     if (result.success) {
+      await updateSpaceStatus(spaceSlug, 'running');
       return NextResponse.json({
         success: true,
-        message: 'Rebuild triggered',
-        container: result.container
+        message: 'Rebuild triggered successfully',
+        port: result.port
       });
     } else {
+      await updateSpaceStatus(spaceSlug, 'error');
       return NextResponse.json({
         success: false,
-        error: result.error,
-        logs: result.buildLogs
+        error: result.error
       }, { status: 500 });
     }
     
@@ -238,20 +266,13 @@ export async function DELETE(request: Request) {
       );
     }
     
-    // Extract container name from spaceId
-    // Format: coreed-{owner}-{spaceSlug}
-    const containerName = `coreed-${spaceId.replace(/^coreed-/, '')}`;
-    
     try {
-      // Import here to avoid circular dependency
-      const { stopContainer, removeContainer } = await import('@/lib/docker/buildEngine');
-      
-      await stopContainer(containerName);
-      await removeContainer(containerName);
+      const stopped = stopSpace(spaceId);
+      await updateSpaceStatus(spaceId, 'created');
       
       return NextResponse.json({
         success: true,
-        message: `Space ${spaceId} stopped and removed`
+        message: stopped ? `Space ${spaceId} stopped` : `Space ${spaceId} was not running`
       });
     } catch (err: any) {
       return NextResponse.json({
