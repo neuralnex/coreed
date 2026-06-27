@@ -45,13 +45,16 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'spaceId parameter is required' }, { status: 400 });
   }
   
+  // Get space details before deleting from the database
+  const space = await getSpaceById(spaceId);
+  
   // 1. Stop running child processes
   stopSpace(spaceId);
   
   // 2. Clear log buffers from memory
   clearSpaceLogs(spaceId);
   
-  // 3. Clean up directory files
+  // 3. Clean up compute node directory files
   const computeNodePath = path.join(process.cwd(), 'storage', 'compute-nodes', spaceId);
   if (fs.existsSync(computeNodePath)) {
     try {
@@ -61,7 +64,22 @@ export async function DELETE(request: Request) {
     }
   }
   
-  // 4. Remove from PostgreSQL/In-memory stores
+  // 4. Clean up local git repository files to prevent storage bloat
+  if (space?.gitRepo?.repoPath) {
+    const gitRepoPath = path.isAbsolute(space.gitRepo.repoPath)
+      ? space.gitRepo.repoPath
+      : path.join(process.cwd(), space.gitRepo.repoPath);
+      
+    if (fs.existsSync(gitRepoPath)) {
+      try {
+        fs.rmSync(gitRepoPath, { recursive: true, force: true });
+      } catch (err: any) {
+        console.error(`Failed to delete git repo path ${gitRepoPath}:`, err.message);
+      }
+    }
+  }
+  
+  // 5. Remove from PostgreSQL/In-memory stores
   const deleted = await deleteSpace(spaceId);
   
   return NextResponse.json({

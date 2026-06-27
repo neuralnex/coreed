@@ -22,6 +22,22 @@ jest.mock('child_process', () => ({
   execSync: jest.fn().mockReturnValue('mock stdout')
 }));
 
+// Mock fs module
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  writeFileSync: jest.fn(),
+  mkdirSync: jest.fn(),
+  existsSync: jest.fn().mockReturnValue(true),
+  readFileSync: jest.fn().mockReturnValue('')
+}));
+
+// Mock path module to return test paths
+jest.mock('path', () => ({
+  ...jest.requireActual('path'),
+  join: jest.fn((...args) => args.join('/')),
+  resolve: jest.fn((...args) => args.join('/'))
+}));
+
 jest.mock('@/lib/zeroGSpaceManager', () => ({
   zeroGSpaceManager: {
     downloadAndUnpack: jest.fn(() => Promise.resolve()) as any,
